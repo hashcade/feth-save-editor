@@ -21,13 +21,16 @@ public partial class MainWindow : Window
     private static readonly string[] SkillRanks =
         ["E", "E+", "D", "D+", "C", "C+", "B", "B+", "A", "A+", "S", "S+"];
 
-    private static readonly Choice[] SupportPresets =
+    private static readonly Choice[] SupportRanks =
     [
-        new(0, "No support · 0"),
-        new(101, "C range · 101"),
-        new(301, "B range · 301"),
-        new(601, "A range · 601"),
-        new(1001, "High points · 1001")
+        new(0, "None"),
+        new(101, "C"),
+        new(201, "C+"),
+        new(301, "B"),
+        new(451, "B+"),
+        new(601, "A"),
+        new(801, "A+"),
+        new(1001, "S")
     ];
 
     private static readonly (string Label, string Path)[] GameFields =
@@ -471,7 +474,8 @@ public partial class MainWindow : Window
         }
         _loading = true;
         SupportList.ItemsSource = _visibleSupports.Select(index =>
-            $"{index:D3} · {DisplaySupportName(_save.Inheritance.GetSupportName(index))} · {_save.Inheritance.GetSupportPoints(index)}").ToArray();
+            $"{index:D3} · {DisplaySupportName(_save.Inheritance.GetSupportName(index))} · "
+            + UiStrings.Translate(SupportRankFor(_save.Inheritance.GetSupportPoints(index)).Label, _databaseLanguage)).ToArray();
         int selected = _visibleSupports.IndexOf(_selectedSupport);
         SupportList.SelectedIndex = selected >= 0 ? selected : _visibleSupports.Count > 0 ? 0 : -1;
         _loading = false;
@@ -484,25 +488,19 @@ public partial class MainWindow : Window
     {
         if (_save is null || _selectedSupport < 0)
         {
-            SelectedSupport.Text = "Select a support pair";
             SupportRankPreset.ItemsSource = null;
-            SupportRawPoints.Text = string.Empty;
             return;
         }
-        SelectedSupport.Text = DisplaySupportName(_save.Inheritance.GetSupportName(_selectedSupport));
         int points = _save.Inheritance.GetSupportPoints(_selectedSupport);
-        Choice[] presets = SupportPresets
-            .Select(preset => new Choice(preset.Id, UiStrings.Translate(preset.Label, _databaseLanguage)))
+        Choice[] ranks = SupportRanks
+            .Select(rank => new Choice(rank.Id, UiStrings.Translate(rank.Label, _databaseLanguage)))
             .ToArray();
-        Choice current = presets.FirstOrDefault(choice => choice.Id == points)
-            ?? new Choice(points, string.Format(CultureInfo.CurrentCulture,
-                UiStrings.Translate("Current value · {0}", _databaseLanguage), points));
-        SupportRankPreset.ItemsSource = presets.Contains(current)
-            ? presets : [.. presets, current];
-        SupportRankPreset.SelectedItem = current;
-        SupportRawPoints.Text = string.Format(CultureInfo.CurrentCulture,
-            UiStrings.Translate("Stored points: {0}", _databaseLanguage), points);
+        SupportRankPreset.ItemsSource = ranks;
+        SupportRankPreset.SelectedItem = ranks[Array.IndexOf(SupportRanks, SupportRankFor(points))];
     }
+
+    private static Choice SupportRankFor(int points) =>
+        SupportRanks.Last(rank => points >= rank.Id);
 
     private void ApplySupport_Click(object? sender, RoutedEventArgs e)
     {
@@ -510,7 +508,9 @@ public partial class MainWindow : Window
         try
         {
             if (SupportRankPreset.SelectedItem is not Choice choice)
-                throw new InvalidOperationException("Select a support point preset.");
+                throw new InvalidOperationException("Select a support rank.");
+            int current = _save.Inheritance.GetSupportPoints(_selectedSupport);
+            if (SupportRankFor(current).Id == choice.Id) return;
             _save.Inheritance.SetSupportPoints(_selectedSupport, choice.Id);
             RefreshSupports();
             MarkChanged();

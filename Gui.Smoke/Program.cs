@@ -382,8 +382,14 @@ if (args.Length > 0)
     if (historicalCharacters.Items.OfType<string>().Any(name => name.Contains("Aelfric", StringComparison.Ordinal)))
         throw new InvalidOperationException("Non-recruitable NPCs should not appear in the NG+ editor.");
     var supportPreset = window.FindControl<ComboBox>("SupportRankPreset")!;
-    if (supportPreset.SelectedItem?.ToString()?.Contains("1001", StringComparison.Ordinal) != true)
-        throw new InvalidOperationException("NG+ support point preset did not represent the stored value.");
+    if (supportPreset.ItemCount != 8 || supportPreset.SelectedItem?.ToString() != "S")
+        throw new InvalidOperationException("NG+ support rank was not mapped from the stored value.");
+    supportPreset.SelectedIndex = 2;
+    window.FindControl<Button>("SetInheritedSupportButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    if (window.FindControl<ListBox>("SupportList")!.Items[0]!.ToString()!.EndsWith(" · C+", StringComparison.Ordinal) != true)
+        throw new InvalidOperationException("NG+ support rank edit did not update the list.");
+    supportPreset.SelectedIndex = 7;
+    window.FindControl<Button>("SetInheritedSupportButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
 
     var items = window.FindControl<ListBox>("StorageList")!;
     var misc = window.FindControl<ListBox>("MiscList")!;

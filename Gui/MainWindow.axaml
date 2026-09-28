@@ -526,36 +526,23 @@
       </TabItem>
 
       <TabItem Name="InheritanceSupportTab" Header="NG+ Support Talks">
-        <Grid Margin="8" ColumnDefinitions="312,*" ColumnSpacing="8">
-          <Border Classes="section" Grid.Column="0">
-            <Grid RowDefinitions="Auto,*" RowSpacing="12">
+        <Grid Margin="8" ColumnDefinitions="320,*" ColumnSpacing="10">
+          <suki:GlassCard Name="InheritanceSupportListCard" Classes="section" Grid.Column="0">
+            <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
               <TextBlock Text="Talk List" FontWeight="SemiBold" />
-              <Grid Grid.Row="1" RowDefinitions="Auto,*" RowSpacing="5">
-                <TextBox Classes="Small" Name="SupportSearch" PlaceholderText="Search..."
-                         TextChanged="SupportSearch_TextChanged" />
-                <ListBox Classes="Small" Name="SupportList" Grid.Row="1"
-                         SelectionChanged="SupportList_SelectionChanged" />
-              </Grid>
+              <TextBox Classes="Small" Name="SupportSearch" Grid.Row="1" PlaceholderText="Search..."
+                       TextChanged="SupportSearch_TextChanged" />
+              <ListBox Classes="Small" Name="SupportList" Grid.Row="2"
+                       SelectionChanged="SupportList_SelectionChanged" />
             </Grid>
-          </Border>
-          <Grid Grid.Column="1" RowDefinitions="Auto,*" RowSpacing="8">
-            <Border Classes="section">
-              <StackPanel Spacing="12">
-                <TextBlock Text="Talk Editor" FontWeight="SemiBold" />
-                <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="100,*" RowSpacing="7" ColumnSpacing="8">
-                  <TextBlock Name="SelectedSupport" Grid.ColumnSpan="2" Text="Select a support pair"
-                             TextWrapping="Wrap" />
-                  <TextBlock Grid.Row="1" Text="Support:" VerticalAlignment="Center" />
-                  <ComboBox Classes="Small" Name="SupportRankPreset" Grid.Row="1" Grid.Column="1" />
-                  <Button Classes="Small" Grid.Row="2" Grid.Column="1"
-                          Content="Set" Click="ApplySupport_Click" />
-                </Grid>
-                <TextBlock Name="SupportRawPoints" />
-              </StackPanel>
-            </Border>
-            <TextBlock Grid.Row="1" Margin="8,0" TextWrapping="Wrap"
-                       Text="These are point presets, not guaranteed dialogue ranks. Some pairs have extra conversations or cannot reach S." />
-          </Grid>
+          </suki:GlassCard>
+          <suki:GlassCard Name="InheritanceSupportEditorCard" Classes="section" Grid.Column="1">
+            <StackPanel Width="340" HorizontalAlignment="Left" Spacing="8">
+              <TextBlock Text="Inherited support rank" FontWeight="SemiBold" />
+              <ComboBox Classes="Small" Name="SupportRankPreset" />
+              <Button Classes="Small" Name="SetInheritedSupportButton" Content="Set" Click="ApplySupport_Click" />
+            </StackPanel>
+          </suki:GlassCard>
         </Grid>
       </TabItem>
     </TabControl>
