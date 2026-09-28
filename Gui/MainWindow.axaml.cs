@@ -71,10 +71,48 @@ public partial class MainWindow : Window
     private int _selectedSupport = -1;
     private bool _loading;
     private bool _databaseReady;
+    private enmLanguage _databaseLanguage = enmLanguage.en_u;
 
     public MainWindow()
     {
         InitializeComponent();
+        DatabaseLanguage.ItemsSource = Enum.GetValues<enmLanguage>()
+            .Select(language => new Choice((int)language, language.GetDescription())).ToArray();
+        DatabaseLanguage.SelectedIndex = (int)_databaseLanguage;
+    }
+
+    private void DatabaseLanguage_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (!_databaseReady || DatabaseLanguage.SelectedItem is not Choice choice
+            || choice.Id == (int)_databaseLanguage) return;
+        enmLanguage next = (enmLanguage)choice.Id;
+        try
+        {
+            Database.Init(next);
+            _databaseLanguage = next;
+            _itemChoices = null;
+            _characterIds = null;
+            _abilityChoices = null;
+            _artChoices = null;
+            _battalionCharacters = null;
+            _battalionTypes = null;
+            _battalionSkills = null;
+            if (_save is null) return;
+            RefreshStorage(StorageList.SelectedIndex, MiscList.SelectedIndex, GiftList.SelectedIndex);
+            RefreshCurrentCharacters(Math.Max(0, _currentCharacter));
+            RefreshBattalions(BattalionList.SelectedIndex);
+            RefreshQuests();
+            RefreshCurrentSupports();
+            RefreshCharacters();
+            RefreshSupports();
+            Status.Text = "Database language changed. Save bytes were not modified.";
+        }
+        catch (Exception error)
+        {
+            Database.Init(_databaseLanguage);
+            DatabaseLanguage.SelectedIndex = (int)_databaseLanguage;
+            Status.Text = "Could not change database language: " + error.Message;
+        }
     }
 
     private void Exit_Click(object? sender, RoutedEventArgs e) => Close();
@@ -103,7 +141,7 @@ public partial class MainWindow : Window
     {
         if (!_databaseReady)
         {
-            Database.Init(enmLanguage.en_u);
+            Database.Init(_databaseLanguage);
             _databaseReady = true;
         }
 

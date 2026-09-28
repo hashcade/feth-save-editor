@@ -50,6 +50,12 @@ for (int index = 0; index < characterTabs.ItemCount; index++)
 
 if (args.Length > 0)
 {
+    var language = window.FindControl<ComboBox>("DatabaseLanguage")!;
+    language.SelectedIndex = 11;
+    if (!window.FindControl<TextBlock>("Status")!.Text!.Contains("not modified", StringComparison.Ordinal))
+        throw new InvalidOperationException("Language switch modified the save or failed.");
+    language.SelectedIndex = 1;
+
     var items = window.FindControl<ListBox>("StorageList")!;
     var misc = window.FindControl<ListBox>("MiscList")!;
     if (items.ItemCount != 400 || misc.ItemCount != 223)

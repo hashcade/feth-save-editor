@@ -72,9 +72,8 @@
                 <HeaderedContentControl.Header><TextBlock Text="Settings" FontWeight="SemiBold" /></HeaderedContentControl.Header>
               <StackPanel Margin="0,12,0,0" Spacing="4">
                 <TextBlock Text="Database Language" />
-                <ComboBox Classes="Small" SelectedIndex="0" IsEnabled="False">
-                  <ComboBoxItem Content="English" />
-                </ComboBox>
+                <ComboBox Classes="Small" Name="DatabaseLanguage"
+                          SelectionChanged="DatabaseLanguage_SelectionChanged" />
               </StackPanel>
               </HeaderedContentControl>
             </Border>
