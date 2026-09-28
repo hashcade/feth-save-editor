@@ -78,6 +78,31 @@ def main() -> None:
         assert struct.unpack_from("<I", edited, 12 + 0x231D9 + 0x1074)[0] == 12345
         assert struct.unpack_from("<I", edited, 12 + 0x250A1 + 0xC)[0] == 321
 
+        # Agent edits must not bypass the GUI's rank-specific skill limit.
+        out_of_range = directory / "out-of-range.json"
+        out_of_range.write_text(json.dumps({"operations": [
+            {"op": "set", "path": "Characters[0].data.SkillExp[0]", "value": 40},
+        ]}), encoding="utf-8")
+        error = run(cli, "apply", "--input", str(source), "--patch", str(out_of_range),
+                    "--output", str(directory / "invalid-skill"), success=False)
+        assert "rank limit" in error["error"]
+
+        # In-place mode must retain the exact original save as a backup.
+        inplace = directory / "inplace-slot00"
+        inplace.write_bytes(raw)
+        applied_inplace = run(cli, "apply", "--input", str(inplace), "--patch", str(patch_file), "--in-place")
+        assert Path(applied_inplace["backup"]).read_bytes() == raw
+        assert inplace.read_bytes() == edited
+
+        # Raw character exchange preserves the record, without rewriting the rest of the save.
+        character = directory / "character.bin"
+        run(cli, "export-character", "--input", str(target), "--slot", "0", "--output", str(character))
+        imported = directory / "imported-slot00"
+        run(cli, "import-character", "--input", str(source), "--slot", "0",
+            "--character", str(character), "--output", str(imported))
+        assert imported.read_bytes()[12 + 0x644:12 + 0x644 + len(character.read_bytes())] == character.read_bytes()
+        assert imported.read_bytes()[sentinel] == 0xA5
+
         bad_patch = directory / "bad.json"
         bad_patch.write_text(json.dumps({"operations": [
             {"op": "set", "path": "Player.field_17D8[0]", "value": 99},
@@ -92,7 +117,7 @@ def main() -> None:
         error = run(cli, "inspect", "--input", str(suspend), success=False)
         assert "Suspend" in error["error"]
 
-        print("CLI save inspection, patching, byte preservation, and rejection checks passed.")
+        print("CLI inspection, editing, backups, character import, byte preservation, and rejection checks passed.")
 
 
 if __name__ == "__main__":
