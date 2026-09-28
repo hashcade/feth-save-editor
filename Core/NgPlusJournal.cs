@@ -31,6 +31,18 @@ namespace FethEditor.Core
 
         public int ProfessorRank => file[player + ProfessorOffset];
 
+        public string GetCharacterName(int recordIndex)
+        {
+            CheckIndex(recordIndex, CharacterCount, nameof(recordIndex));
+            return CharacterName(recordIndex);
+        }
+
+        public string GetSupportName(int index)
+        {
+            CheckIndex(index, Player_V23.COUNT_SUPPORT, nameof(index));
+            return SupportName(index);
+        }
+
         public int GetSupportPoints(int index)
         {
             CheckIndex(index, Player_V23.COUNT_SUPPORT, nameof(index));
@@ -91,14 +103,14 @@ namespace FethEditor.Core
                 .Select(index => new
                 {
                     index,
-                    name = SupportName(index),
+                    name = GetSupportName(index),
                     maxPoints = GetSupportPoints(index)
                 }).ToArray();
             var characters = Enumerable.Range(0, CharacterCount)
                 .Select(index => new
                 {
                     recordIndex = index,
-                    name = CharacterName(index),
+                    name = GetCharacterName(index),
                     skillRanks = Enumerable.Range(0, SkillCount).Select(skill => GetSkillRank(index, skill)).ToArray(),
                     masteredClassIds = Enumerable.Range(0, ClassCount)
                         .Where(classId => IsClassMastered(index, classId)).ToArray()
