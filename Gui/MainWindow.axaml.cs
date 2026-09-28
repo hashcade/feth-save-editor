@@ -206,7 +206,6 @@ public partial class MainWindow : Window
             ClassSearch.Text = string.Empty;
             SupportSearch.Text = string.Empty;
             SaveMenuItem.IsEnabled = false;
-            HeaderSaveButton.IsEnabled = false;
             _selectedCharacter = -1;
             _selectedSupport = -1;
         }
@@ -611,7 +610,6 @@ public partial class MainWindow : Window
     {
         if (_save is null) return;
         SaveMenuItem.IsEnabled = _save.ChangedBytes > 0;
-        HeaderSaveButton.IsEnabled = SaveMenuItem.IsEnabled;
         Status.Text = string.Empty;
     }
 

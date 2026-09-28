@@ -4,6 +4,7 @@ using System.Linq;
 using Avalonia;
 using Avalonia.Headless;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
@@ -27,8 +28,20 @@ Dispatcher.UIThread.RunJobs();
 
 var tabs = window.FindControl<TabControl>("EditorTabs")
     ?? throw new InvalidOperationException("Editor tabs are missing.");
+var navigation = window.FindControl<TabStrip>("MainNavigation")
+    ?? throw new InvalidOperationException("Main navigation is missing.");
+var obsoleteSeparator = tabs.GetVisualDescendants().OfType<Border>()
+    .FirstOrDefault(border => border.Name == "PART_BorderSeparator");
+if (obsoleteSeparator?.IsVisible == true)
+    throw new InvalidOperationException("The old tab separator is still visible.");
 if (tabs.ItemCount != 9)
     throw new InvalidOperationException("Editor should show nine functional sections without a rank-only tab.");
+navigation.SelectedIndex = 3;
+Dispatcher.UIThread.RunJobs();
+if (tabs.SelectedIndex != 3)
+    throw new InvalidOperationException("Main navigation did not switch the editor page.");
+navigation.SelectedIndex = 0;
+Dispatcher.UIThread.RunJobs();
 for (int index = 0; index < tabs.ItemCount; index++)
 {
     tabs.SelectedIndex = index;
@@ -115,19 +128,12 @@ if (args.Length > 0)
     }
     ((MenuItem)language.Items[11]!).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
     Dispatcher.UIThread.RunJobs();
-    var appTitle = window.FindControl<TextBlock>("AppTitle")!;
-    if (appTitle.Text != "FETH Editor" || appTitle.Bounds.Width < 100)
-        throw new InvalidOperationException($"App header collapsed after language change: {appTitle.Text}, width {appTitle.Bounds.Width}.");
     if (tabs.Items.OfType<TabItem>().First().Header?.ToString() != "主页"
         || tabs.Items.OfType<TabItem>().ElementAt(1).Header?.ToString() != "物品"
         || tabs.Items.OfType<TabItem>().ElementAt(3).Header?.ToString() != "骑士团"
         || tabs.Items.OfType<TabItem>().ElementAt(4).Header?.ToString() != "任务"
         || tabs.Items.OfType<TabItem>().ElementAt(5).Header?.ToString() != "支援对话")
         throw new InvalidOperationException("Chinese interface was not applied.");
-    var headerButtons = window.GetVisualDescendants().OfType<Button>().ToArray();
-    if (!headerButtons.Any(button => Equals(button.Content, "打开存档"))
-        || !headerButtons.Any(button => Equals(button.Content, "另存副本")))
-        throw new InvalidOperationException("Header actions were not localized.");
     if (tabs.Items.OfType<TabItem>().ElementAt(7).Header?.ToString() != "继承角色"
         || ((MenuItem)language.Items[11]!).Header?.ToString() != "✓ 简体中文")
         throw new InvalidOperationException("Inheritance labels or language names were not localized.");
@@ -143,6 +149,10 @@ if (args.Length > 0)
     if (untranslatedTabs.Length > 0)
         throw new InvalidOperationException("Visual tab headers are not localized: "
             + string.Join(", ", untranslatedTabs.Select(text => $"{text.Text} ({text.GetVisualParent()?.GetType().Name}, {text.Name})")));
+    var visibleText = window.GetVisualDescendants().OfType<TextBlock>()
+        .Where(text => text.IsVisible).Select(text => text.Text).ToArray();
+    if (!visibleText.Contains("玩家") || !visibleText.Contains("游戏设定"))
+        throw new InvalidOperationException("Overview section headings are not localized.");
     tabs.SelectedIndex = 7;
     Dispatcher.UIThread.RunJobs();
     string inheritanceScreenshot = Path.Combine(Path.GetTempPath(), "feth-editor-zh-inheritance.png");
