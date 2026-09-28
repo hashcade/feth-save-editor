@@ -666,21 +666,28 @@ namespace SaveEditor
 
         public static byte[] MakeName(string name, int max)
         {
+            if(max < 6)
+                throw new ArgumentOutOfRangeException(nameof(max));
+
             byte[] result = new byte[max];
-            byte[] data = Encoding.UTF8.GetBytes(name);
-            int maxLen = max - 6;
-
-            Array.Resize(ref data, Math.Min(data.Length, maxLen));
-
             int i = 0;
-
             result[i++] = 0x1B;
             result[i++] = 0x4E;
             result[i++] = 0x30;
 
-            for(int j = 0; j < name.Length; j++, i++)
+            // Leave three bytes for the closing marker and keep UTF-8 characters intact.
+            int nameEnd = max - 3;
+            for(int j = 0; j < name.Length;)
             {
-                result[i] = data[j];
+                int charCount = char.IsHighSurrogate(name[j]) &&
+                    j + 1 < name.Length && char.IsLowSurrogate(name[j + 1]) ? 2 : 1;
+                byte[] character = Encoding.UTF8.GetBytes(name.Substring(j, charCount));
+                if(i + character.Length > nameEnd)
+                    break;
+
+                Array.Copy(character, 0, result, i, character.Length);
+                i += character.Length;
+                j += charCount;
             }
 
             result[i++] = 0x1B;
