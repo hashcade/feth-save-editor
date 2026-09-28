@@ -451,6 +451,22 @@
         </TabControl>
       </TabItem>
 
+      <TabItem Header="NG+ Journal">
+        <ScrollViewer Background="#F7F8FA">
+          <Border Classes="section" Margin="8" Width="330" HorizontalAlignment="Left"
+                  VerticalAlignment="Top">
+            <StackPanel Spacing="10">
+              <TextBlock Text="Professor Rank Available for NG+" FontWeight="SemiBold" />
+              <ComboBox Classes="Small" Name="NgPlusProfessorRank" Width="120"
+                        HorizontalAlignment="Left"
+                        SelectionChanged="NgPlusProfessorRank_SelectionChanged" />
+              <TextBlock Text="This is separate from the current run's Instruct Exp and rank on Main."
+                         TextWrapping="Wrap" />
+            </StackPanel>
+          </Border>
+        </ScrollViewer>
+      </TabItem>
+
       <TabItem Header="NG+ Characters">
         <Grid Background="#F7F8FA" Margin="8" ColumnDefinitions="264,*" ColumnSpacing="8">
           <Border Classes="section" Grid.Column="0">

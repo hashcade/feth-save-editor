@@ -96,6 +96,12 @@ if (args.Length > 0)
     if (!window.FindControl<TextBlock>("Status")!.Text!.Contains("not modified", StringComparison.Ordinal))
         throw new InvalidOperationException("Language switch modified the save or failed.");
     language.SelectedIndex = 1;
+    var historicalRank = window.FindControl<ComboBox>("NgPlusProfessorRank")!;
+    if (historicalRank.SelectedIndex != 9)
+        throw new InvalidOperationException("NG+ professor rank was not loaded from the sample save.");
+    historicalRank.SelectedIndex = 8;
+    if (!window.FindControl<TextBlock>("Status")!.Text!.Contains("changed", StringComparison.OrdinalIgnoreCase))
+        throw new InvalidOperationException("NG+ professor rank edit did not mark the save as changed.");
 
     var items = window.FindControl<ListBox>("StorageList")!;
     var misc = window.FindControl<ListBox>("MiscList")!;

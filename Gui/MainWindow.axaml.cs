@@ -79,6 +79,7 @@ public partial class MainWindow : Window
         DatabaseLanguage.ItemsSource = Enum.GetValues<enmLanguage>()
             .Select(language => new Choice((int)language, language.GetDescription())).ToArray();
         DatabaseLanguage.SelectedIndex = (int)_databaseLanguage;
+        NgPlusProfessorRank.ItemsSource = SkillRanks.Take(10).ToArray();
     }
 
     private void DatabaseLanguage_SelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -182,6 +183,7 @@ public partial class MainWindow : Window
         RefreshCurrentSupports();
         RefreshCharacters();
         RefreshSupports();
+        RefreshNgPlusProfessorRank();
         RefreshDatabaseViewer();
         Status.Text = "Save loaded. Changes stay in memory until you save a new copy.";
     }
