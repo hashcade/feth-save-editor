@@ -1,9 +1,13 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:suki="https://github.com/kikipoulet/SukiUI"
         x:Class="FethEditor.Gui.MainWindow"
         Title="FETH Editor" Width="1120" Height="780" MinWidth="860" MinHeight="600"
         FontSize="13" DragDrop.AllowDrop="True">
   <Window.Styles>
+    <Style Selector="suki|GlassCard.section">
+      <Setter Property="Padding" Value="20" />
+    </Style>
     <Style Selector="Border.section">
       <Setter Property="Padding" Value="20" />
     </Style>
@@ -55,7 +59,7 @@
         <ScrollViewer>
           <Grid Margin="12" ColumnDefinitions="*,*" ColumnSpacing="12">
             <StackPanel Spacing="12">
-            <Border Classes="section">
+            <suki:GlassCard Classes="section">
               <HeaderedContentControl>
                 <HeaderedContentControl.Header><TextBlock Text="Player" FontWeight="SemiBold" /></HeaderedContentControl.Header>
                 <Grid Margin="0,16,0,0" ColumnDefinitions="160,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
@@ -82,36 +86,36 @@
                            LostFocus="PlayerName_LostFocus" />
                 </Grid>
               </HeaderedContentControl>
-            </Border>
+            </suki:GlassCard>
 
-            <Border Classes="section">
+            <suki:GlassCard Classes="section">
               <HeaderedContentControl>
                 <HeaderedContentControl.Header><TextBlock Text="Game Values" FontWeight="SemiBold" /></HeaderedContentControl.Header>
                 <StackPanel Name="GameRows" Margin="0,16,0,0" Spacing="8" />
               </HeaderedContentControl>
-            </Border>
+            </suki:GlassCard>
 
             </StackPanel>
             <StackPanel Grid.Column="1" Spacing="12">
-            <Border Classes="section">
+            <suki:GlassCard Classes="section">
               <HeaderedContentControl>
                 <HeaderedContentControl.Header><TextBlock Text="Monthly Statistics" FontWeight="SemiBold" /></HeaderedContentControl.Header>
                 <StackPanel Name="StatisticsRows" Margin="0,16,0,0" Spacing="6" />
               </HeaderedContentControl>
-            </Border>
+            </suki:GlassCard>
 
-              <Border Classes="section">
+              <suki:GlassCard Classes="section">
                 <HeaderedContentControl>
                   <HeaderedContentControl.Header><TextBlock Text="Activity Points" FontWeight="SemiBold" /></HeaderedContentControl.Header>
                   <StackPanel Name="ActivityRows" Margin="0,16,0,0" Spacing="8" />
                 </HeaderedContentControl>
-              </Border>
-              <Border Classes="section">
+              </suki:GlassCard>
+              <suki:GlassCard Classes="section">
                 <HeaderedContentControl>
                   <HeaderedContentControl.Header><TextBlock Text="Goddess Statue" FontWeight="SemiBold" /></HeaderedContentControl.Header>
                   <StackPanel Name="StatueRows" Margin="0,16,0,0" Spacing="8" />
                 </HeaderedContentControl>
-              </Border>
+              </suki:GlassCard>
             </StackPanel>
           </Grid>
         </ScrollViewer>

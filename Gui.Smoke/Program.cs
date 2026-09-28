@@ -223,6 +223,15 @@ if (args.Length > 0)
         .Where(text => text.IsVisible).Select(text => text.Text).ToArray();
     if (!visibleText.Contains("玩家") || !visibleText.Contains("游戏设定"))
         throw new InvalidOperationException("Overview section headings are not localized.");
+    for (int index = 0; index < tabs.ItemCount; index++)
+    {
+        tabs.SelectedIndex = index;
+        Dispatcher.UIThread.RunJobs();
+        string pageScreenshot = Path.Combine(Path.GetTempPath(), $"feth-editor-zh-tab-{index}.png");
+        (window.CaptureRenderedFrame() ?? throw new InvalidOperationException($"Chinese page {index} did not render."))
+            .Save(pageScreenshot, PngBitmapEncoderOptions.Default);
+        Console.WriteLine(pageScreenshot);
+    }
     tabs.SelectedIndex = 7;
     Dispatcher.UIThread.RunJobs();
     string inheritanceScreenshot = Path.Combine(Path.GetTempPath(), "feth-editor-zh-inheritance.png");
