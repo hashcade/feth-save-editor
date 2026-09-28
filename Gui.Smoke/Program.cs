@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using Avalonia;
 using Avalonia.Headless;
 using Avalonia.Controls;
@@ -96,6 +97,11 @@ if (args.Length > 0)
     if (!window.FindControl<TextBlock>("Status")!.Text!.Contains("not modified", StringComparison.Ordinal))
         throw new InvalidOperationException("Language switch modified the save or failed.");
     language.SelectedIndex = 1;
+    var gameRows = window.FindControl<StackPanel>("GameRows")!;
+    var difficulty = ((StackPanel)gameRows.Children[1]).Children.OfType<ComboBox>().Single();
+    if (difficulty.ItemCount != 4)
+        throw new InvalidOperationException("Difficulty choices were not loaded.");
+    difficulty.SelectedIndex = difficulty.SelectedIndex == 0 ? 1 : 0;
     var historicalRank = window.FindControl<ComboBox>("NgPlusProfessorRank")!;
     if (historicalRank.SelectedIndex != 9)
         throw new InvalidOperationException("NG+ professor rank was not loaded from the sample save.");

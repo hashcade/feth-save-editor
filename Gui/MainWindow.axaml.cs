@@ -99,6 +99,7 @@ public partial class MainWindow : Window
             _battalionTypes = null;
             _battalionSkills = null;
             if (_save is null) return;
+            RefreshCurrentSummary();
             RefreshStorage(StorageList.SelectedIndex, MiscList.SelectedIndex, GiftList.SelectedIndex);
             RefreshCurrentCharacters(Math.Max(0, _currentCharacter));
             RefreshBattalions(BattalionList.SelectedIndex);
@@ -467,6 +468,12 @@ public partial class MainWindow : Window
                 Width = labelWidth,
                 VerticalAlignment = VerticalAlignment.Center
             });
+            if (path is "Player.Difficulty" or "Player.Gamestyle")
+            {
+                row.Children.Add(CreateGameChoice(path));
+                container.Children.Add(row);
+                continue;
+            }
             var input = new TextBox
             {
                 Width = container == GameRows ? 88 : 70,
@@ -492,6 +499,34 @@ public partial class MainWindow : Window
             row.Children.Add(input);
             container.Children.Add(row);
         }
+    }
+
+    private ComboBox CreateGameChoice(string path)
+    {
+        int count = path == "Player.Difficulty" ? Database.DIFFICULTY_COUNT : Database.GAMESTYLE_COUNT;
+        int firstString = path == "Player.Difficulty" ? 373 : 381;
+        var choices = Enumerable.Range(0, count)
+            .Select(index => new Choice(index, Database.GetString(firstString + index, 1)))
+            .ToArray();
+        var combo = new ComboBox { Width = 125, ItemsSource = choices };
+        combo.Classes.Add("Small");
+        combo.SelectedIndex = checked((int)(long)_save!.Get(path));
+        combo.SelectionChanged += (_, _) =>
+        {
+            if (_save is null || combo.SelectedItem is not Choice choice) return;
+            try
+            {
+                if ((long)_save.Get(path) == choice.Id) return;
+                _save.Set(path, choice.Id);
+                MarkChanged();
+            }
+            catch (Exception error)
+            {
+                combo.SelectedIndex = checked((int)(long)_save.Get(path));
+                Status.Text = error.Message;
+            }
+        };
+        return combo;
     }
 
     private void MarkChanged()
