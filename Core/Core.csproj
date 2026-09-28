@@ -12,6 +12,7 @@
     <Compile Include="../SaveEditor/Util.cs" Link="Util.cs" />
     <Compile Include="../SaveEditor/Structs/*.cs" Link="Structs/%(Filename)%(Extension)" />
     <Compile Include="SaveBuffer.cs" />
+    <Compile Include="SystemBuffer.cs" />
     <Compile Include="NgPlusJournal.cs" />
     <Compile Include="Resources.cs" />
     <EmbeddedResource Include="../SaveEditor/Resources/*.bin.gz" LogicalName="%(Filename)%(Extension)" />

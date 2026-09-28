@@ -7,6 +7,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using FethEditor.Gui;
+using FethEditor.Core;
 
 AppBuilder.Configure<App>()
     .UseSkia()
@@ -33,6 +34,25 @@ for (int index = 0; index < tabs.ItemCount; index++)
     string screenshot = Path.Combine(Path.GetTempPath(), $"feth-editor-tab-{index}.png");
     frame.Save(screenshot, PngBitmapEncoderOptions.Default);
     Console.WriteLine(screenshot);
+}
+
+if (args.Length > 1)
+{
+    var system = SystemBuffer.Open(args[1]);
+    bool oldValue = system.GetFlag(0);
+    system.SetFlag(0, !oldValue);
+    string copy = Path.Combine(Path.GetTempPath(), $"feth-system-smoke-{Guid.NewGuid():N}");
+    try
+    {
+        File.WriteAllBytes(copy, system.FinishedBytes());
+        var reopened = SystemBuffer.Open(copy);
+        if (reopened.GetFlag(0) == oldValue)
+            throw new InvalidOperationException("System flag edit did not persist.");
+    }
+    finally
+    {
+        if (File.Exists(copy)) File.Delete(copy);
+    }
 }
 
 var characterTabs = window.FindControl<TabControl>("CharacterTabs")!;
