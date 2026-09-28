@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 
 namespace SaveEditor.Properties
 {
@@ -12,8 +13,15 @@ namespace SaveEditor.Properties
 
         private static byte[] Read(string name)
         {
-            using Stream stream = typeof(Resources).Assembly.GetManifestResourceStream(name)
-                ?? throw new InvalidDataException("Missing embedded database: " + name);
+            var assembly = typeof(Resources).Assembly;
+            string[] available = assembly.GetManifestResourceNames();
+            string resourceName = available.SingleOrDefault(candidate =>
+                candidate.Equals(name, StringComparison.OrdinalIgnoreCase) ||
+                candidate.EndsWith("." + name, StringComparison.OrdinalIgnoreCase))
+                ?? throw new InvalidDataException("Missing embedded database: " + name
+                    + "; available: " + string.Join(", ", available));
+            using Stream stream = assembly.GetManifestResourceStream(resourceName)
+                ?? throw new InvalidDataException("Could not open embedded database: " + resourceName);
             using var memory = new MemoryStream();
             stream.CopyTo(memory);
             return memory.ToArray();
