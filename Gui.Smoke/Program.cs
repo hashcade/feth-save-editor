@@ -152,6 +152,19 @@ if (args.Length > 0)
         .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
     if (classExp.Text != "12")
         throw new InvalidOperationException("Character class experience was not retained.");
+    characterTabs.SelectedIndex = 0;
+    var stats = window.FindControl<StackPanel>("CharacterStatRows")!;
+    var level = ((StackPanel)stats.Children[2]).Children.OfType<TextBox>().Single();
+    level.Focus();
+    level.Text = "4";
+    ((StackPanel)stats.Children[3]).Children.OfType<TextBox>().Single().Focus();
+    Dispatcher.UIThread.RunJobs();
+    if (!character.Items[0]!.ToString()!.Contains("Lv:4", StringComparison.Ordinal))
+        throw new InvalidOperationException("Character level edit did not update the list.");
+    characterTabs.SelectedIndex = 2;
+    var flags = window.FindControl<StackPanel>("CurrentCharacterFlags")!;
+    var firstFlag = (CheckBox)flags.Children[0];
+    firstFlag.IsChecked = !firstFlag.IsChecked;
     if (!window.FindControl<TextBlock>("Status")!.Text!.Contains("changed", StringComparison.OrdinalIgnoreCase))
         throw new InvalidOperationException("Character edit did not mark the save as changed.");
 }
