@@ -1,0 +1,5 @@
+SaveEditor/obj/
+DataUnpacker/obj/
+SaveEditor/bin/
+DataUnpacker/bin/
+*.user

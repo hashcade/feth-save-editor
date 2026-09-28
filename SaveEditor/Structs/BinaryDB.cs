@@ -12,11 +12,14 @@ namespace SaveEditor.Structs
 {
     public class BinaryDB
     {
-        public const string PATH_ASSEMBLY = "SaveEditor.Data.";
-        public const string PATH_CharacterDB = PATH_ASSEMBLY + "CharacterDB";
-        public const string PATH_ClassDB = PATH_ASSEMBLY + "ClassDB";
-        public const string PATH_SupportTalkDB = PATH_ASSEMBLY + "SupportTalkDB";
-        public const string PATH_ItemDB = PATH_ASSEMBLY + "ItemDB";
+        public const int MAX_ITEM_TYPES = 7;
+        public const int ITEM_ID_BASE_WEAPON = 10;
+        public const int ITEM_ID_BASE_ACCESSORY = 600;
+        public const int ITEM_ID_BASE_CONSUMEABLE = 1000;
+        public const int ITEM_ID_BASE_MAGIC = 4000;
+        public const int ITEM_ID_BASE_OBJECT = 5000;
+        public const int ITEM_ID_BASE_SPECIAL1 = 6000;
+        public const int ITEM_ID_BASE_SPECIAL2 = 7000;
 
         [StructLayout(LayoutKind.Sequential, Pack = 1, Size = SIZE)]
         public struct FETH_DATA_HEADER
@@ -46,28 +49,32 @@ namespace SaveEditor.Structs
         [StructLayout(LayoutKind.Sequential, Pack = 1, Size = SIZE)]
         public struct CHARACTER_DATABASE_ENTRY
         {
-            public const int SIZE = 0x4C;
+            public const int SIZE = 0x50; //old: 0x4C
 
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
             public float[] Scale;
 
-            public short unk1, NameStringId, unk2, NameStringId2, NameStringId3;
+            public short field_10, NameStringId, field_14, NameStringId2, NameStringId3;
 
-            public byte unk3, BaseAge, BaseClass;
-            public short unk4, unk5;
-            public byte unk8, MaximumHP, unk7;
-            public byte Affiliation, GrowthHP, Gender;
-            public byte BaseHP, unk9;
-            public byte Crest1, Crest2, unk10;
-            public byte Height1, Height2, unk11, unk12;
+            public byte BaseClass, BaseAge, field_1C, BaseLevel;
+
+            public ushort field_1E;
+            public sbyte MainCharacterId; //-1 = not a main character
+            public byte field_21;
+            public byte MaximumHP;
+            public byte field_23, Affiliation, field_25;
+            public byte Gender, field_27, BaseBattalionType;
+            public byte GrowthHP, field_2A;
+            public byte BaseHP, Crest1, Crest2, field_2E;
+            public byte Height1, Height2, field_31, field_32;
 
             public STAT_ENTRY BaseStats, GrowthStats, MaximumStats;
 
-            public byte padding;
+            public short field_4E; //was "byte"
 
-            public string UnitName => Database.GetString(NameStringId + 1156);
-            public string ExtraName => Database.GetString(NameStringId2 + 1730);
-            public string SurName => Database.GetString(NameStringId3 + 2304);
+            public string UnitName => Database.GetUnitName(NameStringId);
+            public string ExtraName => Database.GetString(NameStringId2 + 1731); //1.0.0: , 1.1.0: 1730, 1.2.0: 1731
+            public string SurName => Database.GetString(NameStringId3 + 2305); //1.0.0: , 1.1.0: 2304, 1.2.0: 2305
             public string FullName => string.Join(" ", UnitName, ExtraName, SurName);
 
             public override string ToString()
@@ -79,27 +86,30 @@ namespace SaveEditor.Structs
             {
                 string result = "";
 
-                result += $"Scale: {Scale[0]}, {Scale[1]}, {Scale[2]}, {Scale[3]}\r\n";
+                result += $"Scale: {Scale[0]};{Scale[1]};{Scale[2]};{Scale[3]}\r\n";
 
                 result += $"Unit Name: {UnitName}\r\n";
                 result += $"Full Name: {FullName}\r\n";
+                result += $"Main Character Id: {MainCharacterId}\r\n";
 
                 result += $"Base Age: {BaseAge}\r\n";
                 result += $"Base Class: {Database.GetClassName(BaseClass, true)}\r\n";
+                result += $"Base Level: {BaseLevel}\r\n";
+                result += $"Base Battalion Type: {Database.GetBattalionName(BaseBattalionType, true)}\r\n";
                 result += $"Gender: {Gender}\r\n";
                 result += $"Affiliation: {Database.GetAffiliationName(Affiliation, true)}\r\n";
                 result += $"Crests: {Database.GetCrestName(Crest1, true)}, {Database.GetCrestName(Crest2, true)}\r\n";
 
                 result += $"Height1: {Height1} cm, Height2: {Height2} cm\r\n";
 
-                result += $"Base Stats: {BaseHP};{BaseStats}\r\n";
-                result += $"Growth Stats: {GrowthHP};{GrowthStats}\r\n";
+                result += $"Base    Stats: {BaseHP};{BaseStats}\r\n";
+                result += $"Growth  Stats: {GrowthHP};{GrowthStats}\r\n";
                 result += $"Maximum Stats: {MaximumHP};{MaximumStats}\r\n";
                 
-                result += $"unk1: {unk1}, unk2: {unk2}\r\n";
-                result += $"unk3: {unk3}, unk4: {unk4}, unk5: {unk5}\r\n";
-                result += $"unk7: {unk7}, unk8: {unk8}, unk9: {unk9}\r\n";
-                result += $"unk10: {unk10}, unk11: {unk11}, unk12: {unk12}, padding: {padding}\r\n";
+                result += $"field_10: {field_10},\r\nfield_14: {field_14}\r\n";
+                result += $"field_1C: {field_1C},\r\nfield_1E: {field_1E},\r\nfield_21: {field_21}\r\n";
+                result += $"field_23: {field_23},\r\nfield_25: {field_25},\r\nfield_27: {field_27},\r\nfield_2A: {field_2A}\r\n";
+                result += $"field_2E: {field_2E},\r\nfield_31: {field_31},\r\nfield_32: {field_32},\r\nfield_4E: {field_4E}\r\n";
 
                 return result;
             }
@@ -108,7 +118,7 @@ namespace SaveEditor.Structs
         [StructLayout(LayoutKind.Sequential, Pack = 1, Size = SIZE)]
         public struct CLASS_DATABASE_ENTRY
         {
-            public const int SIZE = 0x6C;
+            public const int SIZE = 0x76; //old: 0x6C
 
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
             public short[] Frame;
@@ -132,16 +142,16 @@ namespace SaveEditor.Structs
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = Database.MAX_SKILLS)]
             public byte[] SkillBonus;
 
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
-            public byte[] unk5;
-
-            public byte ExamType;
-
+            public byte unk5, ExamType, unk5_1;
+            
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
             public byte[] unk6;
 
-            public byte Exp, unk7;
+            public byte unk5_2;
+
+            public byte Exp;
             public sbyte BaseHP;
+            public byte unk7;
 
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)]
             public byte[] unk8;
@@ -153,7 +163,7 @@ namespace SaveEditor.Structs
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
             public byte[] CombatArts;
 
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 20)]
             public byte[] unk9;
 
 
@@ -184,7 +194,7 @@ namespace SaveEditor.Structs
                 result += $"unk2: {unk2}\r\n";
                 result += $"unk3: {Util.Array2String(unk3, " ")}\r\n";
                 result += $"unk4: {Util.Array2String(unk4, " ")}\r\n";
-                result += $"unk5: {Util.Array2String(unk5, " ")}\r\n";
+                result += $"unk5: {unk5} {unk5_1} {unk5_2}\r\n";
                 result += $"unk6: {Util.Array2String(unk6, " ")}\r\n";
                 result += $"unk7: {unk7}\r\n";
                 result += $"unk8: {Util.Array2String(unk8, " ")}\r\n";
@@ -197,12 +207,15 @@ namespace SaveEditor.Structs
         [StructLayout(LayoutKind.Sequential, Pack = 1, Size = SIZE)]
         public struct SUPPORT_TALK_DATABASE_ENTRY
         {
-            public const int SIZE = 0x8;
+            //old:
+            //public const int SIZE = 0x8;
+            //public short Id1, Id2;
+            //public ushort Flags;
+            
+            public const int SIZE = 0xA;
 
-            public short Id1, Id2;
+            public short Id1, Character1, Character2, Id2;
             public ushort Flags;
-
-            public sbyte Character1, Character2;
         }
         
         [StructLayout(LayoutKind.Sequential, Pack = 1, Size = SIZE)]
@@ -257,6 +270,7 @@ namespace SaveEditor.Structs
         public List<CLASS_DATABASE_ENTRY> ClassEntries;
         public List<SUPPORT_TALK_DATABASE_ENTRY> SupportTalkEntries;
         public Dictionary<int, ITEM_DATABASE_ENTRY> ItemEntries;
+        public int[] ItemCounts;
 
         public BinaryDB()
         {
@@ -272,115 +286,144 @@ namespace SaveEditor.Structs
             LoadSupportTalkDB();
 
             ItemEntries = new Dictionary<int, ITEM_DATABASE_ENTRY>();
+            ItemCounts = new int[MAX_ITEM_TYPES];
 
-            LoadItemDB(10);
-            LoadItemDB(600);
-            LoadItemDB(1000);
-            LoadItemDB(4000);
-            LoadItemDB(5000);
-            LoadItemDB(6000);
-            LoadItemDB(7000);
+            LoadItemDB(enmItemTypes.Weapon, ITEM_ID_BASE_WEAPON);
+            LoadItemDB(enmItemTypes.Accessory, ITEM_ID_BASE_ACCESSORY);
+            LoadItemDB(enmItemTypes.Consumeable, ITEM_ID_BASE_CONSUMEABLE);
+            LoadItemDB(enmItemTypes.Magic, ITEM_ID_BASE_MAGIC);
+            LoadItemDB(enmItemTypes.Object, ITEM_ID_BASE_OBJECT);
+            LoadItemDB(enmItemTypes.Special1, ITEM_ID_BASE_SPECIAL1);
+            LoadItemDB(enmItemTypes.Special2, ITEM_ID_BASE_SPECIAL2);
         }
 
         public void DumpToJson()
         {
-            Util.DeleteFile(PATH_CharacterDB + ".json");
-            Util.DeleteFile(PATH_ClassDB + ".json");
+            CreateJson("person.json", CharacterEntries);
+            CreateJson("class.json", ClassEntries);
+            CreateJson("talk.json", SupportTalkEntries);
+            CreateJson("items.json", ItemEntries);
+        }
+
+        private void CreateJson(string filename, object data)
+        {
+            Util.DeleteFile(filename);
 
             var serializer = new JavaScriptSerializer();
-            File.WriteAllText(PATH_CharacterDB + ".json", serializer.Serialize(CharacterEntries));
-            File.WriteAllText(PATH_ClassDB + ".json", serializer.Serialize(ClassEntries));
+            File.WriteAllText(filename, serializer.Serialize(data));
         }
 
         public void LoadCharacterDB()
         {
-            var h = new FETH_DATA_HEADER();
             CharacterEntries = new List<CHARACTER_DATABASE_ENTRY>();
 
-            byte[] res = Util.GetRessourceFile(PATH_CharacterDB + ".dat");
+            MiniArchive person = new MiniArchive();
+            person.Load(Util.DecompressGzip(Properties.Resources.fixed_persondata_bin));
 
-            if (res != null)
+            using (var ms = new MemoryStream(person.GetEntry(0)))
+            using (var br = new BinaryReader(ms))
             {
-                using (var ms = new MemoryStream(res))
-                using (var br = new BinaryReader(ms))
-                {
-                    h = Util.ReadStructure<FETH_DATA_HEADER>(br.ReadBytes(FETH_DATA_HEADER.SIZE));
+                var h = Util.ReadStructure<FETH_DATA_HEADER>(br.ReadBytes(FETH_DATA_HEADER.SIZE));
 
-                    for (int i = 0; i < h.Count; i++)
-                    {
-                        byte[] data = br.ReadBytes(h.StructureSize);
-                        CharacterEntries.Add(Util.ReadStructure<CHARACTER_DATABASE_ENTRY>(data));
-                    }
+                for (int i = 0; i < h.Count; i++)
+                {
+                    CharacterEntries.Add(Util.ReadStructure<CHARACTER_DATABASE_ENTRY>(br.ReadBytes(h.StructureSize)));
                 }
             }
         }
 
         public void LoadClassDB()
         {
-            var h = new FETH_DATA_HEADER();
             ClassEntries = new List<CLASS_DATABASE_ENTRY>();
-                
-            byte[] res = Util.GetRessourceFile(PATH_ClassDB + ".dat");
+         
+            MiniArchive classdata = new MiniArchive();
+            classdata.Load(Util.DecompressGzip(Properties.Resources.fixed_classdata_bin));
 
-            if (res != null)
+            using (var ms = new MemoryStream(classdata.GetEntry(0)))
+            using (var br = new BinaryReader(ms))
             {
-                using (var ms = new MemoryStream(res))
-                using (var br = new BinaryReader(ms))
-                {
-                    h = Util.ReadStructure<FETH_DATA_HEADER>(br.ReadBytes(FETH_DATA_HEADER.SIZE));
+                var h = Util.ReadStructure<FETH_DATA_HEADER>(br.ReadBytes(FETH_DATA_HEADER.SIZE));
 
-                    for (int i = 0; i < h.Count; i++)
-                    {
-                        byte[] data = br.ReadBytes(h.StructureSize);
-                        ClassEntries.Add(Util.ReadStructure<CLASS_DATABASE_ENTRY>(data));
-                    }
+                for (int i = 0; i < h.Count; i++)
+                {
+                    ClassEntries.Add(Util.ReadStructure<CLASS_DATABASE_ENTRY>(br.ReadBytes(h.StructureSize)));
                 }
             }
         }
 
         public void LoadSupportTalkDB()
         {
-            var h = new FETH_DATA_HEADER();
             SupportTalkEntries = new List<SUPPORT_TALK_DATABASE_ENTRY>();
-                
-            byte[] res = Util.GetRessourceFile(PATH_SupportTalkDB + ".dat");
+           
+            MiniArchive person = new MiniArchive();
+            person.Load(Util.DecompressGzip(Properties.Resources.fixed_persondata_bin));
 
-            if (res != null)
+            using (var ms = new MemoryStream(person.GetEntry(10)))
+            using (var br = new BinaryReader(ms))
             {
-                using (var ms = new MemoryStream(res))
-                using (var br = new BinaryReader(ms))
-                {
-                    h = Util.ReadStructure<FETH_DATA_HEADER>(br.ReadBytes(FETH_DATA_HEADER.SIZE));
+                var h = Util.ReadStructure<FETH_DATA_HEADER>(br.ReadBytes(FETH_DATA_HEADER.SIZE));
 
-                    for (int i = 0; i < h.Count; i++)
-                    {
-                        byte[] data = br.ReadBytes(h.StructureSize);
-                        SupportTalkEntries.Add(Util.ReadStructure<SUPPORT_TALK_DATABASE_ENTRY>(data));
-                    }
+                for (int i = 0; i < h.Count; i++)
+                {
+                    SupportTalkEntries.Add(Util.ReadStructure<SUPPORT_TALK_DATABASE_ENTRY>(br.ReadBytes(h.StructureSize)));
                 }
             }
         }
 
-        public void LoadItemDB(int start_index)
+        public void LoadItemDB(enmItemTypes type, int start_index)
         {
-            var h = new FETH_DATA_HEADER();                
-            byte[] res = Util.GetRessourceFile($"{PATH_ItemDB}_{start_index:D4}.dat");
+            MiniArchive data = new MiniArchive();
+            data.Load(Util.DecompressGzip(Properties.Resources.fixed_data_bin));
 
-            if (res != null)
+            using (var ms = new MemoryStream(data.GetEntry((int)type)))
+            using (var br = new BinaryReader(ms))
             {
-                using (var ms = new MemoryStream(res))
-                using (var br = new BinaryReader(ms))
-                {
-                    h = Util.ReadStructure<FETH_DATA_HEADER>(br.ReadBytes(FETH_DATA_HEADER.SIZE));
+                var h = Util.ReadStructure<FETH_DATA_HEADER>(br.ReadBytes(FETH_DATA_HEADER.SIZE));
 
-                    for (int i = 0; i < h.Count; i++)
-                    {
-                        byte[] data = br.ReadBytes(h.StructureSize);
-                        ItemEntries.Add(start_index + i, Util.ReadStructure<ITEM_DATABASE_ENTRY>(data));
-                    }
+                for (int i = 0; i < h.Count; i++)
+                {
+                    ItemEntries.Add(start_index + i, Util.ReadStructure<ITEM_DATABASE_ENTRY>(br.ReadBytes(h.StructureSize)));
                 }
+
+                ItemCounts[(int)type] = h.Count;
             }
         }
+
+        public int GetMinItemIndex(enmItemTypes type)
+        {
+            switch (type)
+            {
+                case enmItemTypes.Weapon: return ITEM_ID_BASE_WEAPON;
+                case enmItemTypes.Accessory: return ITEM_ID_BASE_ACCESSORY;
+                case enmItemTypes.Consumeable: return ITEM_ID_BASE_CONSUMEABLE;
+                case enmItemTypes.Magic: return ITEM_ID_BASE_MAGIC;
+                case enmItemTypes.Object: return ITEM_ID_BASE_OBJECT;
+                case enmItemTypes.Special1: return ITEM_ID_BASE_SPECIAL1;
+                case enmItemTypes.Special2: return ITEM_ID_BASE_SPECIAL2;
+                default:
+                    return -1;
+            }
+        }
+
+        public int GetMaxItemIndex(enmItemTypes type)
+        {
+            int min = GetMinItemIndex(type);
+            var count = ItemCounts[(int) type];
+
+            if (type >= enmItemTypes.MaxItemTypes)
+                return -1;
+
+            return min + count;
+        }
+
+        public bool IsItemInRange(enmItemTypes type, int id)
+        {
+            int min = GetMinItemIndex(type);
+            int max = GetMaxItemIndex(type);
+
+            return id >= min && id < max;
+        }
+
 
     }
 }
