@@ -79,10 +79,6 @@ jobs:
       - name: Build CLI
         run: dotnet build Cli/Cli.csproj -c Release --nologo
 
-      - name: Inspect embedded database inputs
-        if: runner.os == 'Windows'
-        run: dotnet msbuild Core/Core.csproj -getItem:EmbeddedResource
-
       - name: Verify save editing
         run: python tools/test_cli.py --cli Cli/bin/Release/net10.0/${{ matrix.executable }}
 
@@ -93,32 +89,5 @@ jobs:
         with:
           name: feth-cli-${{ matrix.rid }}
           path: dist/${{ matrix.rid }}/
-          if-no-files-found: error
-          retention-days: 14
-
-  windows:
-    runs-on: windows-2025
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: microsoft/setup-msbuild@v3
-
-      - uses: actions/setup-python@v6
-        with:
-          python-version: '3.13'
-
-      - name: Build .NET Framework projects
-        run: msbuild FireEmblemThreeHouse.sln /restore /t:Rebuild /p:Configuration=Release /p:Platform="Any CPU" /v:minimal
-
-      - name: Verify CLI save editing
-        run: python tools/test_cli.py --cli FethCli/bin/Release/net472/FETH_Cli.exe
-
-      - name: Package and verify downloads
-        run: python tools/package.py
-
-      - uses: actions/upload-artifact@v7
-        with:
-          name: fe3h-editor-windows
-          path: dist/*
           if-no-files-found: error
           retention-days: 14
