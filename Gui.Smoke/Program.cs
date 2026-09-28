@@ -510,10 +510,15 @@ if (args.Length > 0)
     var inheritedSkills = window.FindControl<Panel>("SkillRows")!;
     ((Grid)inheritedSkills.Children[0]).Children.OfType<ComboBox>().Single().SelectedIndex = 0;
     var maxInheritedSkills = window.FindControl<Button>("MaxInheritedSkillsButton")!;
-    if (Grid.GetColumn(maxInheritedSkills) != 1 ||
-        maxInheritedSkills.HorizontalAlignment != Avalonia.Layout.HorizontalAlignment.Right ||
+    if (maxInheritedSkills.HorizontalAlignment != Avalonia.Layout.HorizontalAlignment.Right ||
+        !maxInheritedSkills.IsVisible ||
         maxInheritedSkills.Bounds.Width >= 200)
         throw new InvalidOperationException("Inherited skill action is not compact and right-aligned.");
+    var tabHeader = window.FindControl<TabControl>("InheritanceTabs")!;
+    var buttonOrigin = maxInheritedSkills.TranslatePoint(new Point(0, 0), window);
+    var tabsOrigin = tabHeader.TranslatePoint(new Point(0, 0), window);
+    if (buttonOrigin is null || tabsOrigin is null || Math.Abs(buttonOrigin.Value.Y - tabsOrigin.Value.Y) > 20)
+        throw new InvalidOperationException("Inherited skill action is not aligned with the tabs.");
     maxInheritedSkills.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
     inheritedSkills = window.FindControl<Panel>("SkillRows")!;
     if (inheritedSkills.Children.OfType<Grid>()

@@ -499,16 +499,10 @@
           </suki:GlassCard>
 
           <suki:GlassCard Name="InheritanceCharacterEditorCard" Classes="section" Grid.Column="1">
+            <Grid>
               <TabControl Name="InheritanceTabs">
-                <TabItem Header="Skills">
-                  <StackPanel Margin="0,8,0,0" Spacing="16" VerticalAlignment="Top">
-                    <Grid ColumnDefinitions="*,Auto">
-                      <TextBlock Text="Historical Skill Ranks" FontSize="14" FontWeight="SemiBold"
-                                 VerticalAlignment="Center" />
-                      <Button Name="MaxInheritedSkillsButton" Classes="Small" Grid.Column="1"
-                              Content="Unlock All" HorizontalAlignment="Right"
-                              Click="MaxInheritedSkills_Click" />
-                    </Grid>
+                <TabItem Name="InheritedSkillsTab" Header="Skills">
+                  <StackPanel Margin="0,8,0,0" VerticalAlignment="Top">
                     <UniformGrid Name="SkillRows" Columns="2" />
                   </StackPanel>
                 </TabItem>
@@ -522,6 +516,11 @@
                   </Grid>
                 </TabItem>
               </TabControl>
+              <Button Name="MaxInheritedSkillsButton" Classes="Small" Content="Unlock All"
+                      HorizontalAlignment="Right" VerticalAlignment="Top"
+                      IsVisible="{Binding IsSelected, ElementName=InheritedSkillsTab}"
+                      Click="MaxInheritedSkills_Click" />
+            </Grid>
           </suki:GlassCard>
         </Grid>
       </TabItem>
