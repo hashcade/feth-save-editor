@@ -407,10 +407,13 @@ if (args.Length > 0)
         throw new InvalidOperationException("Quest edit did not update the list.");
 
     var supports = window.FindControl<ListBox>("CurrentSupportList")!;
-    window.FindControl<TextBox>("CurrentSupportPoints")!.Text = "1234";
+    var currentSupportRank = window.FindControl<ComboBox>("CurrentSupportRank")!;
+    if (currentSupportRank.ItemCount != 8)
+        throw new InvalidOperationException("Current support ranks were not loaded.");
+    currentSupportRank.SelectedIndex = 2;
     window.FindControl<Button>("SetCurrentSupportButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-    if (!supports.Items[0]!.ToString()!.EndsWith(" · 1234", StringComparison.Ordinal))
-        throw new InvalidOperationException("Current support edit did not update the list.");
+    if (!supports.Items[0]!.ToString()!.EndsWith(" · C+", StringComparison.Ordinal))
+        throw new InvalidOperationException("Current support rank edit did not update the list.");
 
     var battalionExp = window.FindControl<TextBox>("BattalionExp")!;
     battalionExp.Text = "401";

@@ -430,9 +430,9 @@
           <suki:GlassCard Name="SupportEditorCard" Classes="section" Grid.Column="1">
             <StackPanel Width="340" HorizontalAlignment="Left" Spacing="8">
               <TextBlock Text="Talk Editor" FontWeight="SemiBold" />
-              <TextBlock Text="Current support points" />
-              <TextBox Classes="Small" Name="CurrentSupportPoints" />
-              <Button Classes="Small" Name="SetCurrentSupportButton" Content="Set Points" Click="SetCurrentSupport_Click" />
+              <TextBlock Text="Current support rank" />
+              <ComboBox Classes="Small" Name="CurrentSupportRank" />
+              <Button Classes="Small" Name="SetCurrentSupportButton" Content="Set" Click="SetCurrentSupport_Click" />
             </StackPanel>
           </suki:GlassCard>
         </Grid>

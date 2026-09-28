@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -18,7 +17,8 @@ public partial class MainWindow
         try
         {
             SetSearchRows(CurrentSupportList, CurrentSupportSearch, supports.Select((points, index) =>
-                $"{index:D3} · {DisplaySupportName(Database.GetSupportTalkName(index))} · {points}")
+                $"{index:D3} · {DisplaySupportName(Database.GetSupportTalkName(index))} · "
+                + UiStrings.Translate(SupportRankFor(points).Label, _databaseLanguage))
                 .ToArray(), selectedIndex);
         }
         finally
@@ -37,8 +37,12 @@ public partial class MainWindow
     {
         int index = SelectedSourceIndex(CurrentSupportList);
         if (_save is null || index < 0) return;
-        CurrentSupportPoints.Text = _save.Data.Player.CharacterSupportValues[index]
-            .ToString(CultureInfo.InvariantCulture);
+        int points = _save.Data.Player.CharacterSupportValues[index];
+        Choice[] ranks = SupportRanks
+            .Select(rank => new Choice(rank.Id, UiStrings.Translate(rank.Label, _databaseLanguage)))
+            .ToArray();
+        CurrentSupportRank.ItemsSource = ranks;
+        CurrentSupportRank.SelectedItem = ranks[System.Array.IndexOf(SupportRanks, SupportRankFor(points))];
     }
 
     private void SetCurrentSupport_Click(object? sender, RoutedEventArgs e)
@@ -47,8 +51,11 @@ public partial class MainWindow
         if (_save is null || index < 0) return;
         try
         {
-            ushort points = ParseUShort(CurrentSupportPoints, "Support points");
-            _save.Set($"Player.CharacterSupportValues[{index}]", points);
+            if (CurrentSupportRank.SelectedItem is not Choice rank)
+                throw new InvalidOperationException("Select a support rank.");
+            int points = _save.Data.Player.CharacterSupportValues[index];
+            if (SupportRankFor(points).Id == rank.Id) return;
+            _save.Set($"Player.CharacterSupportValues[{index}]", rank.Id);
             RefreshCurrentSupports(index);
             MarkChanged();
         }
