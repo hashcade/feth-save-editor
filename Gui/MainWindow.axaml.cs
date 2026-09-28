@@ -89,6 +89,7 @@ public partial class MainWindow : Window
         DragDrop.AddDragOverHandler(this, SaveDragOver);
         DragDrop.AddDropHandler(this, SaveDropped);
         UpdateLanguageMenu();
+        CurrentProfessorRank.ItemsSource = SkillRanks.Take(Database.TeacherLevelupRank.Length).ToArray();
         NgPlusProfessorRank.ItemsSource = SkillRanks.Take(10).ToArray();
         _statusTimer.Tick += (_, _) =>
         {
@@ -521,8 +522,7 @@ public partial class MainWindow : Window
         var data = _save.Data;
         PlaytimeInput.Text = data.Player.Playtime.ToString(CultureInfo.InvariantCulture);
         MoneyInput.Text = data.Player.Money.ToString(CultureInfo.InvariantCulture);
-        InstructExpInput.Text = data.Activities.InstructExp.ToString(CultureInfo.InvariantCulture);
-        ProfessorLevelValue.Text = data.Activities.GetInstructRank();
+        ShowProfessorInputs(data.Activities.InstructExp);
         RenownInput.Text = data.Activities.Reputation.ToString(CultureInfo.InvariantCulture);
         PlayerNameInput.Text = SaveEditor.Util.DecodeString(data.PlayerName);
         PopulateNumericRows(GameRows, GameFields);

@@ -14,6 +14,15 @@ using FethEditor.Core;
 using SaveEditor;
 using SaveEditor.Structs;
 
+int[] professorThresholds = [0, 100, 1500, 3600, 6400, 10900, 16300, 24000, 32800, 44500];
+for (int rank = 0; rank < professorThresholds.Length; rank++)
+{
+    if (Database.TeacherLevelupRank[rank] != professorThresholds[rank]
+        || Database.GetProfessorRankFromExperience(professorThresholds[rank]) != rank
+        || rank > 0 && Database.GetProfessorRankFromExperience(professorThresholds[rank] - 1) != rank - 1)
+        throw new InvalidOperationException($"Professor experience threshold for rank {rank} is incorrect.");
+}
+
 Environment.SetEnvironmentVariable("FETH_EDITOR_LANGUAGE", "en_u");
 AppBuilder.Configure<App>()
     .UseSkia()
@@ -28,6 +37,8 @@ if (args.Length > 0)
 Dispatcher.UIThread.RunJobs();
 if (args.Length > 0 && !window.FindControl<MenuItem>("SaveMenuItem")!.IsEnabled)
     throw new InvalidOperationException("A loaded save cannot be written before editing.");
+if (args.Length > 0 && window.FindControl<TextBlock>("PlayerCardTitle")?.Text != "Player")
+    throw new InvalidOperationException("Player card title was mistranslated by the game database.");
 if (!Avalonia.Input.DragDrop.GetAllowDrop(window))
     throw new InvalidOperationException("Dropping a slot save on the editor is disabled.");
 
@@ -112,6 +123,19 @@ for (int index = 0; index < tabs.ItemCount; index++)
     string screenshot = Path.Combine(Path.GetTempPath(), $"feth-editor-tab-{index}.png");
     frame.Save(screenshot, PngBitmapEncoderOptions.Default);
     Console.WriteLine(screenshot);
+}
+
+if (args.Length > 0)
+{
+    window.Height = 1000;
+    tabs.SelectedIndex = 0;
+    Dispatcher.UIThread.RunJobs();
+    string mainScreenshot = Path.Combine(Path.GetTempPath(), "feth-editor-main-full.png");
+    (window.CaptureRenderedFrame() ?? throw new InvalidOperationException("Main page did not render."))
+        .Save(mainScreenshot, PngBitmapEncoderOptions.Default);
+    Console.WriteLine(mainScreenshot);
+    window.Height = 780;
+    Dispatcher.UIThread.RunJobs();
 }
 
 if (args.Length > 1)
@@ -354,6 +378,25 @@ if (args.Length > 0)
     ((MenuItem)language.Items[1]!).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
     if (tabs.Items.OfType<TabItem>().First().Header?.ToString() != "Main")
         throw new InvalidOperationException("English interface was not restored.");
+    tabs.SelectedIndex = 0;
+    Dispatcher.UIThread.RunJobs();
+    var currentProfessorRank = window.FindControl<ComboBox>("CurrentProfessorRank")!;
+    var professorExperience = window.FindControl<TextBox>("InstructExpInput")!;
+    if (currentProfessorRank.ItemCount != professorThresholds.Length
+        || currentProfessorRank.SelectedIndex != Database.GetProfessorRankFromExperience(
+            int.Parse(professorExperience.Text!, System.Globalization.CultureInfo.InvariantCulture)))
+        throw new InvalidOperationException("Current professor rank was not mapped from experience.");
+    professorExperience.Text = "1517";
+    Dispatcher.UIThread.RunJobs();
+    if (currentProfessorRank.SelectedItem?.ToString() != "D" || professorExperience.Text != "1517")
+        throw new InvalidOperationException("Typing professor experience did not update the rank exactly.");
+    currentProfessorRank.SelectedIndex = 8;
+    if (professorExperience.Text != "32800"
+        || window.FindControl<ComboBox>("NgPlusProfessorRank")!.SelectedIndex != 9)
+        throw new InvalidOperationException("Current professor rank did not use its own experience threshold.");
+    currentProfessorRank.SelectedIndex = 9;
+    if (professorExperience.Text != "44500")
+        throw new InvalidOperationException("Choosing A+ professor rank did not set its experience threshold.");
     var gameRows = window.FindControl<StackPanel>("GameRows")!;
     var difficulty = ((Grid)gameRows.Children[1]).Children.OfType<ComboBox>().Single();
     if (difficulty.ItemCount != 4)

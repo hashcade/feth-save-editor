@@ -61,59 +61,60 @@
             <StackPanel Spacing="12">
             <suki:GlassCard Classes="section">
               <HeaderedContentControl>
-                <HeaderedContentControl.Header><TextBlock Text="Player" FontWeight="SemiBold" /></HeaderedContentControl.Header>
+                <HeaderedContentControl.Header><TextBlock Name="PlayerCardTitle" Text="Player" FontWeight="SemiBold" /></HeaderedContentControl.Header>
                 <Grid Margin="0,16,0,0" ColumnDefinitions="160,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                       RowSpacing="8" ColumnSpacing="8">
-                  <TextBlock Text="Playtime:" VerticalAlignment="Center" />
-                  <TextBox Classes="Small" Name="PlaytimeInput" Grid.Column="1" Tag="Player.Playtime"
-                           LostFocus="PlayerField_LostFocus" />
-                  <TextBlock Grid.Row="1" Text="Money:" VerticalAlignment="Center" />
-                  <TextBox Classes="Small" Name="MoneyInput" Grid.Row="1" Grid.Column="1" Tag="Player.Money"
-                           LostFocus="PlayerField_LostFocus" />
-                  <TextBlock Grid.Row="2" Text="Instruct Exp:" VerticalAlignment="Center" />
-                  <TextBox Classes="Small" Name="InstructExpInput" Grid.Row="2" Grid.Column="1"
-                           Tag="Activities.InstructExp" LostFocus="PlayerField_LostFocus" />
-                  <TextBlock Grid.Row="3" Text="Instruct Level:" VerticalAlignment="Center" />
-                  <TextBlock Name="ProfessorLevelValue" Grid.Row="3" Grid.Column="1" Text="-" VerticalAlignment="Center" />
-                  <TextBlock Grid.Row="4" Text="Inherited rank:" VerticalAlignment="Center" />
-                  <ComboBox Classes="Small" Name="NgPlusProfessorRank" Grid.Row="4" Grid.Column="1"
-                            SelectionChanged="NgPlusProfessorRank_SelectionChanged" />
-                  <TextBlock Grid.Row="5" Text="Reputation:" VerticalAlignment="Center" />
-                  <TextBox Classes="Small" Name="RenownInput" Grid.Row="5" Grid.Column="1"
-                           Tag="Activities.Reputation" LostFocus="PlayerField_LostFocus" />
-                  <TextBlock Grid.Row="6" Text="Player Name:" VerticalAlignment="Center" />
-                  <TextBox Classes="Small" Name="PlayerNameInput" Grid.Row="6" Grid.Column="1"
+                  <TextBlock Text="Player Name:" VerticalAlignment="Center" />
+                  <TextBox Classes="Small" Name="PlayerNameInput" Grid.Column="1"
                            LostFocus="PlayerName_LostFocus" />
+                  <TextBlock Grid.Row="1" Text="Playtime:" VerticalAlignment="Center" />
+                  <TextBox Classes="Small" Name="PlaytimeInput" Grid.Row="1" Grid.Column="1" Tag="Player.Playtime"
+                           LostFocus="PlayerField_LostFocus" />
+                  <TextBlock Grid.Row="2" Text="Money:" VerticalAlignment="Center" />
+                  <TextBox Classes="Small" Name="MoneyInput" Grid.Row="2" Grid.Column="1" Tag="Player.Money"
+                           LostFocus="PlayerField_LostFocus" />
+                  <TextBlock Grid.Row="3" Text="Reputation:" VerticalAlignment="Center" />
+                  <TextBox Classes="Small" Name="RenownInput" Grid.Row="3" Grid.Column="1"
+                           Tag="Activities.Reputation" LostFocus="PlayerField_LostFocus" />
+                  <TextBlock Grid.Row="4" Text="Instruct Level:" VerticalAlignment="Center" />
+                  <ComboBox Classes="Small" Name="CurrentProfessorRank" Grid.Row="4" Grid.Column="1" Margin="-5,0"
+                            SelectionChanged="CurrentProfessorRank_SelectionChanged" />
+                  <TextBlock Grid.Row="5" Text="Instruct Exp:" VerticalAlignment="Center" />
+                  <TextBox Classes="Small" Name="InstructExpInput" Grid.Row="5" Grid.Column="1"
+                           Tag="Activities.InstructExp" TextChanged="InstructExpInput_TextChanged"
+                           LostFocus="PlayerField_LostFocus" />
+                  <TextBlock Grid.Row="6" Text="Inherited rank:" VerticalAlignment="Center" />
+                  <ComboBox Classes="Small" Name="NgPlusProfessorRank" Grid.Row="6" Grid.Column="1" Margin="-5,0"
+                            SelectionChanged="NgPlusProfessorRank_SelectionChanged" />
                 </Grid>
               </HeaderedContentControl>
             </suki:GlassCard>
 
             <suki:GlassCard Classes="section">
               <HeaderedContentControl>
-                <HeaderedContentControl.Header><TextBlock Text="Game Values" FontWeight="SemiBold" /></HeaderedContentControl.Header>
-                <StackPanel Name="GameRows" Margin="0,16,0,0" Spacing="8" />
+                <HeaderedContentControl.Header><TextBlock Text="Activity Points" FontWeight="SemiBold" /></HeaderedContentControl.Header>
+                <StackPanel Name="ActivityRows" Margin="0,16,0,0" Spacing="8" />
+              </HeaderedContentControl>
+            </suki:GlassCard>
+            <suki:GlassCard Classes="section">
+              <HeaderedContentControl>
+                <HeaderedContentControl.Header><TextBlock Text="Goddess Statue" FontWeight="SemiBold" /></HeaderedContentControl.Header>
+                <StackPanel Name="StatueRows" Margin="0,16,0,0" Spacing="8" />
               </HeaderedContentControl>
             </suki:GlassCard>
 
             </StackPanel>
             <StackPanel Grid.Column="1" Spacing="12">
-            <suki:GlassCard Classes="section">
-              <HeaderedContentControl>
-                <HeaderedContentControl.Header><TextBlock Text="Monthly Statistics" FontWeight="SemiBold" /></HeaderedContentControl.Header>
-                <StackPanel Name="StatisticsRows" Margin="0,16,0,0" Spacing="6" />
-              </HeaderedContentControl>
-            </suki:GlassCard>
-
               <suki:GlassCard Classes="section">
                 <HeaderedContentControl>
-                  <HeaderedContentControl.Header><TextBlock Text="Activity Points" FontWeight="SemiBold" /></HeaderedContentControl.Header>
-                  <StackPanel Name="ActivityRows" Margin="0,16,0,0" Spacing="8" />
+                  <HeaderedContentControl.Header><TextBlock Text="Game Values" FontWeight="SemiBold" /></HeaderedContentControl.Header>
+                  <StackPanel Name="GameRows" Margin="0,16,0,0" Spacing="8" />
                 </HeaderedContentControl>
               </suki:GlassCard>
               <suki:GlassCard Classes="section">
                 <HeaderedContentControl>
-                  <HeaderedContentControl.Header><TextBlock Text="Goddess Statue" FontWeight="SemiBold" /></HeaderedContentControl.Header>
-                  <StackPanel Name="StatueRows" Margin="0,16,0,0" Spacing="8" />
+                  <HeaderedContentControl.Header><TextBlock Text="Monthly Statistics" FontWeight="SemiBold" /></HeaderedContentControl.Header>
+                  <StackPanel Name="StatisticsRows" Margin="0,16,0,0" Spacing="6" />
                 </HeaderedContentControl>
               </suki:GlassCard>
             </StackPanel>
