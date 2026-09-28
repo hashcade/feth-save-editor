@@ -124,9 +124,11 @@
       <TabItem Name="StorageTab" Header="Storage">
         <Grid Margin="8" ColumnDefinitions="250,220,*,*" ColumnSpacing="10">
           <suki:GlassCard Name="StorageListCard" Classes="section" Grid.Column="0">
-            <Grid RowDefinitions="Auto,*" RowSpacing="12">
+            <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
               <TextBlock Name="StorageCount" Text="Item List" FontWeight="SemiBold" />
-              <ListBox Classes="Small" Name="StorageList" Grid.Row="1"
+              <TextBox Classes="Small" Name="StorageSearch" Grid.Row="1" PlaceholderText="Search..."
+                       TextChanged="SearchableList_TextChanged" />
+              <ListBox Classes="Small" Name="StorageList" Grid.Row="2"
                        SelectionChanged="StorageList_SelectionChanged" />
             </Grid>
           </suki:GlassCard>
@@ -158,23 +160,27 @@
             </suki:GlassCard>
           </Grid>
           <suki:GlassCard Name="StorageMiscCard" Classes="section" Grid.Column="2">
-            <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" RowSpacing="8">
+            <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" RowSpacing="8">
               <TextBlock Text="Misc Items" FontWeight="SemiBold" />
               <Button Classes="Small" Grid.Row="1" Content="Get All (99)" Click="FillMisc_Click" />
-              <ListBox Classes="Small" Name="MiscList" Grid.Row="2"
+              <TextBox Classes="Small" Name="MiscSearch" Grid.Row="2" PlaceholderText="Search..."
+                       TextChanged="SearchableList_TextChanged" />
+              <ListBox Classes="Small" Name="MiscList" Grid.Row="3"
                        SelectionChanged="MiscList_SelectionChanged" />
-              <TextBox Classes="Small" Name="MiscAmount" Grid.Row="3" />
-              <Button Classes="Small" Name="SetMisc" Grid.Row="4" Content="Set Selected Amount" Click="SetMisc_Click" />
+              <TextBox Classes="Small" Name="MiscAmount" Grid.Row="4" />
+              <Button Classes="Small" Name="SetMisc" Grid.Row="5" Content="Set Selected Amount" Click="SetMisc_Click" />
             </Grid>
           </suki:GlassCard>
           <suki:GlassCard Name="StorageGiftCard" Classes="section" Grid.Column="3">
-            <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" RowSpacing="8">
+            <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" RowSpacing="8">
               <TextBlock Text="Gift Items" FontWeight="SemiBold" />
               <Button Classes="Small" Grid.Row="1" Content="Get All (99)" Click="FillGifts_Click" />
-              <ListBox Classes="Small" Name="GiftList" Grid.Row="2"
+              <TextBox Classes="Small" Name="GiftSearch" Grid.Row="2" PlaceholderText="Search..."
+                       TextChanged="SearchableList_TextChanged" />
+              <ListBox Classes="Small" Name="GiftList" Grid.Row="3"
                        SelectionChanged="GiftList_SelectionChanged" />
-              <TextBox Classes="Small" Name="GiftAmount" Grid.Row="3" />
-              <Button Classes="Small" Grid.Row="4" Content="Set Selected Amount" Click="SetGift_Click" />
+              <TextBox Classes="Small" Name="GiftAmount" Grid.Row="4" />
+              <Button Classes="Small" Grid.Row="5" Content="Set Selected Amount" Click="SetGift_Click" />
             </Grid>
           </suki:GlassCard>
         </Grid>
@@ -183,9 +189,11 @@
       <TabItem Name="CharactersTab" Header="Characters">
         <Grid Margin="8" ColumnDefinitions="264,*" ColumnSpacing="8">
           <suki:GlassCard Name="CharacterListCard" Classes="section" Grid.Column="0">
-            <Grid RowDefinitions="Auto,*" RowSpacing="12">
+            <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
               <TextBlock Text="Character List" FontWeight="SemiBold" />
-              <ListBox Classes="Small" Name="CurrentCharacterList" Grid.Row="1"
+              <TextBox Classes="Small" Name="CurrentCharacterSearch" Grid.Row="1" PlaceholderText="Search..."
+                       TextChanged="SearchableList_TextChanged" />
+              <ListBox Classes="Small" Name="CurrentCharacterList" Grid.Row="2"
                        SelectionChanged="CurrentCharacterList_SelectionChanged" />
             </Grid>
           </suki:GlassCard>
@@ -359,9 +367,11 @@
       <TabItem Name="BattalionTab" Header="Battalion">
         <Grid Margin="8" ColumnDefinitions="320,*" ColumnSpacing="10">
           <suki:GlassCard Name="BattalionListCard" Classes="section" Grid.Column="0">
-            <Grid RowDefinitions="Auto,*" RowSpacing="12">
+            <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
               <TextBlock Text="Battalion List" FontWeight="SemiBold" />
-              <ListBox Classes="Small" Name="BattalionList" Grid.Row="1"
+              <TextBox Classes="Small" Name="BattalionSearch" Grid.Row="1" PlaceholderText="Search..."
+                       TextChanged="SearchableList_TextChanged" />
+              <ListBox Classes="Small" Name="BattalionList" Grid.Row="2"
                        SelectionChanged="BattalionList_SelectionChanged" />
             </Grid>
           </suki:GlassCard>
@@ -388,9 +398,11 @@
       <TabItem Name="QuestTab" Header="Quest">
         <Grid Margin="8" ColumnDefinitions="320,*" ColumnSpacing="10">
           <suki:GlassCard Name="QuestListCard" Classes="section" Grid.Column="0">
-            <Grid RowDefinitions="Auto,*" RowSpacing="12">
+            <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
               <TextBlock Text="Quest List" FontWeight="SemiBold" />
-              <ListBox Classes="Small" Name="QuestList" Grid.Row="1"
+              <TextBox Classes="Small" Name="QuestSearch" Grid.Row="1" PlaceholderText="Search..."
+                       TextChanged="SearchableList_TextChanged" />
+              <ListBox Classes="Small" Name="QuestList" Grid.Row="2"
                        SelectionChanged="QuestList_SelectionChanged" />
             </Grid>
           </suki:GlassCard>
@@ -407,9 +419,11 @@
       <TabItem Name="SupportTab" Header="Support Talks">
         <Grid Margin="8" ColumnDefinitions="320,*" ColumnSpacing="10">
           <suki:GlassCard Name="SupportListCard" Classes="section" Grid.Column="0">
-            <Grid RowDefinitions="Auto,*" RowSpacing="12">
+            <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
               <TextBlock Text="Talk List" FontWeight="SemiBold" />
-              <ListBox Classes="Small" Name="CurrentSupportList" Grid.Row="1"
+              <TextBox Classes="Small" Name="CurrentSupportSearch" Grid.Row="1" PlaceholderText="Search..."
+                       TextChanged="SearchableList_TextChanged" />
+              <ListBox Classes="Small" Name="CurrentSupportList" Grid.Row="2"
                        SelectionChanged="CurrentSupportList_SelectionChanged" />
             </Grid>
           </suki:GlassCard>
@@ -426,12 +440,14 @@
 
       <TabItem Name="DatabaseTab" Header="Database">
         <suki:GlassCard Name="DatabaseCard" Classes="section" Margin="8">
-        <TabControl>
+        <TabControl Name="DatabaseTabs">
           <TabItem Header="Characters">
             <Grid ColumnDefinitions="320,*" ColumnSpacing="10" Margin="0,8,0,0">
-              <Grid RowDefinitions="Auto,*" RowSpacing="12">
+              <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
                 <TextBlock Text="Character Database" FontWeight="SemiBold" />
-                <ListBox Classes="Small" Name="DatabaseCharacters" Grid.Row="1"
+                <TextBox Classes="Small" Name="DatabaseCharacterSearch" Grid.Row="1" PlaceholderText="Search..."
+                         TextChanged="SearchableList_TextChanged" />
+                <ListBox Classes="Small" Name="DatabaseCharacters" Grid.Row="2"
                          SelectionChanged="DatabaseCharacters_SelectionChanged" />
               </Grid>
               <TextBox Name="DatabaseCharacterDetails" Grid.Column="1" IsReadOnly="True"
@@ -440,9 +456,11 @@
           </TabItem>
           <TabItem Header="Classes">
             <Grid ColumnDefinitions="320,*" ColumnSpacing="10" Margin="0,8,0,0">
-              <Grid RowDefinitions="Auto,*" RowSpacing="12">
+              <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
                 <TextBlock Text="Class Database" FontWeight="SemiBold" />
-                <ListBox Classes="Small" Name="DatabaseClasses" Grid.Row="1"
+                <TextBox Classes="Small" Name="DatabaseClassSearch" Grid.Row="1" PlaceholderText="Search..."
+                         TextChanged="SearchableList_TextChanged" />
+                <ListBox Classes="Small" Name="DatabaseClasses" Grid.Row="2"
                          SelectionChanged="DatabaseClasses_SelectionChanged" />
               </Grid>
               <TextBox Name="DatabaseClassDetails" Grid.Column="1" IsReadOnly="True"
@@ -451,9 +469,11 @@
           </TabItem>
           <TabItem Header="Items">
             <Grid ColumnDefinitions="320,*" ColumnSpacing="10" Margin="0,8,0,0">
-              <Grid RowDefinitions="Auto,*" RowSpacing="12">
+              <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
                 <TextBlock Text="Item Database" FontWeight="SemiBold" />
-                <ListBox Classes="Small" Name="DatabaseItems" Grid.Row="1"
+                <TextBox Classes="Small" Name="DatabaseItemSearch" Grid.Row="1" PlaceholderText="Search..."
+                         TextChanged="SearchableList_TextChanged" />
+                <ListBox Classes="Small" Name="DatabaseItems" Grid.Row="2"
                          SelectionChanged="DatabaseItems_SelectionChanged" />
               </Grid>
               <TextBox Name="DatabaseItemDetails" Grid.Column="1" IsReadOnly="True"
@@ -470,7 +490,7 @@
             <Grid RowDefinitions="Auto,*" RowSpacing="12">
               <TextBlock Text="Character List" FontWeight="SemiBold" />
               <Grid Grid.Row="1" RowDefinitions="Auto,*" RowSpacing="5">
-                <TextBox Classes="Small" Name="CharacterSearch" PlaceholderText="Search characters..."
+                <TextBox Classes="Small" Name="CharacterSearch" PlaceholderText="Search..."
                          TextChanged="CharacterSearch_TextChanged" />
                 <ListBox Classes="Small" Name="CharacterList" Grid.Row="1"
                          SelectionChanged="CharacterList_SelectionChanged" />
@@ -510,7 +530,7 @@
             <Grid RowDefinitions="Auto,*" RowSpacing="12">
               <TextBlock Text="Talk List" FontWeight="SemiBold" />
               <Grid Grid.Row="1" RowDefinitions="Auto,*" RowSpacing="5">
-                <TextBox Classes="Small" Name="SupportSearch" PlaceholderText="Search character pairs..."
+                <TextBox Classes="Small" Name="SupportSearch" PlaceholderText="Search..."
                          TextChanged="SupportSearch_TextChanged" />
                 <ListBox Classes="Small" Name="SupportList" Grid.Row="1"
                          SelectionChanged="SupportList_SelectionChanged" />

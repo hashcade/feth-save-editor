@@ -138,9 +138,10 @@ public partial class MainWindow : Window
             if (_save is not null)
             {
                 RefreshCurrentSummary();
-                RefreshStorage(StorageList.SelectedIndex, MiscList.SelectedIndex, GiftList.SelectedIndex);
+                RefreshStorage(SelectedSourceIndex(StorageList), SelectedSourceIndex(MiscList),
+                    SelectedSourceIndex(GiftList));
                 RefreshCurrentCharacters(Math.Max(0, _currentCharacter));
-                RefreshBattalions(BattalionList.SelectedIndex);
+                RefreshBattalions(SelectedSourceIndex(BattalionList));
                 RefreshQuests();
                 RefreshCurrentSupports();
                 RefreshCharacters();
@@ -228,6 +229,10 @@ public partial class MainWindow : Window
             CharacterSearch.Text = string.Empty;
             ClassSearch.Text = string.Empty;
             SupportSearch.Text = string.Empty;
+            StorageSearch.Text = MiscSearch.Text = GiftSearch.Text = string.Empty;
+            CurrentCharacterSearch.Text = BattalionSearch.Text = QuestSearch.Text = string.Empty;
+            CurrentSupportSearch.Text = string.Empty;
+            DatabaseCharacterSearch.Text = DatabaseClassSearch.Text = DatabaseItemSearch.Text = string.Empty;
             SaveMenuItem.IsEnabled = true;
             _selectedCharacter = -1;
             _selectedSupport = -1;

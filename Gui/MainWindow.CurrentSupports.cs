@@ -17,10 +17,9 @@ public partial class MainWindow
         _loading = true;
         try
         {
-            CurrentSupportList.ItemsSource = supports.Select((points, index) =>
+            SetSearchRows(CurrentSupportList, CurrentSupportSearch, supports.Select((points, index) =>
                 $"{index:D3} · {DisplaySupportName(Database.GetSupportTalkName(index))} · {points}")
-                .ToArray();
-            CurrentSupportList.SelectedIndex = Math.Clamp(selectedIndex, 0, supports.Length - 1);
+                .ToArray(), selectedIndex);
         }
         finally
         {
@@ -36,17 +35,18 @@ public partial class MainWindow
 
     private void ShowCurrentSupport()
     {
-        if (_save is null || CurrentSupportList.SelectedIndex < 0) return;
-        CurrentSupportPoints.Text = _save.Data.Player.CharacterSupportValues[CurrentSupportList.SelectedIndex]
+        int index = SelectedSourceIndex(CurrentSupportList);
+        if (_save is null || index < 0) return;
+        CurrentSupportPoints.Text = _save.Data.Player.CharacterSupportValues[index]
             .ToString(CultureInfo.InvariantCulture);
     }
 
     private void SetCurrentSupport_Click(object? sender, RoutedEventArgs e)
     {
-        if (_save is null || CurrentSupportList.SelectedIndex < 0) return;
+        int index = SelectedSourceIndex(CurrentSupportList);
+        if (_save is null || index < 0) return;
         try
         {
-            int index = CurrentSupportList.SelectedIndex;
             ushort points = ParseUShort(CurrentSupportPoints, "Support points");
             _save.Set($"Player.CharacterSupportValues[{index}]", points);
             RefreshCurrentSupports(index);

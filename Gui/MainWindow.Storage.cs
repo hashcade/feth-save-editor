@@ -31,16 +31,14 @@ public partial class MainWindow
         try
         {
             StorageCount.Text = $"Item List {data.ItemCount} / {data.Items.Length}";
-            StorageList.ItemsSource = data.Items.Select((item, index) => $"[{index:D3}] {item}").ToArray();
-            MiscList.ItemsSource = Enumerable.Range(0, Player_V23.COUNT_MISC_ITEMS)
+            SetSearchRows(StorageList, StorageSearch,
+                data.Items.Select((item, index) => $"[{index:D3}] {item}").ToArray(), itemIndex);
+            SetSearchRows(MiscList, MiscSearch, Enumerable.Range(0, Player_V23.COUNT_MISC_ITEMS)
                 .Select(index => $"{index:D3} · {Database.GetMiscItemName(index)} · {data.Player.MiscItems[index]}")
-                .ToArray();
-            GiftList.ItemsSource = Enumerable.Range(0, Player_V23.COUNT_GIFT_ITEMS)
+                .ToArray(), miscIndex);
+            SetSearchRows(GiftList, GiftSearch, Enumerable.Range(0, Player_V23.COUNT_GIFT_ITEMS)
                 .Select(index => $"{index:D3} · {Database.GetGiftItemName(index)} · {data.Player.GetGiftItem(index)}")
-                .ToArray();
-            StorageList.SelectedIndex = Math.Clamp(itemIndex, 0, data.Items.Length - 1);
-            MiscList.SelectedIndex = Math.Clamp(miscIndex, 0, Player_V23.COUNT_MISC_ITEMS - 1);
-            GiftList.SelectedIndex = Math.Clamp(giftIndex, 0, Player_V23.COUNT_GIFT_ITEMS - 1);
+                .ToArray(), giftIndex);
         }
         finally
         {
@@ -68,8 +66,9 @@ public partial class MainWindow
 
     private void ShowStorageItem()
     {
-        if (_save is null || StorageList.SelectedIndex < 0) return;
-        var item = _save.Data.Items[StorageList.SelectedIndex];
+        int index = SelectedSourceIndex(StorageList);
+        if (_save is null || index < 0) return;
+        var item = _save.Data.Items[index];
         StorageItemCombo.SelectedItem = _itemChoices?.FirstOrDefault(choice => choice.Id == item.Id);
         StorageDurability.Text = item.Durability.ToString(CultureInfo.InvariantCulture);
         StorageAmount.Text = item.Amount.ToString(CultureInfo.InvariantCulture);
@@ -77,15 +76,17 @@ public partial class MainWindow
 
     private void ShowMiscAmount()
     {
-        if (_save is null || MiscList.SelectedIndex < 0) return;
-        MiscAmount.Text = _save.Data.Player.MiscItems[MiscList.SelectedIndex]
+        int index = SelectedSourceIndex(MiscList);
+        if (_save is null || index < 0) return;
+        MiscAmount.Text = _save.Data.Player.MiscItems[index]
             .ToString(CultureInfo.InvariantCulture);
     }
 
     private void ShowGiftAmount()
     {
-        if (_save is null || GiftList.SelectedIndex < 0) return;
-        GiftAmount.Text = _save.Data.Player.GetGiftItem(GiftList.SelectedIndex)
+        int index = SelectedSourceIndex(GiftList);
+        if (_save is null || index < 0) return;
+        GiftAmount.Text = _save.Data.Player.GetGiftItem(index)
             .ToString(CultureInfo.InvariantCulture);
     }
 
@@ -102,8 +103,8 @@ public partial class MainWindow
         try
         {
             action(_save);
-            RefreshStorage(item ?? StorageList.SelectedIndex, misc ?? MiscList.SelectedIndex,
-                gift ?? GiftList.SelectedIndex);
+            RefreshStorage(item ?? SelectedSourceIndex(StorageList), misc ?? SelectedSourceIndex(MiscList),
+                gift ?? SelectedSourceIndex(GiftList));
             MarkChanged();
         }
         catch (Exception error)
@@ -114,8 +115,8 @@ public partial class MainWindow
 
     private void SaveStorageItem_Click(object? sender, RoutedEventArgs e)
     {
-        if (StorageList.SelectedIndex < 0 || StorageItemCombo.SelectedItem is not Choice choice) return;
-        int slot = StorageList.SelectedIndex;
+        int slot = SelectedSourceIndex(StorageList);
+        if (slot < 0 || StorageItemCombo.SelectedItem is not Choice choice) return;
         try
         {
             byte durability = ParseAmount(StorageDurability, "Durability");
@@ -160,7 +161,7 @@ public partial class MainWindow
 
     private void SetMisc_Click(object? sender, RoutedEventArgs e)
     {
-        int index = MiscList.SelectedIndex;
+        int index = SelectedSourceIndex(MiscList);
         if (index < 0) return;
         try
         {
@@ -175,7 +176,7 @@ public partial class MainWindow
 
     private void SetGift_Click(object? sender, RoutedEventArgs e)
     {
-        int index = GiftList.SelectedIndex;
+        int index = SelectedSourceIndex(GiftList);
         if (index < 0) return;
         try
         {

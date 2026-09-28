@@ -33,10 +33,9 @@ public partial class MainWindow
         try
         {
             var battalions = _save.Data.Player.Battalions;
-            BattalionList.ItemsSource = battalions
+            SetSearchRows(BattalionList, BattalionSearch, battalions
                 .Select((battalion, index) => $"[{index:D3}] {battalion.GetBarracksName()}")
-                .ToArray();
-            BattalionList.SelectedIndex = Math.Clamp(selectedIndex, 0, battalions.Length - 1);
+                .ToArray(), selectedIndex);
         }
         finally
         {
@@ -52,8 +51,9 @@ public partial class MainWindow
 
     private void ShowBattalion()
     {
-        if (_save is null || BattalionList.SelectedIndex < 0) return;
-        Battalion value = _save.Data.Player.Battalions[BattalionList.SelectedIndex];
+        int index = SelectedSourceIndex(BattalionList);
+        if (_save is null || index < 0) return;
+        Battalion value = _save.Data.Player.Battalions[index];
         BattalionCharacter.SelectedItem = _battalionCharacters?.FirstOrDefault(choice => choice.Id == value.CharacterId);
         BattalionType.SelectedItem = _battalionTypes?.FirstOrDefault(choice => choice.Id == value.Type);
         BattalionSkill.SelectedItem = _battalionSkills?.FirstOrDefault(choice => choice.Id == value.Skill);
@@ -70,10 +70,10 @@ public partial class MainWindow
 
     private void SaveBattalion_Click(object? sender, RoutedEventArgs e)
     {
-        if (_save is null || BattalionList.SelectedIndex < 0) return;
+        int index = SelectedSourceIndex(BattalionList);
+        if (_save is null || index < 0) return;
         try
         {
-            int index = BattalionList.SelectedIndex;
             int character = (BattalionCharacter.SelectedItem as Choice)?.Id ?? -1;
             int type = (BattalionType.SelectedItem as Choice)?.Id ?? Database.BATTALION_COUNT;
             int skill = (BattalionSkill.SelectedItem as Choice)?.Id ?? Database.BATTALION_SKILL_COUNT;

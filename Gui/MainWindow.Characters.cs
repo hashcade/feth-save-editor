@@ -45,10 +45,9 @@ public partial class MainWindow
         try
         {
             var characters = _save.Data.Characters;
-            CurrentCharacterList.ItemsSource = characters
-                .Select((character, index) => $"[{index:D3}] {character}").ToArray();
-            CurrentCharacterList.SelectedIndex = Math.Clamp(selectedIndex, 0, characters.Length - 1);
-            _currentCharacter = CurrentCharacterList.SelectedIndex;
+            SetSearchRows(CurrentCharacterList, CurrentCharacterSearch, characters
+                .Select((character, index) => $"[{index:D3}] {character}").ToArray(), selectedIndex);
+            _currentCharacter = SelectedSourceIndex(CurrentCharacterList);
         }
         finally
         {
@@ -60,7 +59,7 @@ public partial class MainWindow
     private void CurrentCharacterList_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         if (_loading) return;
-        _currentCharacter = CurrentCharacterList.SelectedIndex;
+        _currentCharacter = SelectedSourceIndex(CurrentCharacterList);
         ShowCurrentCharacter();
     }
 

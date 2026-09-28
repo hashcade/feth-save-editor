@@ -19,9 +19,8 @@ public partial class MainWindow
         _loading = true;
         try
         {
-            QuestList.ItemsSource = quests.Select((state, index) =>
-                $"{index:D3} · {Database.GetQuestName(index)} · {state}").ToArray();
-            QuestList.SelectedIndex = Math.Clamp(selectedIndex, 0, quests.Length - 1);
+            SetSearchRows(QuestList, QuestSearch, quests.Select((state, index) =>
+                $"{index:D3} · {Database.GetQuestName(index)} · {state}").ToArray(), selectedIndex);
         }
         finally
         {
@@ -37,18 +36,19 @@ public partial class MainWindow
 
     private void ShowQuest()
     {
-        if (_save is null || QuestList.SelectedIndex < 0) return;
-        int state = _save.Data.Activities.QuestStateList[QuestList.SelectedIndex];
+        int index = SelectedSourceIndex(QuestList);
+        if (_save is null || index < 0) return;
+        int state = _save.Data.Activities.QuestStateList[index];
         QuestState.SelectedItem = QuestState.ItemsSource!.Cast<Choice>()
             .FirstOrDefault(choice => choice.Id == state);
     }
 
     private void SetQuestState_Click(object? sender, RoutedEventArgs e)
     {
-        if (_save is null || QuestList.SelectedIndex < 0 || QuestState.SelectedItem is not Choice state) return;
+        int index = SelectedSourceIndex(QuestList);
+        if (_save is null || index < 0 || QuestState.SelectedItem is not Choice state) return;
         try
         {
-            int index = QuestList.SelectedIndex;
             _save.Set($"Activities.QuestStateList[{index}]", state.Id);
             RefreshQuests(index);
             MarkChanged();

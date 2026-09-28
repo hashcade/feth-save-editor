@@ -13,18 +13,17 @@ public partial class MainWindow
         var database = Database.BinaryDatabase;
         if (database is null) return;
         _databaseItemIds = database.ItemEntries.Keys.ToArray();
-        DatabaseCharacters.ItemsSource = Enumerable.Range(0, database.CharacterEntries.Count)
+        SetSearchRows(DatabaseCharacters, DatabaseCharacterSearch,
+            Enumerable.Range(0, database.CharacterEntries.Count)
             .Select(index => $"[{index:D4}] {Database.GetUnitName(index, ShowGender: true)}")
-            .ToArray();
-        DatabaseClasses.ItemsSource = Enumerable.Range(0, database.ClassEntries.Count)
+            .ToArray(), SelectedSourceIndex(DatabaseCharacters));
+        SetSearchRows(DatabaseClasses, DatabaseClassSearch,
+            Enumerable.Range(0, database.ClassEntries.Count)
             .Select(index => $"[{index:D2}] {Database.GetClassName(index)}")
-            .ToArray();
-        DatabaseItems.ItemsSource = _databaseItemIds
+            .ToArray(), SelectedSourceIndex(DatabaseClasses));
+        SetSearchRows(DatabaseItems, DatabaseItemSearch, _databaseItemIds
             .Select(index => $"[{index:D4}] {Database.GetItemName(index)}")
-            .ToArray();
-        DatabaseCharacters.SelectedIndex = 0;
-        DatabaseClasses.SelectedIndex = 0;
-        DatabaseItems.SelectedIndex = 0;
+            .ToArray(), SelectedSourceIndex(DatabaseItems));
         ShowDatabaseCharacter();
         ShowDatabaseClass();
         ShowDatabaseItem();
@@ -41,21 +40,21 @@ public partial class MainWindow
 
     private void ShowDatabaseCharacter()
     {
-        int index = DatabaseCharacters.SelectedIndex;
+        int index = SelectedSourceIndex(DatabaseCharacters);
         DatabaseCharacterDetails.Text = index >= 0
             ? Database.BinaryDatabase.CharacterEntries[index].GenerateDebugOut() : string.Empty;
     }
 
     private void ShowDatabaseClass()
     {
-        int index = DatabaseClasses.SelectedIndex;
+        int index = SelectedSourceIndex(DatabaseClasses);
         DatabaseClassDetails.Text = index >= 0
             ? Database.BinaryDatabase.ClassEntries[index].GenerateDebugOut() : string.Empty;
     }
 
     private void ShowDatabaseItem()
     {
-        int index = DatabaseItems.SelectedIndex;
+        int index = SelectedSourceIndex(DatabaseItems);
         DatabaseItemDetails.Text = index >= 0 && index < _databaseItemIds.Length
             ? Database.BinaryDatabase.ItemEntries[_databaseItemIds[index]].GenerateDebugOut()
             : string.Empty;
