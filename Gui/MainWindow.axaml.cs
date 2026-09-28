@@ -105,6 +105,7 @@ public partial class MainWindow : Window
             RefreshCurrentSupports();
             RefreshCharacters();
             RefreshSupports();
+            RefreshDatabaseViewer();
             Status.Text = "Database language changed. Save bytes were not modified.";
         }
         catch (Exception error)
@@ -181,6 +182,7 @@ public partial class MainWindow : Window
         RefreshCurrentSupports();
         RefreshCharacters();
         RefreshSupports();
+        RefreshDatabaseViewer();
         Status.Text = "Save loaded. Changes stay in memory until you save a new copy.";
     }
 

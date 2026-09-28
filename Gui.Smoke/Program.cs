@@ -87,6 +87,10 @@ for (int index = 0; index < characterTabs.ItemCount; index++)
 
 if (args.Length > 0)
 {
+    if (window.FindControl<ListBox>("DatabaseCharacters")!.ItemCount == 0 ||
+        window.FindControl<ListBox>("DatabaseClasses")!.ItemCount == 0 ||
+        window.FindControl<ListBox>("DatabaseItems")!.ItemCount == 0)
+        throw new InvalidOperationException("Database viewer lists were not loaded.");
     var language = window.FindControl<ComboBox>("DatabaseLanguage")!;
     language.SelectedIndex = 11;
     if (!window.FindControl<TextBlock>("Status")!.Text!.Contains("not modified", StringComparison.Ordinal))
