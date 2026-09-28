@@ -15,6 +15,9 @@
     <Compile Include="SystemBuffer.cs" />
     <Compile Include="NgPlusJournal.cs" />
     <Compile Include="Resources.cs" />
-    <EmbeddedResource Include="../SaveEditor/Resources/*.bin.gz" LogicalName="%(Filename)%(Extension)" />
+    <EmbeddedResource Include="../SaveEditor/Resources/fixed_persondata.bin.gz" LogicalName="fixed_persondata.bin.gz" />
+    <EmbeddedResource Include="../SaveEditor/Resources/fixed_classdata.bin.gz" LogicalName="fixed_classdata.bin.gz" />
+    <EmbeddedResource Include="../SaveEditor/Resources/fixed_data.bin.gz" LogicalName="fixed_data.bin.gz" />
+    <EmbeddedResource Include="../SaveEditor/Resources/msgdata.bin.gz" LogicalName="msgdata.bin.gz" />
   </ItemGroup>
 </Project>
