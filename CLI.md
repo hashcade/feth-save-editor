@@ -1,19 +1,19 @@
 # Command-line save editor
 
-`FethEditor.Cli` runs on Windows, macOS, and Linux. Download the matching self-contained CI artifact or build from source with `dotnet build Cli/Cli.csproj -c Release`. The older Windows release also contains `FETH_Cli.exe`; keep that legacy executable beside `FETH_SaveEditor.exe`. Both CLIs accept version-23 `slotXX` and `auto` saves from Fire Emblem: Three Houses v1.2.0 and reject `system` and `suspend` files.
+`FethEditor.Cli` runs on Windows, macOS, and Linux. Download the matching self-contained CI artifact or build from source with `dotnet build Cli/Cli.csproj -c Release`. It accepts version-23 `slotXX` and `auto` saves from Fire Emblem: Three Houses v1.2.0 and rejects `system` and `suspend` files.
 
-On macOS or Linux, replace `FETH_Cli.exe` in the examples below with `./FethEditor.Cli`. On Windows, use `FethEditor.Cli.exe` for the modern standalone build. The source build requires .NET 10; the self-contained downloads include the runtime. An unsigned macOS download may need local approval in macOS security settings.
+On macOS or Linux, replace `FethEditor.Cli.exe` in the examples below with `./FethEditor.Cli`. The source build requires .NET 10; the self-contained downloads include the runtime. An unsigned macOS download may need local approval in macOS security settings.
 
 The CLI patches only named, mapped fields. Unknown bytes are preserved. `inspect` distinguishes current-run data from read-only NG+ journal history. An edited save still needs an in-game test.
 
 ## Read
 
 ```powershell
-.\FETH_Cli.exe inspect --input C:\saves\slot00 --section summary
-.\FETH_Cli.exe inspect --input C:\saves\slot00 --section characters
-.\FETH_Cli.exe get --input C:\saves\slot00 --path Characters[0].data.Level
-.\FETH_Cli.exe inspect --input C:\saves\slot00 --section inheritance
-.\FETH_Cli.exe catalog --type classes
+.\FethEditor.Cli.exe inspect --input C:\saves\slot00 --section summary
+.\FethEditor.Cli.exe inspect --input C:\saves\slot00 --section characters
+.\FethEditor.Cli.exe get --input C:\saves\slot00 --path Characters[0].data.Level
+.\FethEditor.Cli.exe inspect --input C:\saves\slot00 --section inheritance
+.\FethEditor.Cli.exe catalog --type classes
 ```
 
 `inspect --section` accepts `summary`, `characters`, `inventory`, `battalions`, `activities`, `supports`, `inheritance`, or `all`. `catalog --type` accepts `items`, `characters`, `classes`, `battalions`, `abilities`, `arts`, `quests`, and `supports`. Output and errors are JSON. Optional `--language` selects a GUI language enum such as `en_u`.
@@ -39,8 +39,8 @@ Save this as `patch.json`:
 ```
 
 ```powershell
-.\FETH_Cli.exe apply --input C:\saves\slot00 --patch patch.json --dry-run
-.\FETH_Cli.exe apply --input C:\saves\slot00 --patch patch.json --output C:\saves\edited-slot00
+.\FethEditor.Cli.exe apply --input C:\saves\slot00 --patch patch.json --dry-run
+.\FethEditor.Cli.exe apply --input C:\saves\slot00 --patch patch.json --output C:\saves\edited-slot00
 ```
 
 The output path must not already exist. `--in-place` is available instead of `--output`; it creates a timestamped backup next to the source before replacement. Prefer a new output file and keep the original. `expectedSha256` prevents applying a patch to a different save. `--dry-run` reports byte-level differences without writing.
