@@ -61,34 +61,10 @@ namespace FethEditor.Core
 
         public object ReadInheritance()
         {
-            // Falo's older layout called Player+0x1571..0x1EC8 new_game_plus_related.
-            // The later opaque fields split the 45 x 11 rank table and 45 x 13
-            // class-mastery bitset at misleading boundaries. Read them contiguously.
-            int player = Resolve("Player").Offset;
-            int support = player + 0x1576;
-            int rank = player + 0x17D8;
-            int mastery = rank + 45 * Database.MAX_SKILLS; // Player+0x19C7
-            var supports = Enumerable.Range(0, Player_V23.COUNT_SUPPORT)
-                .Select(index => new { index, maxPoints = BitConverter.ToInt16(bytes, support + index * 2) })
-                .ToArray();
-            var characters = Enumerable.Range(0, 45).Select(index =>
-            {
-                var skillRanks = bytes.Skip(rank + index * Database.MAX_SKILLS)
-                    .Take(Database.MAX_SKILLS).ToArray();
-                int bits = mastery + index * 13;
-                var masteredClassIds = Enumerable.Range(0, Database.MAX_CLASS)
-                    .Where(classId => (bytes[bits + classId / 8] & (1 << (classId % 8))) != 0)
-                    .ToArray();
-                return new { recordIndex = index, skillRanks, masteredClassIds };
-            }).ToArray();
-            return new
-            {
-                professorRank = bytes[player + 0x17CE],
-                supports,
-                characters,
-                note = "Character record indices are not yet mapped to game unit IDs. This is read-only NG+ journal history."
-            };
+            return Inheritance.Snapshot();
         }
+
+        public NgPlusJournal Inheritance => new NgPlusJournal(bytes, Resolve("Player").Offset);
 
         public object Get(string path)
         {

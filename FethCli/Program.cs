@@ -4,7 +4,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+#if MODERN_DOTNET
+using JavaScriptSerializer = FethEditor.Cli.JsonCompat;
+#else
 using System.Web.Script.Serialization;
+#endif
 using FethEditor.Core;
 using SaveEditor;
 using SaveEditor.Structs;
@@ -161,6 +165,20 @@ namespace FethCli
                     case "setSkillRank":
                         save.SetSkillRank(Value<int>(item, "slot"), Value<int>(item, "skill"),
                             Value<int>(item, "rank"), Value<int>(item, "experience"));
+                        break;
+                    case "setNgPlusProfessorRank":
+                        save.Inheritance.SetProfessorRank(Value<int>(item, "rank"));
+                        break;
+                    case "setNgPlusSupport":
+                        save.Inheritance.SetSupportPoints(Value<int>(item, "index"), Value<int>(item, "points"));
+                        break;
+                    case "setNgPlusSkillRank":
+                        save.Inheritance.SetSkillRank(Value<int>(item, "recordIndex"), Value<int>(item, "skill"),
+                            Value<int>(item, "rank"));
+                        break;
+                    case "setNgPlusClassMastery":
+                        save.Inheritance.SetClassMastered(Value<int>(item, "recordIndex"), Value<int>(item, "classId"),
+                            Value<bool>(item, "mastered"));
                         break;
                     case "maxClassExp":
                         save.MaxClassExperience(Value<int>(item, "slot"));

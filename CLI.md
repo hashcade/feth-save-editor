@@ -16,7 +16,9 @@ The CLI patches only named, mapped fields. Unknown bytes are preserved. `inspect
 
 `inspect --section` accepts `summary`, `characters`, `inventory`, `battalions`, `activities`, `supports`, `inheritance`, or `all`. `catalog --type` accepts `items`, `characters`, `classes`, `battalions`, `abilities`, `arts`, `quests`, and `supports`. Output and errors are JSON. Optional `--language` selects a GUI language enum such as `en_u`.
 
-`inheritance` reads the separate NG+ journal history: professor rank, 270 maximum support-point values, 45 records of 11 skill ranks, and 45 class-mastery bitsets. These are not the current-run values. The row-to-unit-ID mapping is still unknown, so output uses `recordIndex` rather than potentially incorrect character names. This section is read-only; editing NG+ history is not yet supported.
+`inheritance` reads the separate NG+ journal history: professor rank, 270 maximum support-point values, 45 records of 11 skill ranks, and 45 class-mastery bitsets. These are not the current-run values. Character names follow the game's character database order; records without a confirmed playable character keep their numeric `recordIndex`. Support names come from the game's support table.
+
+NG+ history can be edited with `setNgPlusProfessorRank` (`rank`: 0–9), `setNgPlusSupport` (`index`, `points`: 0–65535), `setNgPlusSkillRank` (`recordIndex`: 0–44, `skill`: 0–10, `rank`: 0–11), and `setNgPlusClassMastery` (`recordIndex`, `classId`: 0–99, `mastered`: boolean). For example, `{ "op": "setNgPlusSkillRank", "recordIndex": 0, "skill": 0, "rank": 11 }` changes the first historical character's sword rank. These operations edit historical unlocks, not the current-run character. The storage range for support points is known, but not every numeric value is meaningful to the game. Test one targeted change on a disposable save before broader edits.
 
 ## Edit
 

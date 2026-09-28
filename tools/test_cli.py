@@ -56,6 +56,8 @@ def main() -> None:
         assert history["supports"][0]["maxPoints"] == 1001
         assert history["characters"][0]["skillRanks"][0] == 11
         assert 42 in history["characters"][0]["masteredClassIds"]
+        assert history["supports"][0]["name"]
+        assert history["characters"][0]["name"]
         assert run(cli, "get", "--input", str(source), "--path", "Items[0].Id")["value"] == -1
         catalog = run(cli, "catalog", "--type", "classes")
         assert len(catalog) == 101  # 100 classes plus the GUI's "none" sentinel.
@@ -90,6 +92,42 @@ def main() -> None:
         assert edited[12 + 0x644 + 0x61] & 8
         assert struct.unpack_from("<I", edited, 12 + 0x231D9 + 0x1074)[0] == 12345
         assert struct.unpack_from("<I", edited, 12 + 0x250A1 + 0xC)[0] == 321
+
+        ng_patch = directory / "ng-plus.json"
+        ng_patch.write_text(json.dumps({"expectedSha256": summary["sha256"], "operations": [
+            {"op": "setNgPlusProfessorRank", "rank": 8},
+            {"op": "setNgPlusSupport", "index": 0, "points": 1200},
+            {"op": "setNgPlusSkillRank", "recordIndex": 0, "skill": 0, "rank": 10},
+            {"op": "setNgPlusClassMastery", "recordIndex": 0, "classId": 42, "mastered": False},
+        ]}), encoding="utf-8")
+        ng_target = directory / "ng-plus-slot00"
+        run(cli, "apply", "--input", str(source), "--patch", str(ng_patch),
+            "--output", str(ng_target))
+        ng_edited = ng_target.read_bytes()
+        assert source.read_bytes() == raw
+        assert ng_edited[player + 0x17CE] == 8
+        assert struct.unpack_from("<H", ng_edited, player + 0x1576)[0] == 1200
+        assert ng_edited[player + 0x17D8] == 10
+        assert not ng_edited[player + 0x19C7 + 42 // 8] & (1 << (42 % 8))
+        changed_offsets = {0, 1, 2, 3, player + 0x17CE, player + 0x1576,
+                           player + 0x1577, player + 0x17D8, player + 0x19C7 + 42 // 8}
+        assert all(before == after for index, (before, after) in enumerate(zip(raw, ng_edited))
+                   if index not in changed_offsets)
+        assert struct.unpack_from("<I", ng_edited, 0)[0] == checksum(ng_edited)
+        ng_history = run(cli, "inspect", "--input", str(ng_target),
+                         "--section", "inheritance")["inheritance"]
+        assert ng_history["professorRank"] == 8
+        assert ng_history["supports"][0]["maxPoints"] == 1200
+        assert ng_history["characters"][0]["skillRanks"][0] == 10
+        assert 42 not in ng_history["characters"][0]["masteredClassIds"]
+
+        invalid_ng_patch = directory / "invalid-ng-plus.json"
+        invalid_ng_patch.write_text(json.dumps({"operations": [
+            {"op": "setNgPlusClassMastery", "recordIndex": 45, "classId": 42, "mastered": True},
+        ]}), encoding="utf-8")
+        run(cli, "apply", "--input", str(source), "--patch", str(invalid_ng_patch),
+            "--output", str(directory / "invalid-ng-plus"), success=False)
+        assert not (directory / "invalid-ng-plus").exists()
 
         # Agent edits must not bypass the GUI's rank-specific skill limit.
         out_of_range = directory / "out-of-range.json"
@@ -130,7 +168,7 @@ def main() -> None:
         error = run(cli, "inspect", "--input", str(suspend), success=False)
         assert "Suspend" in error["error"]
 
-        print("CLI inspection, editing, backups, character import, byte preservation, and rejection checks passed.")
+        print("CLI inspection, NG+ editing, backups, character import, byte preservation, and rejection checks passed.")
 
 
 if __name__ == "__main__":

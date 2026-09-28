@@ -8,6 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../Core/SaveBuffer.cs" Link="SaveBuffer.cs" />
+    <Compile Include="../Core/NgPlusJournal.cs" Link="NgPlusJournal.cs" />
     <Reference Include="System.Web.Extensions" />
     <ProjectReference Include="../SaveEditor/SaveEditor.csproj" />
   </ItemGroup>
