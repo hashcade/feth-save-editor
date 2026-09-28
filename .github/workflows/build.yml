@@ -22,7 +22,10 @@ jobs:
           python-version: '3.13'
 
       - name: Build .NET Framework projects
-        run: msbuild FireEmblemThreeHouse.sln /t:Rebuild /p:Configuration=Release /p:Platform="Any CPU" /v:minimal
+        run: msbuild FireEmblemThreeHouse.sln /restore /t:Rebuild /p:Configuration=Release /p:Platform="Any CPU" /v:minimal
+
+      - name: Verify CLI save editing
+        run: python tools/test_cli.py --cli FethCli/bin/Release/net472/FETH_Cli.exe
 
       - name: Package and verify downloads
         run: python tools/package.py
