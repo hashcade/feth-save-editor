@@ -1,0 +1,51 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:FethEditor.Gui"
+        x:Class="FethEditor.Gui.SystemWindow"
+        Title="System Save Editor" Width="820" Height="600" MinWidth="600" MinHeight="400"
+        Background="#F7F8FA" FontSize="12">
+  <Window.Styles>
+    <Style Selector="Border.section">
+      <Setter Property="Background" Value="White" />
+      <Setter Property="BorderBrush" Value="#E4E7EB" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="16" />
+    </Style>
+  </Window.Styles>
+  <DockPanel>
+    <Menu DockPanel.Dock="Top" Height="24" Background="#F7F8FA">
+      <MenuItem Header="_File">
+        <MenuItem Header="_Load System Save..." Click="OpenSystem_Click" />
+        <MenuItem Name="WriteSystemMenu" Header="_Write Edited Copy..."
+                  IsEnabled="False" Click="WriteSystem_Click" />
+        <Separator />
+        <MenuItem Header="E_xit" Click="Exit_Click" />
+      </MenuItem>
+    </Menu>
+    <Border DockPanel.Dock="Bottom" BorderBrush="#E1E3E6" BorderThickness="0,1,0,0"
+            Background="#F7F8FA" Padding="6,3">
+      <TextBlock Name="SystemStatus" Text="Load a system save to begin." />
+    </Border>
+    <Grid Margin="8" ColumnDefinitions="245,*" ColumnSpacing="8">
+      <Border Classes="section">
+        <Grid RowDefinitions="Auto,*" RowSpacing="12">
+          <TextBlock Text="Save Slots" FontWeight="SemiBold" />
+          <ListBox Classes="Small" Name="SystemSlots" Grid.Row="1" />
+        </Grid>
+      </Border>
+      <Border Classes="section" Grid.Column="1">
+        <Grid RowDefinitions="Auto,*" RowSpacing="12">
+          <TextBlock Text="System Flags" FontWeight="SemiBold" />
+          <ListBox Classes="Small" Name="SystemFlags" Grid.Row="1">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="local:SystemFlagRow">
+                <CheckBox Content="{Binding Label}" IsChecked="{Binding Enabled, Mode=TwoWay}" />
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </Grid>
+      </Border>
+    </Grid>
+  </DockPanel>
+</Window>

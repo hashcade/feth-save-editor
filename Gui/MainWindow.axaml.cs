@@ -117,6 +117,16 @@ public partial class MainWindow : Window
 
     private void Exit_Click(object? sender, RoutedEventArgs e) => Close();
 
+    private void OpenSystemEditor_Click(object? sender, RoutedEventArgs e)
+    {
+        if (!_databaseReady)
+        {
+            Database.Init(_databaseLanguage);
+            _databaseReady = true;
+        }
+        new SystemWindow().Show(this);
+    }
+
     private async void OpenSave_Click(object? sender, RoutedEventArgs e)
     {
         try

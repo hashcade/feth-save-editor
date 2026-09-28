@@ -38,6 +38,23 @@ for (int index = 0; index < tabs.ItemCount; index++)
 
 if (args.Length > 1)
 {
+    var systemWindow = new SystemWindow();
+    systemWindow.Show();
+    systemWindow.LoadSystem(args[1]);
+    Dispatcher.UIThread.RunJobs();
+    if (systemWindow.FindControl<ListBox>("SystemSlots")!.ItemCount != 37 ||
+        systemWindow.FindControl<ListBox>("SystemFlags")!.ItemCount != 2464)
+        throw new InvalidOperationException("System save lists were not loaded.");
+    var systemFrame = systemWindow.CaptureRenderedFrame()
+        ?? throw new InvalidOperationException("System editor did not render.");
+    string systemScreenshot = Path.Combine(Path.GetTempPath(), "feth-editor-system.png");
+    systemFrame.Save(systemScreenshot, PngBitmapEncoderOptions.Default);
+    Console.WriteLine(systemScreenshot);
+    var row = (SystemFlagRow)systemWindow.FindControl<ListBox>("SystemFlags")!.Items[0]!;
+    row.Enabled = !row.Enabled;
+    if (!systemWindow.FindControl<MenuItem>("WriteSystemMenu")!.IsEnabled)
+        throw new InvalidOperationException("System flag edit did not enable saving.");
+
     var system = SystemBuffer.Open(args[1]);
     bool oldValue = system.GetFlag(0);
     system.SetFlag(0, !oldValue);
