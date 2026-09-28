@@ -36,11 +36,14 @@ namespace FethEditor.Core
         private readonly byte[] bytes;
         private readonly byte[] original;
 
-        private SaveBuffer(byte[] file)
+        private SaveBuffer(byte[] file, bool hasInvalidChecksum)
         {
             bytes = file;
             original = (byte[])file.Clone();
+            HasInvalidChecksum = hasInvalidChecksum;
         }
+
+        public bool HasInvalidChecksum { get; }
 
         public static SaveBuffer Open(string path)
         {
@@ -49,10 +52,8 @@ namespace FethEditor.Core
                 throw new InvalidDataException($"Expected a 1.2.0 slot/auto file of {Save.SIZE_SAVE_V23} bytes; got {file.Length}. Suspend and system files cannot be edited here.");
             if (BitConverter.ToUInt32(file, 4) != Save.CURRENT_VERSION || BitConverter.ToUInt32(file, 8) != file.Length)
                 throw new InvalidDataException("Unsupported save version or declared size.");
-            uint checksum = BitConverter.ToUInt32(file, 0);
-            if (checksum != Checksum(file))
-                throw new InvalidDataException("Save checksum is invalid. No changes were made.");
-            return new SaveBuffer(file);
+            bool hasInvalidChecksum = BitConverter.ToUInt32(file, 0) != Checksum(file);
+            return new SaveBuffer(file, hasInvalidChecksum);
         }
 
         public SaveData_V23 Data => Util.ReadStructure<SaveData_V23>(bytes.Skip(HeaderSize).ToArray());

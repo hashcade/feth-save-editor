@@ -100,6 +100,40 @@ def main() -> None:
         assert struct.unpack_from("<I", edited, 12 + 0x231D9 + 0x1074)[0] == 12345
         assert struct.unpack_from("<I", edited, 12 + 0x250A1 + 0xC)[0] == 321
 
+        class_flags_patch = directory / "class-flags.json"
+        class_flags_patch.write_text(json.dumps({"operations": [
+            {"op": "setBit", "path": "Characters[0].data.ClassUnlockFlags", "index": 17, "value": True},
+            {"op": "setBit", "path": "Characters[0].data.ClassFlags", "index": 1, "value": True},
+        ]}), encoding="utf-8")
+        class_flags_target = directory / "class-flags-slot00"
+        run(cli, "apply", "--input", str(source), "--patch", str(class_flags_patch),
+            "--output", str(class_flags_target))
+        class_flags_bytes = class_flags_target.read_bytes()
+        unlock_offset = 12 + 0x644 + 0xD3 + 17 // 8
+        class_flag_offset = 12 + 0x644 + 0xDF
+        assert class_flags_bytes[unlock_offset] == raw[unlock_offset] | (1 << (17 % 8))
+        assert class_flags_bytes[class_flag_offset] == raw[class_flag_offset] | (1 << 1)
+        assert all(before == after for index, (before, after) in enumerate(zip(raw, class_flags_bytes))
+                   if index not in {0, 1, 2, 3, unlock_offset, class_flag_offset})
+        assert struct.unpack_from("<I", class_flags_bytes, 0)[0] == checksum(class_flags_bytes)
+
+        invalid_checksum = bytearray(raw)
+        invalid_checksum[12 + 0x231D9 + 0x1074] ^= 1
+        invalid_source = directory / "checksum-mismatch-slot00"
+        invalid_source.write_bytes(invalid_checksum)
+        invalid_summary = run(cli, "inspect", "--input", str(invalid_source), "--section", "summary")
+        assert invalid_summary["checksumValid"] is False
+        repair_patch = directory / "repair-checksum.json"
+        repair_patch.write_text(json.dumps({"operations": [
+            {"op": "set", "path": "Player.Money", "value": 54321},
+        ]}), encoding="utf-8")
+        repaired_path = directory / "repaired-slot00"
+        run(cli, "apply", "--input", str(invalid_source), "--patch", str(repair_patch),
+            "--output", str(repaired_path))
+        repaired = repaired_path.read_bytes()
+        assert checksum(repaired) == struct.unpack_from("<I", repaired, 0)[0]
+        assert invalid_source.read_bytes() == invalid_checksum
+
         ng_patch = directory / "ng-plus.json"
         ng_patch.write_text(json.dumps({"expectedSha256": summary["sha256"], "operations": [
             {"op": "setNgPlusProfessorRank", "rank": 8},

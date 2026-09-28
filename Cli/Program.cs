@@ -273,6 +273,7 @@ namespace FethEditor.Cli
             {
                 ["format"] = "FE3H 1.1.0-1.2.0 / save version 23",
                 ["sha256"] = save.Sha256,
+                ["checksumValid"] = !save.HasInvalidChecksum,
                 ["note"] = "Mapped current-run fields and separately reported NG+ journal history; other unknown data is preserved."
             };
             if (section == "all" || section == "inheritance")

@@ -13,6 +13,7 @@
     <Compile Include="Structs/*.cs" />
     <Compile Include="SaveBuffer.cs" />
     <Compile Include="SystemBuffer.cs" />
+    <Compile Include="VerifiedFileWriter.cs" />
     <Compile Include="NgPlusJournal.cs" />
     <Compile Include="Resources.cs" />
     <EmbeddedResource Include="Resources/fixed_persondata.bin.gz" LogicalName="fixed_persondata.bin.gz" />

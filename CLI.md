@@ -53,4 +53,4 @@ Other operations: `setName` (`value`), `sortItems`, `sortBattalions`, `inventory
 
 For full character records, use `export-character --input ... --slot 0 --output character.bin`, then `import-character --input ... --slot 0 --character character.bin --output ...`. Importing a record from another save is riskier than targeted edits; it replaces all bytes in that record, including fields not understood by the editor.
 
-The CLI checks file size, version, and checksum before reading and verifies written output. It does not make gameplay semantics safe automatically. Close the game before replacing a save, retain an untouched backup, and test on a disposable copy first.
+The CLI checks file size and version before reading, reports checksum validity in `inspect`, and verifies written output. A mismatched source checksum is repaired when the save is written. It does not make gameplay semantics safe automatically. Close the game before replacing a save, retain an untouched backup, and test on a disposable copy first.
