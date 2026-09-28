@@ -380,11 +380,17 @@ public partial class MainWindow : Window
             if (!name.Contains(search, StringComparison.OrdinalIgnoreCase)
                 && !classId.ToString(CultureInfo.InvariantCulture).Contains(search, StringComparison.OrdinalIgnoreCase))
                 continue;
+            int selectedClass = classId;
             var check = new CheckBox
             {
                 Content = $"{classId:D2} · {name}",
-                IsChecked = _save.Inheritance.IsClassMastered(character, classId),
-                IsEnabled = false
+                IsChecked = _save.Inheritance.IsClassMastered(character, classId)
+            };
+            check.IsCheckedChanged += (_, _) =>
+            {
+                if (_save is null) return;
+                _save.Inheritance.SetClassMastered(character, selectedClass, check.IsChecked == true);
+                MarkChanged();
             };
             ClassRows.Children.Add(check);
         }

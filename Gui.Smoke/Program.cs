@@ -144,6 +144,18 @@ if (args.Length > 0)
     historicalRank.SelectedIndex = 8;
     if (!window.FindControl<TextBlock>("Status")!.Text!.Contains("changed", StringComparison.OrdinalIgnoreCase))
         throw new InvalidOperationException("NG+ professor rank edit did not mark the save as changed.");
+    tabs.SelectedIndex = 7;
+    var classRows = window.FindControl<StackPanel>("ClassRows")!;
+    var firstClass = classRows.Children.OfType<CheckBox>().First();
+    if (!firstClass.IsEnabled)
+        throw new InvalidOperationException("NG+ class mastery editing is disabled.");
+    bool wasMastered = firstClass.IsChecked == true;
+    firstClass.IsChecked = !wasMastered;
+    var classSearch = window.FindControl<TextBox>("ClassSearch")!;
+    classSearch.Text = "99";
+    classSearch.Text = string.Empty;
+    if (classRows.Children.OfType<CheckBox>().First().IsChecked == wasMastered)
+        throw new InvalidOperationException("NG+ class mastery edit was not retained after refreshing the rows.");
     tabs.SelectedIndex = 2;
     var historicalCharacters = window.FindControl<ListBox>("CharacterList")!;
     if (!historicalCharacters.Items.OfType<string>().Any(name => name.Contains("Yuri", StringComparison.Ordinal))

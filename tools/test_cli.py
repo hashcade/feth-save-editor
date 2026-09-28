@@ -58,8 +58,8 @@ def main() -> None:
         assert history["professorRank"] == 9
         assert history["supports"][0]["maxPoints"] == 1001
         assert history["characters"][0]["skillRanks"][0] == 11
-        assert 42 in history["characters"][0]["rawClassFlagIds"]
-        assert 42 in history["characters"][38]["rawClassFlagIds"]
+        assert 42 in history["characters"][0]["masteredClassIds"]
+        assert 42 in history["characters"][38]["masteredClassIds"]
         assert history["characters"][30]["name"] == "Gilbert"
         assert [history["characters"][index]["name"] for index in range(38, 45)] == [
             "Yuri", "Balthus", "Constance", "Hapi", "Aelfric", "Jeritza", "Anna"]
@@ -105,6 +105,10 @@ def main() -> None:
             {"op": "setNgPlusProfessorRank", "rank": 8},
             {"op": "setNgPlusSupport", "index": 0, "points": 1200},
             {"op": "setNgPlusSkillRank", "recordIndex": 0, "skill": 0, "rank": 10},
+            {"op": "setNgPlusClassMastery", "recordIndex": 0, "classId": 42, "mastered": False},
+            {"op": "setNgPlusClassMastery", "recordIndex": 34, "classId": 99, "mastered": True},
+            {"op": "setNgPlusClassMastery", "recordIndex": 38, "classId": 42, "mastered": False},
+            {"op": "setNgPlusClassMastery", "recordIndex": 44, "classId": 99, "mastered": True},
         ]}), encoding="utf-8")
         ng_target = directory / "ng-plus-slot00"
         run(cli, "apply", "--input", str(source), "--patch", str(ng_patch),
@@ -114,10 +118,14 @@ def main() -> None:
         assert ng_edited[player + 0x17CE] == 8
         assert struct.unpack_from("<H", ng_edited, player + 0x1576)[0] == 1200
         assert ng_edited[player + 0x17D8] == 10
-        assert ng_edited[player + 0x19CC + 42 // 8] & (1 << (42 % 8))
-        assert ng_edited[player + 0x1B93 + extra_class_bit // 8] & (1 << (extra_class_bit % 8))
+        assert not ng_edited[player + 0x19CC + 42 // 8] & (1 << (42 % 8))
+        assert ng_edited[player + 0x19CC + 34 * 13 + 99 // 8] & (1 << (99 % 8))
+        assert not ng_edited[player + 0x1B93 + extra_class_bit // 8] & (1 << (extra_class_bit % 8))
+        assert ng_edited[player + 0x1B93 + 124] & 0x80
         changed_offsets = {0, 1, 2, 3, player + 0x17CE, player + 0x1576,
-                           player + 0x1577, player + 0x17D8}
+                           player + 0x1577, player + 0x17D8,
+                           player + 0x19CC + 42 // 8, player + 0x19CC + 34 * 13 + 99 // 8,
+                           player + 0x1B93 + extra_class_bit // 8, player + 0x1B93 + 124}
         assert all(before == after for index, (before, after) in enumerate(zip(raw, ng_edited))
                    if index not in changed_offsets)
         assert struct.unpack_from("<I", ng_edited, 0)[0] == checksum(ng_edited)
@@ -126,7 +134,10 @@ def main() -> None:
         assert ng_history["professorRank"] == 8
         assert ng_history["supports"][0]["maxPoints"] == 1200
         assert ng_history["characters"][0]["skillRanks"][0] == 10
-        assert 42 in ng_history["characters"][0]["rawClassFlagIds"]
+        assert 42 not in ng_history["characters"][0]["masteredClassIds"]
+        assert 99 in ng_history["characters"][34]["masteredClassIds"]
+        assert 42 not in ng_history["characters"][38]["masteredClassIds"]
+        assert 99 in ng_history["characters"][44]["masteredClassIds"]
 
         invalid_ng_patch = directory / "invalid-ng-plus.json"
         invalid_ng_patch.write_text(json.dumps({"operations": [
@@ -135,15 +146,6 @@ def main() -> None:
         run(cli, "apply", "--input", str(source), "--patch", str(invalid_ng_patch),
             "--output", str(directory / "invalid-ng-plus"), success=False)
         assert not (directory / "invalid-ng-plus").exists()
-
-        unverified_class = directory / "unverified-class.json"
-        unverified_class.write_text(json.dumps({"operations": [
-            {"op": "setNgPlusClassMastery", "recordIndex": 0, "classId": 42, "mastered": True},
-        ]}), encoding="utf-8")
-        error = run(cli, "apply", "--input", str(source), "--patch", str(unverified_class),
-                    "--output", str(directory / "unverified-class"), success=False)
-        assert "not verified" in error["error"]
-        assert not (directory / "unverified-class").exists()
 
         # Agent edits must not bypass the GUI's rank-specific skill limit.
         out_of_range = directory / "out-of-range.json"

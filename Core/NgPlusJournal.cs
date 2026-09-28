@@ -94,7 +94,8 @@ namespace FethEditor.Core
 
         public void SetClassMastered(int recordIndex, int classId, bool mastered)
         {
-            throw new NotSupportedException("NG+ class flag semantics are not verified; writing them is disabled.");
+            var (offset, mask) = ClassBit(recordIndex, classId);
+            file[offset] = mastered ? (byte)(file[offset] | mask) : (byte)(file[offset] & ~mask);
         }
 
         private (int offset, byte mask) ClassBit(int recordIndex, int classId)
@@ -124,7 +125,7 @@ namespace FethEditor.Core
                     recordIndex = index,
                     name = GetCharacterName(index),
                     skillRanks = Enumerable.Range(0, SkillCount).Select(skill => GetSkillRank(index, skill)).ToArray(),
-                    rawClassFlagIds = Enumerable.Range(0, ClassCount)
+                    masteredClassIds = Enumerable.Range(0, ClassCount)
                         .Where(classId => IsClassMastered(index, classId)).ToArray()
                 }).ToArray();
             return new
@@ -132,7 +133,7 @@ namespace FethEditor.Core
                 professorRank = ProfessorRank,
                 supports,
                 characters,
-                note = "NG+ history is separate from current-run progress. Class flags are raw, unverified data and cannot be edited."
+                note = "NG+ history is separate from current-run progress. Test changes on a copy before using the save in-game."
             };
         }
 

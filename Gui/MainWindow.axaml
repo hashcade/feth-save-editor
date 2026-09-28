@@ -473,7 +473,7 @@
                   </Border>
                 </ScrollViewer>
               </TabItem>
-              <TabItem Header="Class Flags">
+              <TabItem Header="Class Mastery">
                 <Grid Background="#F7F8FA" Margin="8" RowDefinitions="Auto,*" RowSpacing="6">
                   <TextBox Classes="Small" Name="ClassSearch" PlaceholderText="Search classes..."
                            TextChanged="ClassSearch_TextChanged" />

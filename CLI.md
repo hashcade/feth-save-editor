@@ -4,7 +4,7 @@
 
 On macOS or Linux, replace `FethEditor.Cli.exe` in the examples below with `./FethEditor.Cli`. The source build requires .NET 10; the self-contained downloads include the runtime. An unsigned macOS download may need local approval in macOS security settings.
 
-The CLI patches only named, mapped fields. Unknown bytes are preserved. `inspect` distinguishes current-run data from read-only NG+ journal history. An edited save still needs an in-game test.
+The CLI patches only named, mapped fields. Unknown bytes are preserved. `inspect` distinguishes current-run data from NG+ journal history. An edited save still needs an in-game test.
 
 ## Read
 
