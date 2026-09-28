@@ -79,6 +79,10 @@ jobs:
       - name: Build CLI
         run: dotnet build Cli/Cli.csproj -c Release --nologo
 
+      - name: Inspect embedded database inputs
+        if: runner.os == 'Windows'
+        run: dotnet msbuild Core/Core.csproj -getItem:EmbeddedResource
+
       - name: Verify save editing
         run: python tools/test_cli.py --cli Cli/bin/Release/net10.0/${{ matrix.executable }}
 
