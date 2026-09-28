@@ -25,7 +25,6 @@ internal static class UiStrings
     // labels follow the selected game database language.
     private static readonly Dictionary<string, (int Id, int Table)> GameStrings = new(StringComparer.Ordinal)
     {
-        ["Player"] = (1455, 1),
         ["Money:"] = (652, 1),
         ["Instruct Level:"] = (1153, 1),
         ["Reputation:"] = (651, 1),
