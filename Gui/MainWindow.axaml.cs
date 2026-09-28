@@ -27,15 +27,6 @@ public partial class MainWindow : Window
         new(1001, "High points · 1001")
     ];
 
-    private static readonly Choice[] SupportPresetsZh =
-    [
-        new(0, "无支援 · 0"),
-        new(101, "C 区间 · 101"),
-        new(301, "B 区间 · 301"),
-        new(601, "A 区间 · 601"),
-        new(1001, "高点数 · 1001")
-    ];
-
     private static readonly (string Label, string Path)[] GameFields =
     [
         ("Chapter:", "Player.Chapter"),
@@ -88,25 +79,36 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        DatabaseLanguage.ItemsSource = LanguageChoices();
-        DatabaseLanguage.SelectedIndex = (int)_databaseLanguage;
+        UpdateLanguageMenu();
         NgPlusProfessorRank.ItemsSource = SkillRanks.Take(10).ToArray();
         EditorTabs.SelectionChanged += (_, _) => UiStrings.Apply(this, _databaseLanguage);
         UiStrings.Apply(this, _databaseLanguage);
     }
 
-    private void DatabaseLanguage_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    private void UpdateLanguageMenu()
     {
-        if (!_databaseReady || DatabaseLanguage.SelectedItem is not Choice choice
-            || choice.Id == (int)_databaseLanguage) return;
-        enmLanguage next = (enmLanguage)choice.Id;
+        LanguageMenu.ItemsSource = Enum.GetValues<enmLanguage>()
+            .Select(language =>
+            {
+                var item = new MenuItem
+                {
+                    Header = (language == _databaseLanguage ? "✓ " : "  ")
+                        + UiStrings.LanguageName(language, _databaseLanguage)
+                };
+                item.Click += (_, _) => ChangeLanguage(language);
+                return item;
+            }).ToArray();
+    }
+
+    private void ChangeLanguage(enmLanguage next)
+    {
+        if (next == _databaseLanguage) return;
         try
         {
-            Database.Init(next);
+            if (_databaseReady) Database.Init(next);
             _databaseLanguage = next;
             UiPreferences.Save(next);
-            DatabaseLanguage.ItemsSource = LanguageChoices();
-            DatabaseLanguage.SelectedIndex = (int)next;
+            UpdateLanguageMenu();
             _itemChoices = null;
             _characterIds = null;
             _abilityChoices = null;
@@ -114,25 +116,25 @@ public partial class MainWindow : Window
             _battalionCharacters = null;
             _battalionTypes = null;
             _battalionSkills = null;
-            if (_save is null) return;
-            RefreshCurrentSummary();
-            RefreshStorage(StorageList.SelectedIndex, MiscList.SelectedIndex, GiftList.SelectedIndex);
-            RefreshCurrentCharacters(Math.Max(0, _currentCharacter));
-            RefreshBattalions(BattalionList.SelectedIndex);
-            RefreshQuests();
-            RefreshCurrentSupports();
-            RefreshCharacters();
-            RefreshSupports();
-            RefreshDatabaseViewer();
+            if (_save is not null)
+            {
+                RefreshCurrentSummary();
+                RefreshStorage(StorageList.SelectedIndex, MiscList.SelectedIndex, GiftList.SelectedIndex);
+                RefreshCurrentCharacters(Math.Max(0, _currentCharacter));
+                RefreshBattalions(BattalionList.SelectedIndex);
+                RefreshQuests();
+                RefreshCurrentSupports();
+                RefreshCharacters();
+                RefreshSupports();
+                RefreshDatabaseViewer();
+            }
             UiStrings.Apply(this, _databaseLanguage);
-            Status.Text = _databaseLanguage == enmLanguage.zh_hans
-                ? "语言已切换，存档内容没有修改。"
-                : "Database language changed. Save bytes were not modified.";
+            Status.Text = UiStrings.Translate("Database language changed. Save bytes were not modified.", _databaseLanguage);
         }
         catch (Exception error)
         {
-            Database.Init(_databaseLanguage);
-            DatabaseLanguage.SelectedIndex = (int)_databaseLanguage;
+            if (_databaseReady) Database.Init(_databaseLanguage);
+            UpdateLanguageMenu();
             Status.Text = "Could not change database language: " + error.Message;
         }
     }
@@ -208,9 +210,7 @@ public partial class MainWindow : Window
         RefreshNgPlusProfessorRank();
         RefreshDatabaseViewer();
         UiStrings.Apply(this, _databaseLanguage);
-        Status.Text = _databaseLanguage == enmLanguage.zh_hans
-            ? "存档已加载。修改只保存在内存中，另存副本后才会写入。"
-            : "Save loaded. Changes stay in memory until you save a new copy.";
+        Status.Text = UiStrings.Translate("Save loaded. Changes stay in memory until you save a new copy.", _databaseLanguage);
     }
 
     private async void SaveCopy_Click(object? sender, RoutedEventArgs e)
@@ -380,17 +380,11 @@ public partial class MainWindow : Window
             if (!name.Contains(search, StringComparison.OrdinalIgnoreCase)
                 && !classId.ToString(CultureInfo.InvariantCulture).Contains(search, StringComparison.OrdinalIgnoreCase))
                 continue;
-            int selectedClass = classId;
             var check = new CheckBox
             {
                 Content = $"{classId:D2} · {name}",
-                IsChecked = _save.Inheritance.IsClassMastered(character, classId)
-            };
-            check.IsCheckedChanged += (_, _) =>
-            {
-                if (_save is null) return;
-                _save.Inheritance.SetClassMastered(character, selectedClass, check.IsChecked == true);
-                MarkChanged();
+                IsChecked = _save.Inheritance.IsClassMastered(character, classId),
+                IsEnabled = false
             };
             ClassRows.Children.Add(check);
         }
@@ -443,15 +437,17 @@ public partial class MainWindow : Window
         }
         SelectedSupport.Text = DisplaySupportName(_save.Inheritance.GetSupportName(_selectedSupport));
         int points = _save.Inheritance.GetSupportPoints(_selectedSupport);
-        Choice[] presets = _databaseLanguage == enmLanguage.zh_hans ? SupportPresetsZh : SupportPresets;
+        Choice[] presets = SupportPresets
+            .Select(preset => new Choice(preset.Id, UiStrings.Translate(preset.Label, _databaseLanguage)))
+            .ToArray();
         Choice current = presets.FirstOrDefault(choice => choice.Id == points)
-            ?? new Choice(points, _databaseLanguage == enmLanguage.zh_hans
-                ? $"当前值 · {points}" : $"Current value · {points}");
+            ?? new Choice(points, string.Format(CultureInfo.CurrentCulture,
+                UiStrings.Translate("Current value · {0}", _databaseLanguage), points));
         SupportRankPreset.ItemsSource = presets.Contains(current)
             ? presets : [.. presets, current];
         SupportRankPreset.SelectedItem = current;
-        SupportRawPoints.Text = _databaseLanguage == enmLanguage.zh_hans
-            ? $"存档点数：{points}" : $"Stored points: {points}";
+        SupportRawPoints.Text = string.Format(CultureInfo.CurrentCulture,
+            UiStrings.Translate("Stored points: {0}", _databaseLanguage), points);
     }
 
     private void ApplySupport_Click(object? sender, RoutedEventArgs e)
@@ -481,10 +477,10 @@ public partial class MainWindow : Window
         ProfessorLevelValue.Text = data.Activities.GetInstructRank();
         RenownInput.Text = data.Activities.Reputation.ToString(CultureInfo.InvariantCulture);
         PlayerNameInput.Text = SaveEditor.Util.DecodeString(data.PlayerName);
-        PopulateNumericRows(GameRows, GameFields, 130);
-        PopulateNumericRows(ActivityRows, ActivityFields, 116);
-        PopulateNumericRows(StatueRows, StatueFields, 116);
-        PopulateNumericRows(StatisticsRows, StatisticFields, 118);
+        PopulateNumericRows(GameRows, GameFields, 160);
+        PopulateNumericRows(ActivityRows, ActivityFields, 160);
+        PopulateNumericRows(StatueRows, StatueFields, 200);
+        PopulateNumericRows(StatisticsRows, StatisticFields, 200);
     }
 
     private void PopulateNumericRows(
@@ -509,7 +505,7 @@ public partial class MainWindow : Window
             }
             var input = new TextBox
             {
-                Width = container == GameRows ? 88 : 70,
+                Width = 120,
                 Text = Convert.ToString(_save.Get(path), CultureInfo.InvariantCulture)
             };
             input.Classes.Add("Small");
@@ -558,10 +554,6 @@ public partial class MainWindow : Window
             return Database.GetString(9763 + statue) + ":";
         return UiStrings.Translate(fallback, _databaseLanguage);
     }
-
-    private Choice[] LanguageChoices() => Enum.GetValues<enmLanguage>()
-        .Select(language => new Choice((int)language,
-            UiStrings.LanguageName(language, _databaseLanguage))).ToArray();
 
     private ComboBox CreateGameChoice(string path)
     {

@@ -10,6 +10,7 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FethEditor.Gui;
 using FethEditor.Core;
+using SaveEditor;
 
 Environment.SetEnvironmentVariable("FETH_EDITOR_LANGUAGE", "en_u");
 AppBuilder.Configure<App>()
@@ -26,8 +27,8 @@ Dispatcher.UIThread.RunJobs();
 
 var tabs = window.FindControl<TabControl>("EditorTabs")
     ?? throw new InvalidOperationException("Editor tabs are missing.");
-if (tabs.ItemCount == 0)
-    throw new InvalidOperationException("Editor has no tabs.");
+if (tabs.ItemCount != 9)
+    throw new InvalidOperationException("Editor should show nine functional sections without a rank-only tab.");
 for (int index = 0; index < tabs.ItemCount; index++)
 {
     tabs.SelectedIndex = index;
@@ -99,13 +100,23 @@ if (args.Length > 0)
         window.FindControl<ListBox>("DatabaseClasses")!.ItemCount == 0 ||
         window.FindControl<ListBox>("DatabaseItems")!.ItemCount == 0)
         throw new InvalidOperationException("Database viewer lists were not loaded.");
-    var language = window.FindControl<ComboBox>("DatabaseLanguage")!;
-    language.SelectedIndex = 11;
+    var language = window.FindControl<MenuItem>("LanguageMenu")!;
+    var menuItems = language.Items.OfType<MenuItem>().ToArray();
+    var supportedLanguages = Enum.GetValues<enmLanguage>();
+    if (menuItems.Length != supportedLanguages.Length)
+        throw new InvalidOperationException("A game database language is missing from the menu.");
+    for (int index = 0; index < supportedLanguages.Length; index++)
+    {
+        menuItems[index].RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+        if (tabs.Items.OfType<TabItem>().ElementAt(1).Header?.ToString() != Database.GetString(1814, 1))
+            throw new InvalidOperationException($"Game text did not follow {supportedLanguages[index]}.");
+    }
+    ((MenuItem)language.Items[11]!).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
     if (!window.FindControl<TextBlock>("Status")!.Text!.Contains("没有修改", StringComparison.Ordinal)
         || tabs.Items.OfType<TabItem>().First().Header?.ToString() != "主页")
         throw new InvalidOperationException("Chinese interface was not applied.");
-    if (tabs.Items.OfType<TabItem>().ElementAt(7).Header?.ToString() != "继承等级"
-        || language.SelectedItem?.ToString() != "简体中文")
+    if (tabs.Items.OfType<TabItem>().ElementAt(7).Header?.ToString() != "继承角色"
+        || ((MenuItem)language.Items[11]!).Header?.ToString() != "✓ 简体中文")
         throw new InvalidOperationException("Inheritance labels or language names were not localized.");
     tabs.SelectedIndex = 0;
     Dispatcher.UIThread.RunJobs();
@@ -119,7 +130,7 @@ if (args.Length > 0)
     (window.CaptureRenderedFrame() ?? throw new InvalidOperationException("Inheritance UI did not render."))
         .Save(inheritanceScreenshot, PngBitmapEncoderOptions.Default);
     Console.WriteLine(inheritanceScreenshot);
-    language.SelectedIndex = 1;
+    ((MenuItem)language.Items[1]!).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
     if (tabs.Items.OfType<TabItem>().First().Header?.ToString() != "Main")
         throw new InvalidOperationException("English interface was not restored.");
     var gameRows = window.FindControl<StackPanel>("GameRows")!;
