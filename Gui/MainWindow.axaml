@@ -465,8 +465,8 @@
       </TabItem>
 
       <TabItem Name="InheritanceCharactersTab" Header="NG+ Characters">
-        <Grid Margin="8" ColumnDefinitions="248,*" ColumnSpacing="12">
-          <Border Classes="section" Grid.Column="0">
+        <Grid Margin="8" ColumnDefinitions="264,*" ColumnSpacing="10">
+          <suki:GlassCard Name="InheritanceCharacterListCard" Classes="section" Grid.Column="0">
             <Grid RowDefinitions="Auto,*" RowSpacing="12">
               <TextBlock Text="Character List" FontWeight="SemiBold" />
               <Grid Grid.Row="1" RowDefinitions="Auto,*" RowSpacing="5">
@@ -476,33 +476,31 @@
                          SelectionChanged="CharacterList_SelectionChanged" />
               </Grid>
             </Grid>
-          </Border>
+          </suki:GlassCard>
 
-          <Grid Grid.Column="1" RowDefinitions="Auto,*" RowSpacing="10">
-            <TextBlock Name="SelectedCharacter" Margin="4,6,0,0" Text="Select a character"
-                       FontSize="17" FontWeight="SemiBold" />
-            <TabControl Name="InheritanceTabs" Grid.Row="1">
-              <TabItem Header="Skills">
-                <Border Classes="section" Margin="8" VerticalAlignment="Top">
-                  <StackPanel Spacing="16">
+          <suki:GlassCard Name="InheritanceCharacterEditorCard" Classes="section" Grid.Column="1">
+            <Grid RowDefinitions="Auto,*" RowSpacing="10">
+              <TextBlock Name="SelectedCharacter" Margin="4,6,0,0" Text="Select a character"
+                         FontSize="17" FontWeight="SemiBold" />
+              <TabControl Name="InheritanceTabs" Grid.Row="1">
+                <TabItem Header="Skills">
+                  <StackPanel Margin="0,8,0,0" Spacing="16" VerticalAlignment="Top">
                     <TextBlock Text="Historical Skill Ranks" FontSize="14" FontWeight="SemiBold" />
                     <UniformGrid Name="SkillRows" Columns="2" />
                   </StackPanel>
-                </Border>
-              </TabItem>
-              <TabItem Header="Class Mastery">
-                <Border Classes="section" Margin="8">
-                  <Grid RowDefinitions="Auto,*" RowSpacing="12">
+                </TabItem>
+                <TabItem Header="Class Mastery">
+                  <Grid Margin="0,8,0,0" RowDefinitions="Auto,*" RowSpacing="12">
                     <TextBox Classes="Small" Name="ClassSearch" PlaceholderText="Search classes..."
                              TextChanged="ClassSearch_TextChanged" />
                     <ScrollViewer Grid.Row="1">
                       <UniformGrid Name="ClassRows" Columns="2" />
                     </ScrollViewer>
                   </Grid>
-                </Border>
-              </TabItem>
-            </TabControl>
-          </Grid>
+                </TabItem>
+              </TabControl>
+            </Grid>
+          </suki:GlassCard>
         </Grid>
       </TabItem>
 
