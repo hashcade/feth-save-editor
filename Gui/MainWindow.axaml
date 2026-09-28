@@ -163,6 +163,174 @@
         </Grid>
       </TabItem>
 
+      <TabItem Header="Characters">
+        <Grid Background="#F7F8FA" Margin="8" ColumnDefinitions="264,*" ColumnSpacing="8">
+          <Border Classes="section" Grid.Column="0">
+            <Grid RowDefinitions="Auto,*" RowSpacing="12">
+              <TextBlock Text="Character List" FontWeight="SemiBold" />
+              <ListBox Classes="Small" Name="CurrentCharacterList" Grid.Row="1"
+                       SelectionChanged="CurrentCharacterList_SelectionChanged" />
+            </Grid>
+          </Border>
+          <Grid Grid.Column="1" RowDefinitions="Auto,*" RowSpacing="8">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBlock Name="CurrentCharacterTitle" Text="Select a character"
+                         VerticalAlignment="Center" />
+              <ComboBox Classes="Small" Name="CurrentCharacterId" Width="180"
+                        SelectionChanged="CurrentCharacterId_SelectionChanged" />
+              <Button Classes="Small" Content="Export" Click="ExportCharacter_Click" />
+              <Button Classes="Small" Content="Import" Click="ImportCharacter_Click" />
+            </StackPanel>
+            <TabControl Name="CharacterTabs" Grid.Row="1">
+              <TabItem Header="Main">
+                <ScrollViewer Background="#F7F8FA">
+                  <Grid Margin="8" ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <StackPanel Spacing="8">
+                      <Border Classes="section">
+                        <StackPanel Spacing="12">
+                          <TextBlock Text="Stats" FontWeight="SemiBold" />
+                          <StackPanel Name="CharacterStatRows" Spacing="4" />
+                        </StackPanel>
+                      </Border>
+                      <Border Classes="section">
+                        <StackPanel Spacing="12">
+                          <TextBlock Text="Item List" FontWeight="SemiBold" />
+                          <StackPanel Name="CharacterItemRows" Spacing="4" />
+                          <Button Classes="Small" Content="Set Item Durability to 100"
+                                  Click="SetCharacterItemsDurability_Click" />
+                        </StackPanel>
+                      </Border>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="8">
+                      <Border Classes="section">
+                        <StackPanel Spacing="12">
+                          <TextBlock Text="Equipped Abilities" FontWeight="SemiBold" />
+                          <StackPanel Name="EquippedAbilityRows" Spacing="4" />
+                        </StackPanel>
+                      </Border>
+                      <Border Classes="section">
+                        <StackPanel Spacing="12">
+                          <TextBlock Text="Equipped Combat Arts" FontWeight="SemiBold" />
+                          <StackPanel Name="EquippedArtRows" Spacing="4" />
+                        </StackPanel>
+                      </Border>
+                    </StackPanel>
+                  </Grid>
+                </ScrollViewer>
+              </TabItem>
+              <TabItem Header="Skills">
+                <ScrollViewer Background="#F7F8FA">
+                  <Grid Margin="8" ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <Border Classes="section">
+                      <StackPanel Spacing="12">
+                        <TextBlock Text="Skill Experience" FontWeight="SemiBold" />
+                        <StackPanel Name="CurrentSkillRows" Spacing="4" />
+                        <Button Classes="Small" Content="Max Skill Experience"
+                                Click="MaxCharacterSkills_Click" />
+                      </StackPanel>
+                    </Border>
+                    <Border Classes="section" Grid.Column="1">
+                      <StackPanel Spacing="12">
+                        <TextBlock Text="Learned Magic" FontWeight="SemiBold" />
+                        <StackPanel Name="CharacterMagicRows" Spacing="4" />
+                      </StackPanel>
+                    </Border>
+                  </Grid>
+                </ScrollViewer>
+              </TabItem>
+              <TabItem Header="Flags">
+                <ScrollViewer Background="#F7F8FA">
+                  <Grid Margin="8" ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <Border Classes="section">
+                      <StackPanel Spacing="12">
+                        <TextBlock Text="Character Flags" FontWeight="SemiBold" />
+                        <StackPanel Name="CurrentCharacterFlags" Spacing="4" />
+                      </StackPanel>
+                    </Border>
+                    <StackPanel Grid.Column="1" Spacing="8">
+                      <Border Classes="section">
+                        <StackPanel Spacing="12">
+                          <TextBlock Text="Class Flags" FontWeight="SemiBold" />
+                          <StackPanel Name="CurrentClassFlags" Spacing="4" />
+                        </StackPanel>
+                      </Border>
+                      <Border Classes="section">
+                        <StackPanel Spacing="8">
+                          <TextBlock Text="Adjutant" FontWeight="SemiBold" />
+                          <ComboBox Classes="Small" Name="CurrentAdjutant"
+                                    SelectionChanged="CurrentAdjutant_SelectionChanged" />
+                        </StackPanel>
+                      </Border>
+                    </StackPanel>
+                  </Grid>
+                </ScrollViewer>
+              </TabItem>
+              <TabItem Header="Class Exp">
+                <Grid Background="#F7F8FA" Margin="8" ColumnDefinitions="*,200" ColumnSpacing="8">
+                  <Border Classes="section">
+                    <Grid RowDefinitions="Auto,*" RowSpacing="12">
+                      <TextBlock Text="Class Experience" FontWeight="SemiBold" />
+                      <ListBox Classes="Small" Name="CurrentClassExpList" Grid.Row="1"
+                               SelectionChanged="CurrentClassExpList_SelectionChanged" />
+                    </Grid>
+                  </Border>
+                  <StackPanel Grid.Column="1" Spacing="8">
+                    <Border Classes="section">
+                      <StackPanel Spacing="8">
+                        <TextBlock Text="Class Editor" FontWeight="SemiBold" />
+                        <TextBlock Name="CurrentClassInfo" Text="Current class" TextWrapping="Wrap" />
+                        <TextBlock Text="Experience" />
+                        <TextBox Classes="Small" Name="SelectedClassExp" />
+                        <TextBlock Text="Mastery Level (0 or 1)" />
+                        <TextBox Classes="Small" Name="SelectedClassLevel" />
+                        <Button Classes="Small" Name="SetCharacterClassButton" Content="Set Class Values"
+                                Click="SetCharacterClass_Click" />
+                      </StackPanel>
+                    </Border>
+                    <Button Classes="Small" Content="Max All Class Experience"
+                            Click="MaxCharacterClasses_Click" />
+                  </StackPanel>
+                </Grid>
+              </TabItem>
+              <TabItem Header="Class Flags">
+                <ScrollViewer Background="#F7F8FA">
+                  <Border Classes="section" Margin="8">
+                    <StackPanel Spacing="12">
+                      <TextBlock Text="Class Unlock Flags" FontWeight="SemiBold" />
+                      <StackPanel Name="CurrentClassUnlockFlags" Spacing="4" />
+                    </StackPanel>
+                  </Border>
+                </ScrollViewer>
+              </TabItem>
+              <TabItem Header="Abilities">
+                <ScrollViewer Background="#F7F8FA">
+                  <Border Classes="section" Margin="8">
+                    <StackPanel Spacing="12">
+                      <TextBlock Text="Abilities" FontWeight="SemiBold" />
+                      <Button Classes="Small" Content="Unlock All" HorizontalAlignment="Left"
+                              Click="UnlockAllAbilities_Click" />
+                      <StackPanel Name="CurrentAbilityFlags" Spacing="4" />
+                    </StackPanel>
+                  </Border>
+                </ScrollViewer>
+              </TabItem>
+              <TabItem Header="Combat Arts">
+                <ScrollViewer Background="#F7F8FA">
+                  <Border Classes="section" Margin="8">
+                    <StackPanel Spacing="12">
+                      <TextBlock Text="Combat Arts" FontWeight="SemiBold" />
+                      <Button Classes="Small" Content="Unlock All" HorizontalAlignment="Left"
+                              Click="UnlockAllCombatArts_Click" />
+                      <StackPanel Name="CurrentArtFlags" Spacing="4" />
+                    </StackPanel>
+                  </Border>
+                </ScrollViewer>
+              </TabItem>
+            </TabControl>
+          </Grid>
+        </Grid>
+      </TabItem>
+
       <TabItem Header="Battalion">
         <Grid Background="#F7F8FA" Margin="8" ColumnDefinitions="264,220,*" ColumnSpacing="8">
           <Border Classes="section" Grid.Column="0">

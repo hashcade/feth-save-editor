@@ -127,6 +127,7 @@ public partial class MainWindow : Window
 
         RefreshCurrentSummary();
         RefreshStorage();
+        RefreshCurrentCharacters();
         RefreshBattalions();
         RefreshQuests();
         RefreshCurrentSupports();

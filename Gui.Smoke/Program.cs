@@ -35,6 +35,19 @@ for (int index = 0; index < tabs.ItemCount; index++)
     Console.WriteLine(screenshot);
 }
 
+var characterTabs = window.FindControl<TabControl>("CharacterTabs")!;
+tabs.SelectedIndex = 2;
+for (int index = 0; index < characterTabs.ItemCount; index++)
+{
+    characterTabs.SelectedIndex = index;
+    Dispatcher.UIThread.RunJobs();
+    var frame = window.CaptureRenderedFrame()
+        ?? throw new InvalidOperationException($"Character tab {index} did not render.");
+    string screenshot = Path.Combine(Path.GetTempPath(), $"feth-editor-character-{index}.png");
+    frame.Save(screenshot, PngBitmapEncoderOptions.Default);
+    Console.WriteLine(screenshot);
+}
+
 if (args.Length > 0)
 {
     var items = window.FindControl<ListBox>("StorageList")!;
@@ -63,4 +76,17 @@ if (args.Length > 0)
     window.FindControl<Button>("SaveBattalionButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
     if (battalionExp.Text != "401")
         throw new InvalidOperationException("Battalion edit was not retained.");
+
+    var character = window.FindControl<ListBox>("CurrentCharacterList")!;
+    if (character.ItemCount == 0)
+        throw new InvalidOperationException("Character list was not loaded.");
+    characterTabs.SelectedIndex = 3;
+    var classExp = window.FindControl<TextBox>("SelectedClassExp")!;
+    classExp.Text = "12";
+    window.FindControl<Button>("SetCharacterClassButton")!
+        .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    if (classExp.Text != "12")
+        throw new InvalidOperationException("Character class experience was not retained.");
+    if (!window.FindControl<TextBlock>("Status")!.Text!.Contains("changed", StringComparison.OrdinalIgnoreCase))
+        throw new InvalidOperationException("Character edit did not mark the save as changed.");
 }
