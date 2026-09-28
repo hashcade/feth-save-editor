@@ -292,7 +292,7 @@
                   </StackPanel>
                 </Grid>
               </TabItem>
-              <TabItem Header="Class Flags">
+              <TabItem Header="Class data (unverified)" IsEnabled="False">
                 <ScrollViewer Background="#F7F8FA">
                   <Border Classes="section" Margin="8">
                     <StackPanel Spacing="12">
@@ -460,8 +460,6 @@
               <ComboBox Classes="Small" Name="NgPlusProfessorRank" Width="120"
                         HorizontalAlignment="Left"
                         SelectionChanged="NgPlusProfessorRank_SelectionChanged" />
-              <TextBlock Text="This is separate from the current run's Instruct Exp and rank on Main."
-                         TextWrapping="Wrap" />
             </StackPanel>
           </Border>
         </ScrollViewer>
@@ -494,7 +492,7 @@
                   </Border>
                 </ScrollViewer>
               </TabItem>
-              <TabItem Header="Class Flags">
+              <TabItem Header="Class Flags" IsVisible="False">
                 <Grid Background="#F7F8FA" Margin="8" RowDefinitions="Auto,*" RowSpacing="6">
                   <TextBox Classes="Small" Name="ClassSearch" PlaceholderText="Search classes..."
                            TextChanged="ClassSearch_TextChanged" />
@@ -521,22 +519,23 @@
               </Grid>
             </Grid>
           </Border>
-          <Grid Grid.Column="1" RowDefinitions="130,*" RowSpacing="8">
+          <Grid Grid.Column="1" RowDefinitions="Auto,*" RowSpacing="8">
             <Border Classes="section">
               <StackPanel Spacing="12">
                 <TextBlock Text="Talk Editor" FontWeight="SemiBold" />
-                <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="100,160,*" RowSpacing="7">
+                <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="100,240,*" RowSpacing="7">
                   <TextBlock Name="SelectedSupport" Grid.ColumnSpan="3" Text="Select a support pair"
                              TextWrapping="Wrap" />
-                  <TextBlock Grid.Row="1" Text="Max points:" VerticalAlignment="Center" />
-                  <TextBox Classes="Small" Name="SupportPointsInput" Grid.Row="1" Grid.Column="1" />
+                  <TextBlock Grid.Row="1" Text="Support:" VerticalAlignment="Center" />
+                  <ComboBox Classes="Small" Name="SupportRankPreset" Grid.Row="1" Grid.Column="1" />
                   <Button Classes="Small" Grid.Row="1" Grid.Column="2" Margin="6,0,0,0" HorizontalAlignment="Left"
                           Content="Set" Click="ApplySupport_Click" />
                 </Grid>
+                <TextBlock Name="SupportRawPoints" Foreground="#6B7280" />
               </StackPanel>
             </Border>
             <TextBlock Grid.Row="1" Margin="8,0" TextWrapping="Wrap"
-                       Text="Historical support points are stored separately from this run. Values outside known game ranges may not be meaningful." />
+                       Text="These are point presets, not guaranteed dialogue ranks. Some pairs have extra conversations or cannot reach S." />
           </Grid>
         </Grid>
       </TabItem>

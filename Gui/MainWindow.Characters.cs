@@ -218,7 +218,7 @@ public partial class MainWindow
             int rank = character.SkillLevel[index];
             row.Children.Add(new TextBlock
             {
-                Text = $"{SkillNames[index]} ({(rank < SkillRanks.Length ? SkillRanks[rank] : rank.ToString(CultureInfo.InvariantCulture))})",
+                Text = $"{Database.GetString(7214 + index)} ({(rank < SkillRanks.Length ? SkillRanks[rank] : rank.ToString(CultureInfo.InvariantCulture))})",
                 Width = 125, VerticalAlignment = VerticalAlignment.Center
             });
             var input = new TextBox

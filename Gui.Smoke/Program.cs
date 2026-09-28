@@ -11,6 +11,7 @@ using Avalonia.VisualTree;
 using FethEditor.Gui;
 using FethEditor.Core;
 
+Environment.SetEnvironmentVariable("FETH_EDITOR_LANGUAGE", "en_u");
 AppBuilder.Configure<App>()
     .UseSkia()
     .WithInterFont()
@@ -100,9 +101,27 @@ if (args.Length > 0)
         throw new InvalidOperationException("Database viewer lists were not loaded.");
     var language = window.FindControl<ComboBox>("DatabaseLanguage")!;
     language.SelectedIndex = 11;
-    if (!window.FindControl<TextBlock>("Status")!.Text!.Contains("not modified", StringComparison.Ordinal))
-        throw new InvalidOperationException("Language switch modified the save or failed.");
+    if (!window.FindControl<TextBlock>("Status")!.Text!.Contains("没有修改", StringComparison.Ordinal)
+        || tabs.Items.OfType<TabItem>().First().Header?.ToString() != "主页")
+        throw new InvalidOperationException("Chinese interface was not applied.");
+    if (tabs.Items.OfType<TabItem>().ElementAt(7).Header?.ToString() != "继承等级"
+        || language.SelectedItem?.ToString() != "简体中文")
+        throw new InvalidOperationException("Inheritance labels or language names were not localized.");
+    tabs.SelectedIndex = 0;
+    Dispatcher.UIThread.RunJobs();
+    string chineseScreenshot = Path.Combine(Path.GetTempPath(), "feth-editor-zh.png");
+    (window.CaptureRenderedFrame() ?? throw new InvalidOperationException("Chinese UI did not render."))
+        .Save(chineseScreenshot, PngBitmapEncoderOptions.Default);
+    Console.WriteLine(chineseScreenshot);
+    tabs.SelectedIndex = 7;
+    Dispatcher.UIThread.RunJobs();
+    string inheritanceScreenshot = Path.Combine(Path.GetTempPath(), "feth-editor-zh-inheritance.png");
+    (window.CaptureRenderedFrame() ?? throw new InvalidOperationException("Inheritance UI did not render."))
+        .Save(inheritanceScreenshot, PngBitmapEncoderOptions.Default);
+    Console.WriteLine(inheritanceScreenshot);
     language.SelectedIndex = 1;
+    if (tabs.Items.OfType<TabItem>().First().Header?.ToString() != "Main")
+        throw new InvalidOperationException("English interface was not restored.");
     var gameRows = window.FindControl<StackPanel>("GameRows")!;
     var difficulty = ((StackPanel)gameRows.Children[1]).Children.OfType<ComboBox>().Single();
     if (difficulty.ItemCount != 4)
@@ -114,6 +133,16 @@ if (args.Length > 0)
     historicalRank.SelectedIndex = 8;
     if (!window.FindControl<TextBlock>("Status")!.Text!.Contains("changed", StringComparison.OrdinalIgnoreCase))
         throw new InvalidOperationException("NG+ professor rank edit did not mark the save as changed.");
+    tabs.SelectedIndex = 2;
+    var historicalCharacters = window.FindControl<ListBox>("CharacterList")!;
+    if (!historicalCharacters.Items.OfType<string>().Any(name => name.Contains("Yuri", StringComparison.Ordinal))
+        || !historicalCharacters.Items.OfType<string>().Any(name => name.Contains("Jeritza", StringComparison.Ordinal)))
+        throw new InvalidOperationException("DLC and Jeritza NG+ names are missing.");
+    if (historicalCharacters.Items.OfType<string>().Any(name => name.Contains("Aelfric", StringComparison.Ordinal)))
+        throw new InvalidOperationException("Non-recruitable NPCs should not appear in the NG+ editor.");
+    var supportPreset = window.FindControl<ComboBox>("SupportRankPreset")!;
+    if (supportPreset.SelectedItem?.ToString()?.Contains("1001", StringComparison.Ordinal) != true)
+        throw new InvalidOperationException("NG+ support point preset did not represent the stored value.");
 
     var items = window.FindControl<ListBox>("StorageList")!;
     var misc = window.FindControl<ListBox>("MiscList")!;
