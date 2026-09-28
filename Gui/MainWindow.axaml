@@ -357,7 +357,7 @@
       </TabItem>
 
       <TabItem Name="BattalionTab" Header="Battalion">
-        <Grid Margin="8" ColumnDefinitions="360,*" ColumnSpacing="10">
+        <Grid Margin="8" ColumnDefinitions="320,*" ColumnSpacing="10">
           <suki:GlassCard Name="BattalionListCard" Classes="section" Grid.Column="0">
             <Grid RowDefinitions="Auto,*" RowSpacing="12">
               <TextBlock Text="Battalion List" FontWeight="SemiBold" />
