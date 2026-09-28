@@ -12,6 +12,7 @@ using Avalonia.VisualTree;
 using FethEditor.Gui;
 using FethEditor.Core;
 using SaveEditor;
+using SaveEditor.Structs;
 
 Environment.SetEnvironmentVariable("FETH_EDITOR_LANGUAGE", "en_u");
 AppBuilder.Configure<App>()
@@ -25,6 +26,10 @@ window.Show();
 if (args.Length > 0)
     window.LoadSave(args[0]);
 Dispatcher.UIThread.RunJobs();
+if (args.Length > 0 && !window.FindControl<MenuItem>("SaveMenuItem")!.IsEnabled)
+    throw new InvalidOperationException("A loaded save cannot be written before editing.");
+if (!Avalonia.Input.DragDrop.GetAllowDrop(window))
+    throw new InvalidOperationException("Dropping a slot save on the editor is disabled.");
 
 var tabs = window.FindControl<TabControl>("EditorTabs")
     ?? throw new InvalidOperationException("Editor tabs are missing.");
@@ -59,6 +64,9 @@ if (args.Length > 1)
     systemWindow.Show();
     systemWindow.LoadSystem(args[1]);
     Dispatcher.UIThread.RunJobs();
+    if (!Avalonia.Input.DragDrop.GetAllowDrop(systemWindow) ||
+        !systemWindow.FindControl<MenuItem>("WriteSystemMenu")!.IsEnabled)
+        throw new InvalidOperationException("System save drag/drop or writing is disabled.");
     if (systemWindow.FindControl<ListBox>("SystemSlots")!.ItemCount != 37 ||
         systemWindow.FindControl<ListBox>("SystemFlags")!.ItemCount != 2464)
         throw new InvalidOperationException("System save lists were not loaded.");
@@ -94,8 +102,58 @@ if (args.Length > 1)
     }
 }
 
+string legacySystem = Path.Combine(Path.GetTempPath(), $"feth-system-v5-{Guid.NewGuid():N}");
+string upgradedSystem = legacySystem + "-upgraded";
+string? legacyBackup = null;
+try
+{
+    var legacy = new byte[SystemSave.SIZE_SAVE_V5];
+    BitConverter.GetBytes(5u).CopyTo(legacy, 4);
+    BitConverter.GetBytes(legacy.Length).CopyTo(legacy, 8);
+    legacy[SystemSave.SIZE_SAVE_HEADER] = 0x07;
+    legacy[SystemSave.SIZE_SAVE_HEADER + SystemSaveData_V5.COUNT_SAVES * SaveFileInfo.SIZE] = 0x81;
+    BitConverter.GetBytes(Util.CalcChecksum32(legacy[SystemSave.SIZE_SAVE_HEADER..])).CopyTo(legacy, 0);
+    File.WriteAllBytes(legacySystem, legacy);
+
+    var converted = SystemBuffer.Open(legacySystem);
+    if (converted.SourceVersion != 5 || converted.HasInvalidChecksum ||
+        converted.Data.Infos.Length != SystemSaveData_V7.COUNT_SAVES ||
+        converted.Data.Infos[0].Flags != 0x07 || converted.Data.Infos[7].Flags != 0x11 ||
+        !converted.GetFlag(0) || !converted.GetFlag(7))
+        throw new InvalidOperationException("Version-5 system save conversion lost slots or flags.");
+
+    File.WriteAllBytes(upgradedSystem, legacy);
+    legacyBackup = VerifiedFileWriter.Write(upgradedSystem, converted.FinishedBytes(), path =>
+    {
+        var verified = SystemBuffer.Open(path);
+        return verified.SourceVersion == 7 && !verified.HasInvalidChecksum;
+    });
+    if (legacyBackup is null || !File.ReadAllBytes(legacyBackup).SequenceEqual(legacy) ||
+        SystemBuffer.Open(upgradedSystem).SourceVersion != 7 ||
+        !File.ReadAllBytes(legacySystem).SequenceEqual(legacy))
+        throw new InvalidOperationException("Overwriting a system save did not preserve its exact backup.");
+    legacy[SystemSave.SIZE_SAVE_HEADER] ^= 0x01;
+    File.WriteAllBytes(legacySystem, legacy);
+    var damaged = SystemBuffer.Open(legacySystem);
+    if (!damaged.HasInvalidChecksum)
+        throw new InvalidOperationException("Bad system checksum was not reported.");
+    File.WriteAllBytes(upgradedSystem, damaged.FinishedBytes());
+    if (SystemBuffer.Open(upgradedSystem).HasInvalidChecksum)
+        throw new InvalidOperationException("Writing a system save did not repair its checksum.");
+}
+finally
+{
+    if (File.Exists(legacySystem)) File.Delete(legacySystem);
+    if (File.Exists(upgradedSystem)) File.Delete(upgradedSystem);
+    if (legacyBackup is not null && File.Exists(legacyBackup)) File.Delete(legacyBackup);
+}
+
 var characterTabs = window.FindControl<TabControl>("CharacterTabs")!;
 tabs.SelectedIndex = 2;
+var classFlagsTab = characterTabs.Items.OfType<TabItem>()
+    .Single(tab => tab.Header?.ToString() == "Class Flags");
+if (!classFlagsTab.IsEnabled)
+    throw new InvalidOperationException("Current-run class unlock editing is disabled.");
 for (int index = 0; index < characterTabs.ItemCount; index++)
 {
     characterTabs.SelectedIndex = index;
@@ -105,6 +163,18 @@ for (int index = 0; index < characterTabs.ItemCount; index++)
     string screenshot = Path.Combine(Path.GetTempPath(), $"feth-editor-character-{index}.png");
     frame.Save(screenshot, PngBitmapEncoderOptions.Default);
     Console.WriteLine(screenshot);
+}
+if (args.Length > 0)
+{
+    characterTabs.SelectedItem = classFlagsTab;
+    Dispatcher.UIThread.RunJobs();
+    var classUnlocks = window.FindControl<StackPanel>("CurrentClassUnlockFlags")!;
+    if (classUnlocks.Children.Count != Database.CLASS_FLAGS_COUNT)
+        throw new InvalidOperationException("Current-run class unlock list is incomplete.");
+    var firstUnlock = (CheckBox)classUnlocks.Children[0];
+    firstUnlock.IsChecked = firstUnlock.IsChecked != true;
+    if (!window.FindControl<MenuItem>("SaveMenuItem")!.IsEnabled)
+        throw new InvalidOperationException("Editing a class unlock did not enable saving.");
 }
 
 if (args.Length > 0)
@@ -234,6 +304,10 @@ if (args.Length > 0)
     var character = window.FindControl<ListBox>("CurrentCharacterList")!;
     if (character.ItemCount == 0)
         throw new InvalidOperationException("Character list was not loaded.");
+    var battalionLabel = window.FindControl<StackPanel>("CharacterStatRows")!.Children
+        .OfType<TextBlock>().LastOrDefault();
+    if (battalionLabel?.Text?.StartsWith("Equipped Battalion:", StringComparison.Ordinal) != true)
+        throw new InvalidOperationException("Character equipped battalion is not shown.");
     characterTabs.SelectedIndex = 3;
     var classExp = window.FindControl<TextBox>("SelectedClassExp")!;
     classExp.Text = "12";

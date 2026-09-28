@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Platform.Storage;
@@ -82,6 +83,8 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        DragDrop.AddDragOverHandler(this, SaveDragOver);
+        DragDrop.AddDropHandler(this, SaveDropped);
         UpdateLanguageMenu();
         NgPlusProfessorRank.ItemsSource = SkillRanks.Take(10).ToArray();
         _statusTimer.Tick += (_, _) =>
@@ -94,7 +97,8 @@ public partial class MainWindow : Window
             if (change.Property != TextBlock.TextProperty) return;
             _statusTimer.Stop();
             StatusNotice.IsVisible = !string.IsNullOrWhiteSpace(Status.Text);
-            if (StatusNotice.IsVisible) _statusTimer.Start();
+            if (StatusNotice.IsVisible && !Status.Text!.StartsWith("Warning:", StringComparison.Ordinal))
+                _statusTimer.Start();
         };
         EditorTabs.SelectionChanged += (_, _) => UiStrings.Apply(this, _databaseLanguage);
         UiStrings.Apply(this, _databaseLanguage);
@@ -156,6 +160,25 @@ public partial class MainWindow : Window
 
     private void Exit_Click(object? sender, RoutedEventArgs e) => Close();
 
+    private void SaveDragOver(object? sender, DragEventArgs e) =>
+        e.DragEffects = e.DataTransfer.Contains(DataFormat.File)
+            ? DragDropEffects.Copy : DragDropEffects.None;
+
+    private void SaveDropped(object? sender, DragEventArgs e)
+    {
+        var file = e.DataTransfer.TryGetFiles()?.OfType<IStorageFile>().FirstOrDefault();
+        if (file is null) return;
+        try
+        {
+            if (!file.Path.IsFile) throw new NotSupportedException("Only local files are supported.");
+            LoadSave(file.Path.LocalPath);
+        }
+        catch (Exception error)
+        {
+            Status.Text = "Could not open save: " + error.Message;
+        }
+    }
+
     private void OpenSystemEditor_Click(object? sender, RoutedEventArgs e)
     {
         if (!_databaseReady)
@@ -205,7 +228,7 @@ public partial class MainWindow : Window
             CharacterSearch.Text = string.Empty;
             ClassSearch.Text = string.Empty;
             SupportSearch.Text = string.Empty;
-            SaveMenuItem.IsEnabled = false;
+            SaveMenuItem.IsEnabled = true;
             _selectedCharacter = -1;
             _selectedSupport = -1;
         }
@@ -225,7 +248,9 @@ public partial class MainWindow : Window
         RefreshNgPlusProfessorRank();
         RefreshDatabaseViewer();
         UiStrings.Apply(this, _databaseLanguage);
-        Status.Text = string.Empty;
+        Status.Text = opened.HasInvalidChecksum
+            ? "Warning: save checksum does not match. Keep the original; writing will repair the checksum."
+            : string.Empty;
     }
 
     private async void SaveCopy_Click(object? sender, RoutedEventArgs e)
@@ -235,32 +260,21 @@ public partial class MainWindow : Window
         {
             var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
-                Title = "Save edited copy",
-                SuggestedFileName = Path.GetFileName(_sourcePath) + "-edited"
+                Title = "Write save",
+                SuggestedFileName = Path.GetFileName(_sourcePath)
             });
             if (file is null) return;
             if (!file.Path.IsFile) throw new NotSupportedException("Only local files are supported.");
             string destination = Path.GetFullPath(file.Path.LocalPath);
-            if (string.Equals(destination, Path.GetFullPath(_sourcePath), StringComparison.OrdinalIgnoreCase))
-                throw new IOException("The original save cannot be overwritten. Choose a new path.");
-            if (File.Exists(destination))
-                throw new IOException("The destination already exists. Choose a new filename.");
-
             byte[] output = _save.FinishedBytes();
-            string temporary = destination + ".tmp-" + Guid.NewGuid().ToString("N");
-            try
+            string? backup = VerifiedFileWriter.Write(destination, output, path =>
             {
-                File.WriteAllBytes(temporary, output);
-                var verified = SaveBuffer.Open(temporary);
-                if (verified.Sha256 != SaveBuffer.Digest(output))
-                    throw new InvalidDataException("Written save failed verification.");
-                File.Move(temporary, destination);
-            }
-            finally
-            {
-                if (File.Exists(temporary)) File.Delete(temporary);
-            }
-            Status.Text = "Saved and verified edited copy: " + destination;
+                var verified = SaveBuffer.Open(path);
+                return !verified.HasInvalidChecksum && verified.Sha256 == SaveBuffer.Digest(output);
+            });
+            Status.Text = backup is null
+                ? "Saved and verified: " + destination
+                : "Saved and verified: " + destination + " (backup: " + backup + ")";
         }
         catch (Exception error)
         {
@@ -619,7 +633,7 @@ public partial class MainWindow : Window
     private void MarkChanged()
     {
         if (_save is null) return;
-        SaveMenuItem.IsEnabled = _save.ChangedBytes > 0;
+        SaveMenuItem.IsEnabled = true;
         Status.Text = string.Empty;
     }
 

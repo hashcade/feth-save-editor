@@ -2,7 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="FethEditor.Gui.MainWindow"
         Title="FETH Editor" Width="1120" Height="780" MinWidth="860" MinHeight="600"
-        FontSize="13">
+        FontSize="13" DragDrop.AllowDrop="True">
   <Window.Styles>
     <Style Selector="Border.section">
       <Setter Property="Padding" Value="20" />
@@ -26,7 +26,7 @@
         <Menu VerticalAlignment="Center">
           <MenuItem Header="_File">
             <MenuItem Header="_Load Save..." Click="OpenSave_Click" />
-            <MenuItem Name="SaveMenuItem" Header="_Write Edited Copy..."
+            <MenuItem Name="SaveMenuItem" Header="_Write Save..."
                       IsEnabled="False" Click="SaveCopy_Click" />
             <MenuItem Header="_System Save Editor..." Click="OpenSystemEditor_Click" />
             <Separator />
@@ -305,7 +305,7 @@
                   </StackPanel>
                 </Grid>
               </TabItem>
-              <TabItem Header="Class data (unverified)" IsEnabled="False">
+              <TabItem Header="Class Flags">
                 <ScrollViewer>
                   <Border Classes="section" Margin="8">
                     <StackPanel Spacing="12">

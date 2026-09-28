@@ -117,6 +117,14 @@ public partial class MainWindow
             row.Children.Add(input);
             CharacterStatRows.Children.Add(row);
         }
+        string battalion = character.EquippedBattalion.Type >= Database.BATTALION_COUNT
+            ? Database.STR_NONE : Database.GetBattalionName(character.EquippedBattalion.Type);
+        CharacterStatRows.Children.Add(new TextBlock
+        {
+            Name = "EquippedBattalionValue",
+            Text = UiStrings.Translate("Equipped Battalion:", _databaseLanguage) + " " + battalion,
+            TextWrapping = Avalonia.Media.TextWrapping.Wrap
+        });
     }
 
     private void SetCharacterNumber(int slot, string path, TextBox input)
