@@ -245,6 +245,17 @@ if (args.Length > 0)
             .Save(pageScreenshot, PngBitmapEncoderOptions.Default);
         Console.WriteLine(pageScreenshot);
     }
+    tabs.SelectedIndex = 2;
+    characterTabs.SelectedIndex = 0;
+    Dispatcher.UIThread.RunJobs();
+    var characterMainScroll = window.FindControl<ScrollViewer>("CharacterMainScroll")!;
+    characterMainScroll.Offset = new Vector(0, characterMainScroll.Extent.Height);
+    Dispatcher.UIThread.RunJobs();
+    string characterItemsScreenshot = Path.Combine(Path.GetTempPath(), "feth-editor-zh-character-items.png");
+    (window.CaptureRenderedFrame() ?? throw new InvalidOperationException("Character items did not render."))
+        .Save(characterItemsScreenshot, PngBitmapEncoderOptions.Default);
+    Console.WriteLine(characterItemsScreenshot);
+    characterMainScroll.Offset = new Vector(0, 0);
     tabs.SelectedIndex = 7;
     Dispatcher.UIThread.RunJobs();
     string inheritanceScreenshot = Path.Combine(Path.GetTempPath(), "feth-editor-zh-inheritance.png");

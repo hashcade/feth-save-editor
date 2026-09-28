@@ -182,14 +182,15 @@
 
       <TabItem Name="CharactersTab" Header="Characters">
         <Grid Margin="8" ColumnDefinitions="264,*" ColumnSpacing="8">
-          <Border Classes="section" Grid.Column="0">
+          <suki:GlassCard Name="CharacterListCard" Classes="section" Grid.Column="0">
             <Grid RowDefinitions="Auto,*" RowSpacing="12">
               <TextBlock Text="Character List" FontWeight="SemiBold" />
               <ListBox Classes="Small" Name="CurrentCharacterList" Grid.Row="1"
                        SelectionChanged="CurrentCharacterList_SelectionChanged" />
             </Grid>
-          </Border>
-          <Grid Grid.Column="1" RowDefinitions="Auto,*" RowSpacing="8">
+          </suki:GlassCard>
+          <suki:GlassCard Name="CharacterEditorCard" Classes="section" Grid.Column="1">
+          <Grid RowDefinitions="Auto,*" RowSpacing="8">
             <StackPanel Orientation="Horizontal" Spacing="8">
               <TextBlock Name="CurrentCharacterTitle" Text="Select a character"
                          VerticalAlignment="Center" />
@@ -200,21 +201,13 @@
             </StackPanel>
             <TabControl Name="CharacterTabs" Grid.Row="1">
               <TabItem Header="Main">
-                <ScrollViewer>
+                <ScrollViewer Name="CharacterMainScroll">
                   <Grid Margin="8" ColumnDefinitions="*,*" ColumnSpacing="8">
                     <StackPanel Spacing="8">
                       <Border Classes="section">
                         <StackPanel Spacing="12">
                           <TextBlock Text="Stats" FontWeight="SemiBold" />
                           <StackPanel Name="CharacterStatRows" Spacing="4" />
-                        </StackPanel>
-                      </Border>
-                      <Border Classes="section">
-                        <StackPanel Spacing="12">
-                          <TextBlock Text="Item List" FontWeight="SemiBold" />
-                          <StackPanel Name="CharacterItemRows" Spacing="4" />
-                          <Button Classes="Small" Content="Set Item Durability to 100"
-                                  Click="SetCharacterItemsDurability_Click" />
                         </StackPanel>
                       </Border>
                     </StackPanel>
@@ -229,6 +222,14 @@
                         <StackPanel Spacing="12">
                           <TextBlock Text="Equipped Combat Arts" FontWeight="SemiBold" />
                           <StackPanel Name="EquippedArtRows" Spacing="4" />
+                        </StackPanel>
+                      </Border>
+                      <Border Classes="section">
+                        <StackPanel Spacing="12">
+                          <TextBlock Text="Item List" FontWeight="SemiBold" />
+                          <StackPanel Name="CharacterItemRows" Spacing="4" />
+                          <Button Classes="Small" Content="Set Item Durability to 100"
+                                  Click="SetCharacterItemsDurability_Click" />
                         </StackPanel>
                       </Border>
                     </StackPanel>
@@ -345,6 +346,7 @@
               </TabItem>
             </TabControl>
           </Grid>
+          </suki:GlassCard>
         </Grid>
       </TabItem>
 
