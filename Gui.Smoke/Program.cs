@@ -256,6 +256,24 @@ if (args.Length > 0)
         .Save(characterItemsScreenshot, PngBitmapEncoderOptions.Default);
     Console.WriteLine(characterItemsScreenshot);
     characterMainScroll.Offset = new Vector(0, 0);
+    foreach (var (index, buttonName, fileName) in new[]
+    {
+        (5, "UnlockAllAbilitiesButton", "feth-editor-zh-abilities.png"),
+        (6, "UnlockAllArtsButton", "feth-editor-zh-combat-arts.png"),
+    })
+    {
+        characterTabs.SelectedIndex = index;
+        Dispatcher.UIThread.RunJobs();
+        var unlockButton = window.FindControl<Button>(buttonName)!;
+        if (Grid.GetColumn(unlockButton) != 1 ||
+            unlockButton.HorizontalAlignment != Avalonia.Layout.HorizontalAlignment.Right ||
+            unlockButton.Bounds.Width >= 200)
+            throw new InvalidOperationException($"{buttonName} is not a compact right-aligned title action.");
+        string actionScreenshot = Path.Combine(Path.GetTempPath(), fileName);
+        (window.CaptureRenderedFrame() ?? throw new InvalidOperationException($"Character tab {index} did not render."))
+            .Save(actionScreenshot, PngBitmapEncoderOptions.Default);
+        Console.WriteLine(actionScreenshot);
+    }
     tabs.SelectedIndex = 7;
     Dispatcher.UIThread.RunJobs();
     string inheritanceScreenshot = Path.Combine(Path.GetTempPath(), "feth-editor-zh-inheritance.png");

@@ -324,9 +324,12 @@
                 <ScrollViewer>
                   <Border Classes="section" Margin="8">
                     <StackPanel Spacing="12">
-                      <TextBlock Text="Abilities" FontWeight="SemiBold" />
-                      <Button Classes="Small" Content="Unlock All"
-                              Click="UnlockAllAbilities_Click" />
+                      <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Abilities" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <Button Name="UnlockAllAbilitiesButton" Classes="Small" Grid.Column="1"
+                                Content="Unlock All" HorizontalAlignment="Right"
+                                Click="UnlockAllAbilities_Click" />
+                      </Grid>
                       <StackPanel Name="CurrentAbilityFlags" Spacing="4" />
                     </StackPanel>
                   </Border>
@@ -336,9 +339,12 @@
                 <ScrollViewer>
                   <Border Classes="section" Margin="8">
                     <StackPanel Spacing="12">
-                      <TextBlock Text="Combat Arts" FontWeight="SemiBold" />
-                      <Button Classes="Small" Content="Unlock All"
-                              Click="UnlockAllCombatArts_Click" />
+                      <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Combat Arts" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <Button Name="UnlockAllArtsButton" Classes="Small" Grid.Column="1"
+                                Content="Unlock All" HorizontalAlignment="Right"
+                                Click="UnlockAllCombatArts_Click" />
+                      </Grid>
                       <StackPanel Name="CurrentArtFlags" Spacing="4" />
                     </StackPanel>
                   </Border>
