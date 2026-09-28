@@ -434,9 +434,8 @@
                 <ListBox Classes="Small" Name="DatabaseCharacters" Grid.Row="1"
                          SelectionChanged="DatabaseCharacters_SelectionChanged" />
               </Grid>
-              <ScrollViewer Grid.Column="1" VerticalAlignment="Center">
-                <TextBlock Name="DatabaseCharacterDetails" TextWrapping="Wrap" />
-              </ScrollViewer>
+              <TextBox Name="DatabaseCharacterDetails" Grid.Column="1" IsReadOnly="True"
+                       AcceptsReturn="True" TextWrapping="Wrap" VerticalAlignment="Center" />
             </Grid>
           </TabItem>
           <TabItem Header="Classes">
@@ -446,9 +445,8 @@
                 <ListBox Classes="Small" Name="DatabaseClasses" Grid.Row="1"
                          SelectionChanged="DatabaseClasses_SelectionChanged" />
               </Grid>
-              <ScrollViewer Grid.Column="1" VerticalAlignment="Center">
-                <TextBlock Name="DatabaseClassDetails" TextWrapping="Wrap" />
-              </ScrollViewer>
+              <TextBox Name="DatabaseClassDetails" Grid.Column="1" IsReadOnly="True"
+                       AcceptsReturn="True" TextWrapping="Wrap" VerticalAlignment="Center" />
             </Grid>
           </TabItem>
           <TabItem Header="Items">
@@ -458,9 +456,8 @@
                 <ListBox Classes="Small" Name="DatabaseItems" Grid.Row="1"
                          SelectionChanged="DatabaseItems_SelectionChanged" />
               </Grid>
-              <ScrollViewer Grid.Column="1" VerticalAlignment="Center">
-                <TextBlock Name="DatabaseItemDetails" TextWrapping="Wrap" />
-              </ScrollViewer>
+              <TextBox Name="DatabaseItemDetails" Grid.Column="1" IsReadOnly="True"
+                       AcceptsReturn="True" TextWrapping="Wrap" VerticalAlignment="Center" />
             </Grid>
           </TabItem>
         </TabControl>
