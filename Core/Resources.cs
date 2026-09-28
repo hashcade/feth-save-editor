@@ -17,11 +17,15 @@ namespace SaveEditor.Properties
             string[] available = assembly.GetManifestResourceNames();
             string resourceName = available.SingleOrDefault(candidate =>
                 candidate.Equals(name, StringComparison.OrdinalIgnoreCase) ||
-                candidate.EndsWith("." + name, StringComparison.OrdinalIgnoreCase))
-                ?? throw new InvalidDataException("Missing embedded database: " + name
-                    + "; available: " + string.Join(", ", available));
-            using Stream stream = assembly.GetManifestResourceStream(resourceName)
-                ?? throw new InvalidDataException("Could not open embedded database: " + resourceName);
+                candidate.EndsWith("." + name, StringComparison.OrdinalIgnoreCase));
+            string sidecar = Path.Combine(AppContext.BaseDirectory, "Database", name);
+            using Stream stream = resourceName is not null
+                ? assembly.GetManifestResourceStream(resourceName)
+                    ?? throw new InvalidDataException("Could not open embedded database: " + resourceName)
+                : File.Exists(sidecar)
+                    ? File.OpenRead(sidecar)
+                    : throw new InvalidDataException("Missing game database: " + name
+                        + "; checked manifest and " + sidecar);
             using var memory = new MemoryStream();
             stream.CopyTo(memory);
             return memory.ToArray();

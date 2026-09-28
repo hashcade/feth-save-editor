@@ -7,17 +7,19 @@
     <DefineConstants>$(DefineConstants);CROSS_PLATFORM</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="../SaveEditor/Database.cs" Link="Database.cs" />
-    <Compile Include="../SaveEditor/Enums.cs" Link="Enums.cs" />
-    <Compile Include="../SaveEditor/Util.cs" Link="Util.cs" />
-    <Compile Include="../SaveEditor/Structs/*.cs" Link="Structs/%(Filename)%(Extension)" />
+    <Compile Include="Database.cs" />
+    <Compile Include="Enums.cs" />
+    <Compile Include="Util.cs" />
+    <Compile Include="Structs/*.cs" />
     <Compile Include="SaveBuffer.cs" />
     <Compile Include="SystemBuffer.cs" />
     <Compile Include="NgPlusJournal.cs" />
     <Compile Include="Resources.cs" />
-    <EmbeddedResource Include="../SaveEditor/Resources/fixed_persondata.bin.gz" LogicalName="fixed_persondata.bin.gz" />
-    <EmbeddedResource Include="../SaveEditor/Resources/fixed_classdata.bin.gz" LogicalName="fixed_classdata.bin.gz" />
-    <EmbeddedResource Include="../SaveEditor/Resources/fixed_data.bin.gz" LogicalName="fixed_data.bin.gz" />
-    <EmbeddedResource Include="../SaveEditor/Resources/msgdata.bin.gz" LogicalName="msgdata.bin.gz" />
+    <EmbeddedResource Include="Resources/fixed_persondata.bin.gz" LogicalName="fixed_persondata.bin.gz" />
+    <EmbeddedResource Include="Resources/fixed_classdata.bin.gz" LogicalName="fixed_classdata.bin.gz" />
+    <EmbeddedResource Include="Resources/fixed_data.bin.gz" LogicalName="fixed_data.bin.gz" />
+    <EmbeddedResource Include="Resources/msgdata.bin.gz" LogicalName="msgdata.bin.gz" />
+    <Content Include="Resources/*.bin.gz" Link="Database/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
