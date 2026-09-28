@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tag a reviewed master commit; GitHub Actions builds and publishes it."""
+"""Tag a reviewed main commit; GitHub Actions builds and publishes it."""
 
 from __future__ import annotations
 
@@ -19,15 +19,15 @@ def run(*args: str) -> str:
 def check_ready(tag: str) -> None:
     if Path(run("git", "rev-parse", "--show-toplevel")) != ROOT:
         raise ValueError("run from this repository")
-    if run("git", "branch", "--show-current") != "master":
-        raise ValueError("releases must come from master")
+    if run("git", "branch", "--show-current") != "main":
+        raise ValueError("releases must come from main")
     if run("git", "status", "--porcelain"):
         raise ValueError("commit working-tree changes first")
 
-    run("git", "fetch", "origin", "master", "--tags")
+    run("git", "fetch", "origin", "main", "--tags")
     head = run("git", "rev-parse", "HEAD")
-    if head != run("git", "rev-parse", "origin/master"):
-        raise ValueError("local master is not synchronized with origin/master")
+    if head != run("git", "rev-parse", "origin/main"):
+        raise ValueError("local main is not synchronized with origin/main")
     if run("git", "tag", "--list", tag):
         raise ValueError(f"tag already exists: {tag}")
 
@@ -36,7 +36,7 @@ def check_ready(tag: str) -> None:
         "--json", "conclusion,status", "--limit", "20",
     ))
     if not any(build["status"] == "completed" and build["conclusion"] == "success" for build in builds):
-        raise ValueError("wait for a successful Windows build of this commit before releasing")
+        raise ValueError("wait for a successful build of this commit before releasing")
 
 
 def main() -> None:
