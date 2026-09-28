@@ -123,15 +123,15 @@
 
       <TabItem Name="StorageTab" Header="Storage">
         <Grid Margin="8" ColumnDefinitions="250,220,*,*" ColumnSpacing="10">
-          <Border Classes="section" Grid.Column="0">
+          <suki:GlassCard Name="StorageListCard" Classes="section" Grid.Column="0">
             <Grid RowDefinitions="Auto,*" RowSpacing="12">
               <TextBlock Name="StorageCount" Text="Item List" FontWeight="SemiBold" />
               <ListBox Classes="Small" Name="StorageList" Grid.Row="1"
                        SelectionChanged="StorageList_SelectionChanged" />
             </Grid>
-          </Border>
-          <StackPanel Grid.Column="1" Spacing="8">
-            <Border Classes="section">
+          </suki:GlassCard>
+          <Grid Grid.Column="1" RowDefinitions="*,*" RowSpacing="10">
+            <suki:GlassCard Name="StorageEditorCard" Classes="section">
               <StackPanel Spacing="8">
                 <TextBlock Text="Item Editor" FontWeight="SemiBold" />
                 <ComboBox Classes="Small" Name="StorageItemCombo" />
@@ -141,8 +141,8 @@
                 <TextBox Classes="Small" Name="StorageAmount" />
                 <Button Classes="Small" Content="Save Changes" Click="SaveStorageItem_Click" />
               </StackPanel>
-            </Border>
-            <Border Classes="section">
+            </suki:GlassCard>
+            <suki:GlassCard Name="StorageToolsCard" Classes="section" Grid.Row="1">
               <StackPanel Spacing="8">
                 <TextBlock Text="Item Tools" FontWeight="SemiBold" />
                 <Button Classes="Small" Content="Sort Items" Click="SortStorage_Click" />
@@ -155,9 +155,9 @@
                 </ComboBox>
                 <Button Classes="Small" Content="Apply to Inventory" Click="SetStorageDurability_Click" />
               </StackPanel>
-            </Border>
-          </StackPanel>
-          <Border Classes="section" Grid.Column="2">
+            </suki:GlassCard>
+          </Grid>
+          <suki:GlassCard Name="StorageMiscCard" Classes="section" Grid.Column="2">
             <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" RowSpacing="8">
               <TextBlock Text="Misc Items" FontWeight="SemiBold" />
               <Button Classes="Small" Grid.Row="1" Content="Get All (99)" Click="FillMisc_Click" />
@@ -166,8 +166,8 @@
               <TextBox Classes="Small" Name="MiscAmount" Grid.Row="3" />
               <Button Classes="Small" Name="SetMisc" Grid.Row="4" Content="Set Selected Amount" Click="SetMisc_Click" />
             </Grid>
-          </Border>
-          <Border Classes="section" Grid.Column="3">
+          </suki:GlassCard>
+          <suki:GlassCard Name="StorageGiftCard" Classes="section" Grid.Column="3">
             <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" RowSpacing="8">
               <TextBlock Text="Gift Items" FontWeight="SemiBold" />
               <Button Classes="Small" Grid.Row="1" Content="Get All (99)" Click="FillGifts_Click" />
@@ -176,7 +176,7 @@
               <TextBox Classes="Small" Name="GiftAmount" Grid.Row="3" />
               <Button Classes="Small" Grid.Row="4" Content="Set Selected Amount" Click="SetGift_Click" />
             </Grid>
-          </Border>
+          </suki:GlassCard>
         </Grid>
       </TabItem>
 

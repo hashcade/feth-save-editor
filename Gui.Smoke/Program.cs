@@ -47,6 +47,18 @@ if (tabs.SelectedIndex != 3)
     throw new InvalidOperationException("Main navigation did not switch the editor page.");
 navigation.SelectedIndex = 0;
 Dispatcher.UIThread.RunJobs();
+tabs.SelectedIndex = 1;
+Dispatcher.UIThread.RunJobs();
+var storageListCard = window.FindControl<Control>("StorageListCard")!;
+var storageEditorCard = window.FindControl<Control>("StorageEditorCard")!;
+var storageToolsCard = window.FindControl<Control>("StorageToolsCard")!;
+var storageMiscCard = window.FindControl<Control>("StorageMiscCard")!;
+var storageGiftCard = window.FindControl<Control>("StorageGiftCard")!;
+double storageHeight = storageListCard.Bounds.Height;
+if (Math.Abs(storageMiscCard.Bounds.Height - storageHeight) > 1 ||
+    Math.Abs(storageGiftCard.Bounds.Height - storageHeight) > 1 ||
+    Math.Abs(storageEditorCard.Bounds.Height + storageToolsCard.Bounds.Height + 10 - storageHeight) > 1)
+    throw new InvalidOperationException("Storage cards do not fill equally tall columns.");
 for (int index = 0; index < tabs.ItemCount; index++)
 {
     tabs.SelectedIndex = index;
@@ -223,6 +235,7 @@ if (args.Length > 0)
         .Where(text => text.IsVisible).Select(text => text.Text).ToArray();
     if (!visibleText.Contains("玩家") || !visibleText.Contains("游戏设定"))
         throw new InvalidOperationException("Overview section headings are not localized.");
+    characterTabs.SelectedIndex = 0;
     for (int index = 0; index < tabs.ItemCount; index++)
     {
         tabs.SelectedIndex = index;
