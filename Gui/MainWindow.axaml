@@ -386,41 +386,41 @@
       </TabItem>
 
       <TabItem Name="QuestTab" Header="Quest">
-        <Grid Margin="8" ColumnDefinitions="312,256,*" ColumnSpacing="8">
-          <Border Classes="section" Grid.Column="0">
+        <Grid Margin="8" ColumnDefinitions="320,*" ColumnSpacing="10">
+          <suki:GlassCard Name="QuestListCard" Classes="section" Grid.Column="0">
             <Grid RowDefinitions="Auto,*" RowSpacing="12">
               <TextBlock Text="Quest List" FontWeight="SemiBold" />
               <ListBox Classes="Small" Name="QuestList" Grid.Row="1"
                        SelectionChanged="QuestList_SelectionChanged" />
             </Grid>
-          </Border>
-          <Border Classes="section" Grid.Column="1" VerticalAlignment="Top">
-            <StackPanel Spacing="8">
+          </suki:GlassCard>
+          <suki:GlassCard Name="QuestEditorCard" Classes="section" Grid.Column="1">
+            <StackPanel Width="340" HorizontalAlignment="Left" Spacing="8">
               <TextBlock Text="Quest Editor" FontWeight="SemiBold" />
               <ComboBox Classes="Small" Name="QuestState" />
               <Button Classes="Small" Name="SetQuestStateButton" Content="Set State" Click="SetQuestState_Click" />
             </StackPanel>
-          </Border>
+          </suki:GlassCard>
         </Grid>
       </TabItem>
 
       <TabItem Name="SupportTab" Header="Support Talks">
-        <Grid Margin="8" ColumnDefinitions="312,256,*" ColumnSpacing="8">
-          <Border Classes="section" Grid.Column="0">
+        <Grid Margin="8" ColumnDefinitions="320,*" ColumnSpacing="10">
+          <suki:GlassCard Name="SupportListCard" Classes="section" Grid.Column="0">
             <Grid RowDefinitions="Auto,*" RowSpacing="12">
               <TextBlock Text="Talk List" FontWeight="SemiBold" />
               <ListBox Classes="Small" Name="CurrentSupportList" Grid.Row="1"
                        SelectionChanged="CurrentSupportList_SelectionChanged" />
             </Grid>
-          </Border>
-          <Border Classes="section" Grid.Column="1" VerticalAlignment="Top">
-            <StackPanel Spacing="8">
+          </suki:GlassCard>
+          <suki:GlassCard Name="SupportEditorCard" Classes="section" Grid.Column="1">
+            <StackPanel Width="340" HorizontalAlignment="Left" Spacing="8">
               <TextBlock Text="Talk Editor" FontWeight="SemiBold" />
               <TextBlock Text="Current support points" />
               <TextBox Classes="Small" Name="CurrentSupportPoints" />
               <Button Classes="Small" Name="SetCurrentSupportButton" Content="Set Points" Click="SetCurrentSupport_Click" />
             </StackPanel>
-          </Border>
+          </suki:GlassCard>
         </Grid>
       </TabItem>
 

@@ -66,6 +66,22 @@ var battalionEditorCard = window.FindControl<Control>("BattalionEditorCard")!;
 if (battalionListCard.Bounds.Width >= battalionEditorCard.Bounds.Width ||
     Math.Abs(battalionListCard.Bounds.Height - battalionEditorCard.Bounds.Height) > 1)
     throw new InvalidOperationException("Battalion cards are not aligned with a narrower list column.");
+tabs.SelectedIndex = 4;
+Dispatcher.UIThread.RunJobs();
+var questListCard = window.FindControl<Control>("QuestListCard")!;
+var questEditorCard = window.FindControl<Control>("QuestEditorCard")!;
+if (Math.Abs(questListCard.Bounds.Width - battalionListCard.Bounds.Width) > 1 ||
+    Math.Abs(questEditorCard.Bounds.Width - battalionEditorCard.Bounds.Width) > 1 ||
+    Math.Abs(questListCard.Bounds.Height - questEditorCard.Bounds.Height) > 1)
+    throw new InvalidOperationException("Quest cards do not match the battalion layout.");
+tabs.SelectedIndex = 5;
+Dispatcher.UIThread.RunJobs();
+var supportListCard = window.FindControl<Control>("SupportListCard")!;
+var supportEditorCard = window.FindControl<Control>("SupportEditorCard")!;
+if (Math.Abs(supportListCard.Bounds.Width - battalionListCard.Bounds.Width) > 1 ||
+    Math.Abs(supportEditorCard.Bounds.Width - battalionEditorCard.Bounds.Width) > 1 ||
+    Math.Abs(supportListCard.Bounds.Height - supportEditorCard.Bounds.Height) > 1)
+    throw new InvalidOperationException("Support cards do not match the battalion layout.");
 for (int index = 0; index < tabs.ItemCount; index++)
 {
     tabs.SelectedIndex = index;
