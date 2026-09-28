@@ -2,7 +2,7 @@
 
 `FETH_Cli.exe` runs on Windows with .NET Framework 4.7.2. Keep it beside `FETH_SaveEditor.exe` from the same release archive; it uses the GUI's data tables and translations. It accepts version-23 `slotXX` and `auto` saves from Fire Emblem: Three Houses v1.2.0. It deliberately rejects `system` and `suspend` files.
 
-The CLI patches only named, mapped fields. Unknown bytes are preserved. The `inspect` output describes the current run; NG+ journal inheritance data is not mapped yet. An edited save still needs an in-game test.
+The CLI patches only named, mapped fields. Unknown bytes are preserved. `inspect` distinguishes current-run data from read-only NG+ journal history. An edited save still needs an in-game test.
 
 ## Read
 
@@ -10,10 +10,13 @@ The CLI patches only named, mapped fields. Unknown bytes are preserved. The `ins
 .\FETH_Cli.exe inspect --input C:\saves\slot00 --section summary
 .\FETH_Cli.exe inspect --input C:\saves\slot00 --section characters
 .\FETH_Cli.exe get --input C:\saves\slot00 --path Characters[0].data.Level
+.\FETH_Cli.exe inspect --input C:\saves\slot00 --section inheritance
 .\FETH_Cli.exe catalog --type classes
 ```
 
-`inspect --section` accepts `summary`, `characters`, `inventory`, `battalions`, `activities`, `supports`, or `all`. `catalog --type` accepts `items`, `characters`, `classes`, `battalions`, `abilities`, `arts`, `quests`, and `supports`. Output and errors are JSON. Optional `--language` selects a GUI language enum such as `en_u`.
+`inspect --section` accepts `summary`, `characters`, `inventory`, `battalions`, `activities`, `supports`, `inheritance`, or `all`. `catalog --type` accepts `items`, `characters`, `classes`, `battalions`, `abilities`, `arts`, `quests`, and `supports`. Output and errors are JSON. Optional `--language` selects a GUI language enum such as `en_u`.
+
+`inheritance` reads the separate NG+ journal history: professor rank, 270 maximum support-point values, 45 records of 11 skill ranks, and 45 class-mastery bitsets. These are not the current-run values. The row-to-unit-ID mapping is still unknown, so output uses `recordIndex` rather than potentially incorrect character names. This section is read-only; editing NG+ history is not yet supported.
 
 ## Edit
 

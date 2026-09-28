@@ -41,11 +41,21 @@ def main() -> None:
             struct.pack_into("<h", raw, 12 + slot * 4, -1)
         sentinel = 12 + 0x644 + 0x2A
         raw[sentinel] = 0xA5
+        player = 12 + 0x231D9
+        struct.pack_into("<H", raw, player + 0x1576, 1001)
+        raw[player + 0x17CE] = 9
+        raw[player + 0x17D8] = 11
+        raw[player + 0x19C7 + 42 // 8] |= 1 << (42 % 8)
         struct.pack_into("<I", raw, 0, checksum(raw))
         source.write_bytes(raw)
 
         summary = run(cli, "inspect", "--input", str(source), "--section", "summary")
         assert summary["summary"]["Money"] == 0
+        history = run(cli, "inspect", "--input", str(source), "--section", "inheritance")["inheritance"]
+        assert history["professorRank"] == 9
+        assert history["supports"][0]["maxPoints"] == 1001
+        assert history["characters"][0]["skillRanks"][0] == 11
+        assert 42 in history["characters"][0]["masteredClassIds"]
         assert run(cli, "get", "--input", str(source), "--path", "Items[0].Id")["value"] == -1
         catalog = run(cli, "catalog", "--type", "classes")
         assert len(catalog) == 101  # 100 classes plus the GUI's "none" sentinel.

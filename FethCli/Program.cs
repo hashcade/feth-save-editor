@@ -254,8 +254,10 @@ namespace FethCli
             {
                 ["format"] = "FE3H 1.1.0-1.2.0 / save version 23",
                 ["sha256"] = save.Sha256,
-                ["note"] = "Current-run fields only. NG+ journal inheritance fields are not mapped."
+                ["note"] = "Mapped current-run fields and separately reported NG+ journal history; other unknown data is preserved."
             };
+            if (section == "all" || section == "inheritance")
+                result["inheritance"] = save.ReadInheritance();
             if (section == "all" || section == "summary")
                 result["summary"] = new
                 {
