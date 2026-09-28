@@ -376,16 +376,39 @@ namespace FethCli
             Buffer.BlockCopy(encoded, 0, bytes, loc.Offset, encoded.Length);
         }
 
-        private static void Validate(string path, long value)
+        private void Validate(string path, long value)
         {
+            if (Regex.IsMatch(path, @"^player\.playtime$", RegexOptions.IgnoreCase) && (value < 0 || value > Database.MAX_PLAYTIME))
+                throw new ArgumentOutOfRangeException(nameof(value), "Playtime exceeds the GUI limit.");
             if (Regex.IsMatch(path, @"^player\.money$", RegexOptions.IgnoreCase) && (value < 0 || value > Database.MAX_MONEY))
                 throw new ArgumentOutOfRangeException(nameof(value), "Money exceeds the GUI limit.");
+            if (Regex.IsMatch(path, @"^player\.difficulty$", RegexOptions.IgnoreCase) && (value < 0 || value >= Database.DIFFICULTY_COUNT))
+                throw new ArgumentOutOfRangeException(nameof(value), "Difficulty is outside the GUI list.");
+            if (Regex.IsMatch(path, @"^player\.gamestyle$", RegexOptions.IgnoreCase) && (value < 0 || value >= Database.GAMESTYLE_COUNT))
+                throw new ArgumentOutOfRangeException(nameof(value), "Game style is outside the GUI list.");
             if (Regex.IsMatch(path, @"^activities\.reputation$", RegexOptions.IgnoreCase) && (value < 0 || value > Database.MAX_REPUTATION))
                 throw new ArgumentOutOfRangeException(nameof(value), "Renown exceeds the GUI limit.");
             if (Regex.IsMatch(path, @"^activities\.instructexp$", RegexOptions.IgnoreCase) && (value < 0 || value > Database.MAX_INSTRUCT_EXP))
                 throw new ArgumentOutOfRangeException(nameof(value), "Professor experience exceeds the GUI limit.");
             if (Regex.IsMatch(path, @"\.classlevel\[\d+\]$|\.currentclasslevel$", RegexOptions.IgnoreCase) && (value < 0 || value > Database.MAX_CLASS_LEVEL))
                 throw new ArgumentOutOfRangeException(nameof(value), "Class mastery must be 0 or 1.");
+            Match classExp = Regex.Match(path, @"^(characters\[\d+\]\.data\.)classexp\[(\d+)\]$", RegexOptions.IgnoreCase);
+            if (classExp.Success && (value < 0 || value > Database.GetMaxClassExp(int.Parse(classExp.Groups[2].Value))))
+                throw new ArgumentOutOfRangeException(nameof(value), "Class experience exceeds the GUI limit.");
+            Match currentClassExp = Regex.Match(path, @"^(characters\[\d+\]\.data\.)currentclassexp$", RegexOptions.IgnoreCase);
+            if (currentClassExp.Success)
+            {
+                int classId = checked((int)(long)Get(currentClassExp.Groups[1].Value + "Class"));
+                if (value < 0 || value > Database.GetMaxClassExp(classId))
+                    throw new ArgumentOutOfRangeException(nameof(value), "Current class experience exceeds the GUI limit.");
+            }
+            Match skillExp = Regex.Match(path, @"^(characters\[\d+\]\.data\.)skillexp\[(\d+)\]$", RegexOptions.IgnoreCase);
+            if (skillExp.Success)
+            {
+                int rank = checked((int)(long)Get(skillExp.Groups[1].Value + "SkillLevel[" + skillExp.Groups[2].Value + "]"));
+                if (rank >= Database.SkillLevelupRank.Length || value < 0 || value >= Database.SkillLevelupRank[rank])
+                    throw new ArgumentOutOfRangeException(nameof(value), "Skill experience exceeds the current rank limit in the GUI.");
+            }
             if (Regex.IsMatch(path, @"^activities\.queststatelist\[\d+\]$", RegexOptions.IgnoreCase) && (value < 0 || value > 6))
                 throw new ArgumentOutOfRangeException(nameof(value), "Quest state must be 0 through 6.");
         }

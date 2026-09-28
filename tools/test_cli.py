@@ -55,7 +55,7 @@ def main() -> None:
             "operations": [
                 {"op": "set", "path": "Player.Money", "value": 12345},
                 {"op": "set", "path": "Activities.Reputation", "value": 321},
-                {"op": "set", "path": "Characters[0].data.SkillExp[0]", "value": 40},
+                {"op": "set", "path": "Characters[0].data.SkillExp[0]", "value": 39},
                 {"op": "setBit", "path": "Characters[0].data.Abilities", "index": 3, "value": True},
                 {"op": "set", "path": "Items[0].Id", "value": 65},
             ],
@@ -72,8 +72,8 @@ def main() -> None:
         assert struct.unpack_from("<I", edited, 0)[0] == checksum(edited)
         assert struct.unpack_from("<I", edited, 12 + 0x640)[0] == 1
         assert struct.unpack_from("<h", edited, 12)[0] == 65
-        assert struct.unpack_from("<H", edited, 12 + 0x644 + 0x32)[0] == 40
-        assert struct.unpack_from("<H", edited, 12 + 0x644 + 0xFC)[0] == 40
+        assert struct.unpack_from("<H", edited, 12 + 0x644 + 0x32)[0] == 39
+        assert struct.unpack_from("<H", edited, 12 + 0x644 + 0xFC)[0] == 39
         assert edited[12 + 0x644 + 0x61] & 8
         assert struct.unpack_from("<I", edited, 12 + 0x231D9 + 0x1074)[0] == 12345
         assert struct.unpack_from("<I", edited, 12 + 0x250A1 + 0xC)[0] == 321
