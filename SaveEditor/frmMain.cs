@@ -1109,26 +1109,27 @@ namespace SaveEditor
 
         private void SaveBattalion()
         {
-            int x = lstCharacter.SelectedIndex;
-			
-            if(x == -1 || save == null)
+            int slot = lstBattalion.SelectedIndex;
+
+            if(save == null || slot < 0 || slot >= save.SaveData.Player.Battalions.Length)
                 return;
 
-            short id = (short) Util.GetSortedKey<string>(cboBattalionCharacter);
-            if (id == -1) id = Database.BATTALION_COUNT;
+            short characterId = cboBattalionCharacter.SelectedItem == null
+                ? (short)-1 : (short)Util.GetSortedKey<string>(cboBattalionCharacter);
+            int type = cboBattalionType.SelectedItem == null
+                ? -1 : Util.GetSortedKey<string>(cboBattalionType);
 
             Battalion battalion = new Battalion
             {
-                CharacterId = id,
-                Type = (byte)Util.GetSortedKey<string>(cboBattalionType),
+                CharacterId = characterId,
+                Type = (byte)(type == -1 ? Database.BATTALION_COUNT : type),
                 Exp = (ushort)numBattalionExp.Value,
                 Stamina = (ushort)numBattalionStamina.Value,
                 Skill = (byte)Util.GetSortedKey<string>(cboBattalionSkill)
             };
-                        			                        
-            save.SaveData.Player.Battalions[x] = battalion;
 
-            LoadBattalions(x);
+            save.SaveData.Player.Battalions[slot] = battalion;
+            LoadBattalions(slot);
         }
         
         private void LoadDatabaseViewer()
