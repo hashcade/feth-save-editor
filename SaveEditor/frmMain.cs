@@ -59,7 +59,7 @@ namespace SaveEditor
                 cboLanguage.Items.Add(enm.GetDescription());
             }
 
-            cboLanguage.SelectedIndex = (int)enmLanguage.en_u;
+            cboLanguage.SelectedIndex = (int)enmLanguage.zh_hans;
         }
 
         private void frmMain_DragEnter(object sender, DragEventArgs e)

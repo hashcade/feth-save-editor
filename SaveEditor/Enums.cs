@@ -133,8 +133,8 @@ namespace SaveEditor
         [Description("Spanish - EUR")] es_e = 7,
         [Description("Italian")] it = 8,
         [Description("Korean")] kr = 9,
-        [Description("Chinese")] chn = 10,
-        [Description("Taiwanese")] twn = 11,
+        [Description("Traditional Chinese")] zh_hant = 10,
+        [Description("Simplified Chinese")] zh_hans = 11,
     }
     
     public enum enmItemTypes
