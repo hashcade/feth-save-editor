@@ -98,16 +98,20 @@ public partial class MainWindow
         {
             int slot = _currentCharacter;
             string path = $"Characters[{slot}].data.{field}";
-            var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
+            var row = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitions("125,*"),
+                ColumnSpacing = 8
+            };
             row.Children.Add(new TextBlock
             {
-                Text = label, Width = 95, VerticalAlignment = VerticalAlignment.Center
+                Text = label, VerticalAlignment = VerticalAlignment.Center
             });
             var input = new TextBox
             {
-                Width = 80,
                 Text = Convert.ToString(_save!.Get(path), CultureInfo.InvariantCulture)
             };
+            Grid.SetColumn(input, 1);
             input.Classes.Add("Small");
             input.LostFocus += (_, _) => SetCharacterNumber(slot, path, input);
             row.Children.Add(input);
@@ -179,13 +183,18 @@ public partial class MainWindow
     private void AddEquippedChoice(StackPanel container, Choice[] choices, int value, int index, string field)
     {
         int slot = _currentCharacter;
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
+        var row = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("24,*"),
+            ColumnSpacing = 8
+        };
         row.Children.Add(new TextBlock
         {
             Text = (index + 1).ToString(CultureInfo.InvariantCulture),
-            Width = 18, VerticalAlignment = VerticalAlignment.Center
+            VerticalAlignment = VerticalAlignment.Center
         });
-        var combo = new ComboBox { Width = 210, ItemsSource = choices };
+        var combo = new ComboBox { ItemsSource = choices };
+        Grid.SetColumn(combo, 1);
         combo.Classes.Add("Small");
         combo.SelectedItem = choices.FirstOrDefault(choice => choice.Id == value);
         combo.SelectionChanged += (_, _) =>
@@ -214,18 +223,22 @@ public partial class MainWindow
         {
             int slot = _currentCharacter;
             int skill = index;
-            var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
+            var row = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitions("125,*"),
+                ColumnSpacing = 8
+            };
             int rank = character.SkillLevel[index];
             row.Children.Add(new TextBlock
             {
                 Text = $"{Database.GetString(7214 + index)} ({(rank < SkillRanks.Length ? SkillRanks[rank] : rank.ToString(CultureInfo.InvariantCulture))})",
-                Width = 125, VerticalAlignment = VerticalAlignment.Center
+                VerticalAlignment = VerticalAlignment.Center
             });
             var input = new TextBox
             {
-                Width = 70,
                 Text = character.SkillExp[index].ToString(CultureInfo.InvariantCulture)
             };
+            Grid.SetColumn(input, 1);
             input.Classes.Add("Small");
             input.LostFocus += (_, _) => SetCharacterNumber(slot,
                 $"Characters[{slot}].data.SkillExp[{skill}]", input);

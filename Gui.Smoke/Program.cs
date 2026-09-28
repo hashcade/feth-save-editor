@@ -171,7 +171,7 @@ if (args.Length > 0)
     if (tabs.Items.OfType<TabItem>().First().Header?.ToString() != "Main")
         throw new InvalidOperationException("English interface was not restored.");
     var gameRows = window.FindControl<StackPanel>("GameRows")!;
-    var difficulty = ((StackPanel)gameRows.Children[1]).Children.OfType<ComboBox>().Single();
+    var difficulty = ((Grid)gameRows.Children[1]).Children.OfType<ComboBox>().Single();
     if (difficulty.ItemCount != 4)
         throw new InvalidOperationException("Difficulty choices were not loaded.");
     difficulty.SelectedIndex = difficulty.SelectedIndex == 0 ? 1 : 0;
@@ -243,10 +243,10 @@ if (args.Length > 0)
         throw new InvalidOperationException("Character class experience was not retained.");
     characterTabs.SelectedIndex = 0;
     var stats = window.FindControl<StackPanel>("CharacterStatRows")!;
-    var level = ((StackPanel)stats.Children[2]).Children.OfType<TextBox>().Single();
+    var level = ((Grid)stats.Children[2]).Children.OfType<TextBox>().Single();
     level.Focus();
     level.Text = "4";
-    ((StackPanel)stats.Children[3]).Children.OfType<TextBox>().Single().Focus();
+    ((Grid)stats.Children[3]).Children.OfType<TextBox>().Single().Focus();
     Dispatcher.UIThread.RunJobs();
     if (!character.Items[0]!.ToString()!.Contains("Lv:4", StringComparison.Ordinal))
         throw new InvalidOperationException("Character level edit did not update the list.");

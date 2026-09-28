@@ -2,14 +2,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="FethEditor.Gui.MainWindow"
         Title="FETH Editor" Width="1120" Height="780" MinWidth="860" MinHeight="600"
-        Background="#F3F5F9" FontSize="13">
+        FontSize="13">
   <Window.Styles>
     <Style Selector="Border.section">
-      <Setter Property="Background" Value="White" />
-      <Setter Property="BorderBrush" Value="#DEE4ED" />
-      <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="CornerRadius" Value="10" />
       <Setter Property="Padding" Value="20" />
+    </Style>
+    <Style Selector="Border.section Button, Border.section ComboBox, Border.section TextBox">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
     </Style>
     <Style Selector="ListBoxItem">
       <Setter Property="Padding" Value="10,7" />
@@ -23,7 +22,7 @@
   </Window.Styles>
   <Grid>
   <DockPanel>
-    <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*" Background="White">
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*">
         <Menu VerticalAlignment="Center">
           <MenuItem Header="_File">
             <MenuItem Header="_Load Save..." Click="OpenSave_Click" />
@@ -53,54 +52,54 @@
 
     <TabControl Name="EditorTabs" Margin="16,8,16,16">
       <TabItem Name="MainTab" Header="Main">
-        <ScrollViewer Background="#F5F6F9">
-          <Grid Margin="12" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto"
-                ColumnSpacing="12" RowSpacing="12">
-            <Border Classes="section" Grid.Row="0" Grid.Column="0">
+        <ScrollViewer>
+          <Grid Margin="12" ColumnDefinitions="*,*" ColumnSpacing="12">
+            <StackPanel Spacing="12">
+            <Border Classes="section">
               <HeaderedContentControl>
                 <HeaderedContentControl.Header><TextBlock Text="Player" FontWeight="SemiBold" /></HeaderedContentControl.Header>
                 <Grid Margin="0,16,0,0" ColumnDefinitions="160,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                       RowSpacing="8" ColumnSpacing="8">
                   <TextBlock Text="Playtime:" VerticalAlignment="Center" />
-                  <TextBox Classes="Small" Name="PlaytimeInput" Grid.Column="1" Width="170" HorizontalAlignment="Left" Tag="Player.Playtime"
+                  <TextBox Classes="Small" Name="PlaytimeInput" Grid.Column="1" Tag="Player.Playtime"
                            LostFocus="PlayerField_LostFocus" />
                   <TextBlock Grid.Row="1" Text="Money:" VerticalAlignment="Center" />
-                  <TextBox Classes="Small" Name="MoneyInput" Grid.Row="1" Grid.Column="1" Width="170" HorizontalAlignment="Left" Tag="Player.Money"
+                  <TextBox Classes="Small" Name="MoneyInput" Grid.Row="1" Grid.Column="1" Tag="Player.Money"
                            LostFocus="PlayerField_LostFocus" />
                   <TextBlock Grid.Row="2" Text="Instruct Exp:" VerticalAlignment="Center" />
-                  <TextBox Classes="Small" Name="InstructExpInput" Grid.Row="2" Grid.Column="1" Width="170" HorizontalAlignment="Left"
+                  <TextBox Classes="Small" Name="InstructExpInput" Grid.Row="2" Grid.Column="1"
                            Tag="Activities.InstructExp" LostFocus="PlayerField_LostFocus" />
                   <TextBlock Grid.Row="3" Text="Instruct Level:" VerticalAlignment="Center" />
                   <TextBlock Name="ProfessorLevelValue" Grid.Row="3" Grid.Column="1" Text="-" VerticalAlignment="Center" />
                   <TextBlock Grid.Row="4" Text="Inherited rank:" VerticalAlignment="Center" />
                   <ComboBox Classes="Small" Name="NgPlusProfessorRank" Grid.Row="4" Grid.Column="1"
-                            Width="170" HorizontalAlignment="Left"
                             SelectionChanged="NgPlusProfessorRank_SelectionChanged" />
                   <TextBlock Grid.Row="5" Text="Reputation:" VerticalAlignment="Center" />
-                  <TextBox Classes="Small" Name="RenownInput" Grid.Row="5" Grid.Column="1" Width="170" HorizontalAlignment="Left"
+                  <TextBox Classes="Small" Name="RenownInput" Grid.Row="5" Grid.Column="1"
                            Tag="Activities.Reputation" LostFocus="PlayerField_LostFocus" />
                   <TextBlock Grid.Row="6" Text="Player Name:" VerticalAlignment="Center" />
-                  <TextBox Classes="Small" Name="PlayerNameInput" Grid.Row="6" Grid.Column="1" Width="170" HorizontalAlignment="Left"
+                  <TextBox Classes="Small" Name="PlayerNameInput" Grid.Row="6" Grid.Column="1"
                            LostFocus="PlayerName_LostFocus" />
                 </Grid>
               </HeaderedContentControl>
             </Border>
 
-            <Border Classes="section" Grid.Row="0" Grid.Column="1">
+            <Border Classes="section">
               <HeaderedContentControl>
                 <HeaderedContentControl.Header><TextBlock Text="Game Values" FontWeight="SemiBold" /></HeaderedContentControl.Header>
                 <StackPanel Name="GameRows" Margin="0,16,0,0" Spacing="8" />
               </HeaderedContentControl>
             </Border>
 
-            <Border Classes="section" Grid.Row="1" Grid.Column="0">
+            </StackPanel>
+            <StackPanel Grid.Column="1" Spacing="12">
+            <Border Classes="section">
               <HeaderedContentControl>
                 <HeaderedContentControl.Header><TextBlock Text="Monthly Statistics" FontWeight="SemiBold" /></HeaderedContentControl.Header>
                 <StackPanel Name="StatisticsRows" Margin="0,16,0,0" Spacing="6" />
               </HeaderedContentControl>
             </Border>
 
-            <StackPanel Grid.Row="1" Grid.Column="1" Spacing="12">
               <Border Classes="section">
                 <HeaderedContentControl>
                   <HeaderedContentControl.Header><TextBlock Text="Activity Points" FontWeight="SemiBold" /></HeaderedContentControl.Header>
@@ -114,13 +113,12 @@
                 </HeaderedContentControl>
               </Border>
             </StackPanel>
-
           </Grid>
         </ScrollViewer>
       </TabItem>
 
       <TabItem Name="StorageTab" Header="Storage">
-        <Grid Background="#F3F5F9" Margin="8" ColumnDefinitions="250,220,*,*" ColumnSpacing="10">
+        <Grid Margin="8" ColumnDefinitions="250,220,*,*" ColumnSpacing="10">
           <Border Classes="section" Grid.Column="0">
             <Grid RowDefinitions="Auto,*" RowSpacing="12">
               <TextBlock Name="StorageCount" Text="Item List" FontWeight="SemiBold" />
@@ -179,7 +177,7 @@
       </TabItem>
 
       <TabItem Name="CharactersTab" Header="Characters">
-        <Grid Background="#F7F8FA" Margin="8" ColumnDefinitions="264,*" ColumnSpacing="8">
+        <Grid Margin="8" ColumnDefinitions="264,*" ColumnSpacing="8">
           <Border Classes="section" Grid.Column="0">
             <Grid RowDefinitions="Auto,*" RowSpacing="12">
               <TextBlock Text="Character List" FontWeight="SemiBold" />
@@ -191,14 +189,14 @@
             <StackPanel Orientation="Horizontal" Spacing="8">
               <TextBlock Name="CurrentCharacterTitle" Text="Select a character"
                          VerticalAlignment="Center" />
-              <ComboBox Classes="Small" Name="CurrentCharacterId" Width="180"
+              <ComboBox Classes="Small" Name="CurrentCharacterId" MinWidth="180"
                         SelectionChanged="CurrentCharacterId_SelectionChanged" />
               <Button Classes="Small" Content="Export" Click="ExportCharacter_Click" />
               <Button Classes="Small" Content="Import" Click="ImportCharacter_Click" />
             </StackPanel>
             <TabControl Name="CharacterTabs" Grid.Row="1">
               <TabItem Header="Main">
-                <ScrollViewer Background="#F7F8FA">
+                <ScrollViewer>
                   <Grid Margin="8" ColumnDefinitions="*,*" ColumnSpacing="8">
                     <StackPanel Spacing="8">
                       <Border Classes="section">
@@ -234,7 +232,7 @@
                 </ScrollViewer>
               </TabItem>
               <TabItem Header="Skills">
-                <ScrollViewer Background="#F7F8FA">
+                <ScrollViewer>
                   <Grid Margin="8" ColumnDefinitions="*,*" ColumnSpacing="8">
                     <Border Classes="section">
                       <StackPanel Spacing="12">
@@ -254,7 +252,7 @@
                 </ScrollViewer>
               </TabItem>
               <TabItem Header="Flags">
-                <ScrollViewer Background="#F7F8FA">
+                <ScrollViewer>
                   <Grid Margin="8" ColumnDefinitions="*,*" ColumnSpacing="8">
                     <Border Classes="section">
                       <StackPanel Spacing="12">
@@ -281,7 +279,7 @@
                 </ScrollViewer>
               </TabItem>
               <TabItem Header="Class Exp">
-                <Grid Background="#F7F8FA" Margin="8" ColumnDefinitions="*,200" ColumnSpacing="8">
+                <Grid Margin="8" ColumnDefinitions="*,200" ColumnSpacing="8">
                   <Border Classes="section">
                     <Grid RowDefinitions="Auto,*" RowSpacing="12">
                       <TextBlock Text="Class Experience" FontWeight="SemiBold" />
@@ -308,7 +306,7 @@
                 </Grid>
               </TabItem>
               <TabItem Header="Class data (unverified)" IsEnabled="False">
-                <ScrollViewer Background="#F7F8FA">
+                <ScrollViewer>
                   <Border Classes="section" Margin="8">
                     <StackPanel Spacing="12">
                       <TextBlock Text="Class Unlock Flags" FontWeight="SemiBold" />
@@ -318,11 +316,11 @@
                 </ScrollViewer>
               </TabItem>
               <TabItem Header="Abilities">
-                <ScrollViewer Background="#F7F8FA">
+                <ScrollViewer>
                   <Border Classes="section" Margin="8">
                     <StackPanel Spacing="12">
                       <TextBlock Text="Abilities" FontWeight="SemiBold" />
-                      <Button Classes="Small" Content="Unlock All" HorizontalAlignment="Left"
+                      <Button Classes="Small" Content="Unlock All"
                               Click="UnlockAllAbilities_Click" />
                       <StackPanel Name="CurrentAbilityFlags" Spacing="4" />
                     </StackPanel>
@@ -330,11 +328,11 @@
                 </ScrollViewer>
               </TabItem>
               <TabItem Header="Combat Arts">
-                <ScrollViewer Background="#F7F8FA">
+                <ScrollViewer>
                   <Border Classes="section" Margin="8">
                     <StackPanel Spacing="12">
                       <TextBlock Text="Combat Arts" FontWeight="SemiBold" />
-                      <Button Classes="Small" Content="Unlock All" HorizontalAlignment="Left"
+                      <Button Classes="Small" Content="Unlock All"
                               Click="UnlockAllCombatArts_Click" />
                       <StackPanel Name="CurrentArtFlags" Spacing="4" />
                     </StackPanel>
@@ -347,7 +345,7 @@
       </TabItem>
 
       <TabItem Name="BattalionTab" Header="Battalion">
-        <Grid Background="#F7F8FA" Margin="8" ColumnDefinitions="264,220,*" ColumnSpacing="8">
+        <Grid Margin="8" ColumnDefinitions="264,220,*" ColumnSpacing="8">
           <Border Classes="section" Grid.Column="0">
             <Grid RowDefinitions="Auto,*" RowSpacing="12">
               <TextBlock Text="Battalion List" FontWeight="SemiBold" />
@@ -378,7 +376,7 @@
       </TabItem>
 
       <TabItem Name="QuestTab" Header="Quest">
-        <Grid Background="#F7F8FA" Margin="8" ColumnDefinitions="312,256,*" ColumnSpacing="8">
+        <Grid Margin="8" ColumnDefinitions="312,256,*" ColumnSpacing="8">
           <Border Classes="section" Grid.Column="0">
             <Grid RowDefinitions="Auto,*" RowSpacing="12">
               <TextBlock Text="Quest List" FontWeight="SemiBold" />
@@ -397,7 +395,7 @@
       </TabItem>
 
       <TabItem Name="SupportTab" Header="Support Talks">
-        <Grid Background="#F7F8FA" Margin="8" ColumnDefinitions="312,256,*" ColumnSpacing="8">
+        <Grid Margin="8" ColumnDefinitions="312,256,*" ColumnSpacing="8">
           <Border Classes="section" Grid.Column="0">
             <Grid RowDefinitions="Auto,*" RowSpacing="12">
               <TextBlock Text="Talk List" FontWeight="SemiBold" />
@@ -417,7 +415,7 @@
       </TabItem>
 
       <TabItem Name="DatabaseTab" Header="Database">
-        <TabControl Background="#F7F8FA" Margin="8">
+        <TabControl Margin="8">
           <TabItem Header="Characters">
             <Grid ColumnDefinitions="264,*" ColumnSpacing="8" Margin="0,8,0,0">
               <Border Classes="section">
@@ -467,7 +465,7 @@
       </TabItem>
 
       <TabItem Name="InheritanceCharactersTab" Header="NG+ Characters">
-        <Grid Background="#F3F5F9" Margin="8" ColumnDefinitions="248,*" ColumnSpacing="12">
+        <Grid Margin="8" ColumnDefinitions="248,*" ColumnSpacing="12">
           <Border Classes="section" Grid.Column="0">
             <Grid RowDefinitions="Auto,*" RowSpacing="12">
               <TextBlock Text="Character List" FontWeight="SemiBold" />
@@ -509,7 +507,7 @@
       </TabItem>
 
       <TabItem Name="InheritanceSupportTab" Header="NG+ Support Talks">
-        <Grid Background="#F7F8FA" Margin="8" ColumnDefinitions="312,*" ColumnSpacing="8">
+        <Grid Margin="8" ColumnDefinitions="312,*" ColumnSpacing="8">
           <Border Classes="section" Grid.Column="0">
             <Grid RowDefinitions="Auto,*" RowSpacing="12">
               <TextBlock Text="Talk List" FontWeight="SemiBold" />
@@ -525,15 +523,15 @@
             <Border Classes="section">
               <StackPanel Spacing="12">
                 <TextBlock Text="Talk Editor" FontWeight="SemiBold" />
-                <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="100,240,*" RowSpacing="7">
-                  <TextBlock Name="SelectedSupport" Grid.ColumnSpan="3" Text="Select a support pair"
+                <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="100,*" RowSpacing="7" ColumnSpacing="8">
+                  <TextBlock Name="SelectedSupport" Grid.ColumnSpan="2" Text="Select a support pair"
                              TextWrapping="Wrap" />
                   <TextBlock Grid.Row="1" Text="Support:" VerticalAlignment="Center" />
                   <ComboBox Classes="Small" Name="SupportRankPreset" Grid.Row="1" Grid.Column="1" />
-                  <Button Classes="Small" Grid.Row="1" Grid.Column="2" Margin="6,0,0,0" HorizontalAlignment="Left"
+                  <Button Classes="Small" Grid.Row="2" Grid.Column="1"
                           Content="Set" Click="ApplySupport_Click" />
                 </Grid>
-                <TextBlock Name="SupportRawPoints" Foreground="#6B7280" />
+                <TextBlock Name="SupportRawPoints" />
               </StackPanel>
             </Border>
             <TextBlock Grid.Row="1" Margin="8,0" TextWrapping="Wrap"

@@ -362,15 +362,20 @@ public partial class MainWindow : Window
         for (int skill = 0; skill < NgPlusJournal.SkillCount; skill++)
         {
             int skillIndex = skill;
-            var row = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal,
-                Spacing = 12, Margin = new Avalonia.Thickness(0, 0, 12, 12) };
+            var row = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitions("130,*"),
+                ColumnSpacing = 12,
+                Margin = new Avalonia.Thickness(0, 0, 12, 12)
+            };
             row.Children.Add(new TextBlock
             {
-                Text = Database.GetString(7214 + skill), Width = 130,
+                Text = Database.GetString(7214 + skill),
                 VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
             });
-            var rank = new ComboBox { ItemsSource = SkillRanks, Width = 100,
+            var rank = new ComboBox { ItemsSource = SkillRanks,
                 SelectedIndex = _save.Inheritance.GetSkillRank(character, skill) };
+            Grid.SetColumn(rank, 1);
             rank.Classes.Add("Small");
             rank.SelectionChanged += (_, _) =>
             {
@@ -500,37 +505,42 @@ public partial class MainWindow : Window
         ProfessorLevelValue.Text = data.Activities.GetInstructRank();
         RenownInput.Text = data.Activities.Reputation.ToString(CultureInfo.InvariantCulture);
         PlayerNameInput.Text = SaveEditor.Util.DecodeString(data.PlayerName);
-        PopulateNumericRows(GameRows, GameFields, 160);
-        PopulateNumericRows(ActivityRows, ActivityFields, 160);
-        PopulateNumericRows(StatueRows, StatueFields, 200);
-        PopulateNumericRows(StatisticsRows, StatisticFields, 200);
+        PopulateNumericRows(GameRows, GameFields);
+        PopulateNumericRows(ActivityRows, ActivityFields);
+        PopulateNumericRows(StatueRows, StatueFields);
+        PopulateNumericRows(StatisticsRows, StatisticFields);
     }
 
     private void PopulateNumericRows(
-        StackPanel container, IEnumerable<(string Label, string Path)> fields, double labelWidth)
+        StackPanel container, IEnumerable<(string Label, string Path)> fields)
     {
         container.Children.Clear();
         if (_save is null) return;
         foreach (var (label, path) in fields)
         {
-            var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
+            var row = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitions("160,*"),
+                ColumnSpacing = 8
+            };
             row.Children.Add(new TextBlock
             {
                 Text = LocalizedFieldLabel(path, label),
-                Width = labelWidth,
                 VerticalAlignment = VerticalAlignment.Center
             });
             if (path is "Player.Difficulty" or "Player.Gamestyle")
             {
-                row.Children.Add(CreateGameChoice(path));
+                var choice = CreateGameChoice(path);
+                Grid.SetColumn(choice, 1);
+                row.Children.Add(choice);
                 container.Children.Add(row);
                 continue;
             }
             var input = new TextBox
             {
-                Width = 120,
                 Text = Convert.ToString(_save.Get(path), CultureInfo.InvariantCulture)
             };
+            Grid.SetColumn(input, 1);
             input.Classes.Add("Small");
             input.LostFocus += (_, _) =>
             {
@@ -585,7 +595,7 @@ public partial class MainWindow : Window
         var choices = Enumerable.Range(0, count)
             .Select(index => new Choice(index, Database.GetString(firstString + index, 1)))
             .ToArray();
-        var combo = new ComboBox { Width = 125, ItemsSource = choices };
+        var combo = new ComboBox { ItemsSource = choices };
         combo.Classes.Add("Small");
         combo.SelectedIndex = checked((int)(long)_save!.Get(path));
         combo.SelectionChanged += (_, _) =>
