@@ -10,3 +10,5 @@ dist/
 /Cli/obj/
 /Gui/bin/
 /Gui/obj/
+/Gui.Smoke/bin/
+/Gui.Smoke/obj/

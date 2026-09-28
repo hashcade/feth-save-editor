@@ -1,9 +1,182 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="FethEditor.Gui.MainWindow"
-        Title="FethEditor.Gui">
-    Welcome to Avalonia!
+        Title="FETH Editor" Width="922" Height="720" MinWidth="820" MinHeight="560"
+        Background="#F7F8FA" FontSize="12">
+  <Window.Styles>
+    <Style Selector="Border.section">
+      <Setter Property="Background" Value="White" />
+      <Setter Property="BorderBrush" Value="#E4E7EB" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="16" />
+    </Style>
+  </Window.Styles>
+  <DockPanel>
+    <Menu DockPanel.Dock="Top" Height="24" Background="#F7F8FA">
+      <MenuItem Header="_File">
+        <MenuItem Header="_Load Save..." Click="OpenSave_Click" />
+        <MenuItem Name="SaveMenuItem" Header="_Write Edited Copy..."
+                  IsEnabled="False" Click="SaveCopy_Click" />
+        <Separator />
+        <MenuItem Header="E_xit" Click="Exit_Click" />
+      </MenuItem>
+    </Menu>
+
+    <Border DockPanel.Dock="Bottom" BorderBrush="#E1E3E6" BorderThickness="0,1,0,0"
+            Background="#F7F8FA" Padding="6,3">
+      <TextBlock Name="Status" Text="Load a version-23 slot or auto save to begin."
+                 TextTrimming="CharacterEllipsis" />
+    </Border>
+
+    <TabControl Name="EditorTabs" Margin="2,0,2,2">
+      <TabItem Header="Main">
+        <ScrollViewer Background="#F7F8FA">
+          <Grid Margin="8" ColumnDefinitions="216,248,200" RowDefinitions="215,140,205"
+                ColumnSpacing="8" RowSpacing="8" HorizontalAlignment="Left">
+            <Border Classes="section" Grid.Row="0" Grid.Column="0">
+              <HeaderedContentControl>
+                <HeaderedContentControl.Header><TextBlock Text="Player" FontWeight="SemiBold" /></HeaderedContentControl.Header>
+                <Grid Margin="0,12,0,0" ColumnDefinitions="86,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
+                      RowSpacing="4" ColumnSpacing="4">
+                  <TextBlock Text="Playtime:" VerticalAlignment="Center" />
+                  <TextBox Classes="Small" Name="PlaytimeInput" Grid.Column="1" Tag="Player.Playtime"
+                           LostFocus="PlayerField_LostFocus" />
+                  <TextBlock Grid.Row="1" Text="Money:" VerticalAlignment="Center" />
+                  <TextBox Classes="Small" Name="MoneyInput" Grid.Row="1" Grid.Column="1" Tag="Player.Money"
+                           LostFocus="PlayerField_LostFocus" />
+                  <TextBlock Grid.Row="2" Text="Instruct Exp:" VerticalAlignment="Center" />
+                  <TextBox Classes="Small" Name="InstructExpInput" Grid.Row="2" Grid.Column="1"
+                           Tag="Activities.InstructExp" LostFocus="PlayerField_LostFocus" />
+                  <TextBlock Grid.Row="3" Text="Instruct Level:" VerticalAlignment="Center" />
+                  <TextBlock Name="ProfessorLevelValue" Grid.Row="3" Grid.Column="1" Text="-" VerticalAlignment="Center" />
+                  <TextBlock Grid.Row="4" Text="Reputation:" VerticalAlignment="Center" />
+                  <TextBox Classes="Small" Name="RenownInput" Grid.Row="4" Grid.Column="1"
+                           Tag="Activities.Reputation" LostFocus="PlayerField_LostFocus" />
+                  <TextBlock Grid.Row="5" Text="Player Name:" VerticalAlignment="Center" />
+                  <TextBox Classes="Small" Name="PlayerNameInput" Grid.Row="5" Grid.Column="1"
+                           LostFocus="PlayerName_LostFocus" />
+                </Grid>
+              </HeaderedContentControl>
+            </Border>
+
+            <Border Classes="section" Grid.Row="0" Grid.Column="1">
+              <HeaderedContentControl>
+                <HeaderedContentControl.Header><TextBlock Text="Game Values" FontWeight="SemiBold" /></HeaderedContentControl.Header>
+                <StackPanel Name="GameRows" Margin="0,12,0,0" Spacing="4" />
+              </HeaderedContentControl>
+            </Border>
+
+            <Border Classes="section" Grid.Row="0" Grid.Column="2" VerticalAlignment="Top">
+              <HeaderedContentControl>
+                <HeaderedContentControl.Header><TextBlock Text="Settings" FontWeight="SemiBold" /></HeaderedContentControl.Header>
+              <StackPanel Margin="0,12,0,0" Spacing="4">
+                <TextBlock Text="Database Language" />
+                <ComboBox Classes="Small" SelectedIndex="0" IsEnabled="False">
+                  <ComboBoxItem Content="English" />
+                </ComboBox>
+              </StackPanel>
+              </HeaderedContentControl>
+            </Border>
+
+            <Border Classes="section" Grid.Row="1" Grid.Column="0" Grid.RowSpan="2">
+              <HeaderedContentControl>
+                <HeaderedContentControl.Header><TextBlock Text="Monthly Statistics" FontWeight="SemiBold" /></HeaderedContentControl.Header>
+                <StackPanel Name="StatisticsRows" Margin="0,12,0,0" Spacing="2" />
+              </HeaderedContentControl>
+            </Border>
+
+            <Border Classes="section" Grid.Row="1" Grid.Column="1">
+              <HeaderedContentControl>
+                <HeaderedContentControl.Header><TextBlock Text="Activity Points" FontWeight="SemiBold" /></HeaderedContentControl.Header>
+                <StackPanel Name="ActivityRows" Margin="0,12,0,0" Spacing="4" />
+              </HeaderedContentControl>
+            </Border>
+
+            <Border Classes="section" Grid.Row="2" Grid.Column="1">
+              <HeaderedContentControl>
+                <HeaderedContentControl.Header><TextBlock Text="Goddess Statue" FontWeight="SemiBold" /></HeaderedContentControl.Header>
+                <StackPanel Name="StatueRows" Margin="0,12,0,0" Spacing="4" />
+              </HeaderedContentControl>
+            </Border>
+
+          </Grid>
+        </ScrollViewer>
+      </TabItem>
+
+      <TabItem Header="NG+ Characters">
+        <Grid Background="#F7F8FA" Margin="8" ColumnDefinitions="264,*" ColumnSpacing="8">
+          <Border Classes="section" Grid.Column="0">
+            <Grid RowDefinitions="Auto,*" RowSpacing="12">
+              <TextBlock Text="Character List" FontWeight="SemiBold" />
+              <Grid Grid.Row="1" RowDefinitions="Auto,*" RowSpacing="5">
+                <TextBox Classes="Small" Name="CharacterSearch" PlaceholderText="Search characters..."
+                         TextChanged="CharacterSearch_TextChanged" />
+                <ListBox Classes="Small" Name="CharacterList" Grid.Row="1"
+                         SelectionChanged="CharacterList_SelectionChanged" />
+              </Grid>
+            </Grid>
+          </Border>
+
+          <Grid Grid.Column="1" RowDefinitions="Auto,*" RowSpacing="8">
+            <TextBlock Name="SelectedCharacter" Margin="4,4,0,0" Text="Select a character" />
+            <TabControl Grid.Row="1">
+              <TabItem Header="Skills">
+                <ScrollViewer Background="#F7F8FA">
+                  <Border Classes="section" Margin="8">
+                    <StackPanel Spacing="12">
+                      <TextBlock Text="Historical Skill Ranks" FontWeight="SemiBold" />
+                      <StackPanel Name="SkillRows" Spacing="5" />
+                    </StackPanel>
+                  </Border>
+                </ScrollViewer>
+              </TabItem>
+              <TabItem Header="Class Flags">
+                <Grid Background="#F7F8FA" Margin="8" RowDefinitions="Auto,*" RowSpacing="6">
+                  <TextBox Classes="Small" Name="ClassSearch" PlaceholderText="Search classes..."
+                           TextChanged="ClassSearch_TextChanged" />
+                  <ScrollViewer Grid.Row="1">
+                    <StackPanel Name="ClassRows" Spacing="4" />
+                  </ScrollViewer>
+                </Grid>
+              </TabItem>
+            </TabControl>
+          </Grid>
+        </Grid>
+      </TabItem>
+
+      <TabItem Header="NG+ Support Talks">
+        <Grid Background="#F7F8FA" Margin="8" ColumnDefinitions="312,*" ColumnSpacing="8">
+          <Border Classes="section" Grid.Column="0">
+            <Grid RowDefinitions="Auto,*" RowSpacing="12">
+              <TextBlock Text="Talk List" FontWeight="SemiBold" />
+              <Grid Grid.Row="1" RowDefinitions="Auto,*" RowSpacing="5">
+                <TextBox Classes="Small" Name="SupportSearch" PlaceholderText="Search character pairs..."
+                         TextChanged="SupportSearch_TextChanged" />
+                <ListBox Classes="Small" Name="SupportList" Grid.Row="1"
+                         SelectionChanged="SupportList_SelectionChanged" />
+              </Grid>
+            </Grid>
+          </Border>
+          <Grid Grid.Column="1" RowDefinitions="130,*" RowSpacing="8">
+            <Border Classes="section">
+              <StackPanel Spacing="12">
+                <TextBlock Text="Talk Editor" FontWeight="SemiBold" />
+                <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="100,160,*" RowSpacing="7">
+                  <TextBlock Name="SelectedSupport" Grid.ColumnSpan="3" Text="Select a support pair"
+                             TextWrapping="Wrap" />
+                  <TextBlock Grid.Row="1" Text="Max points:" VerticalAlignment="Center" />
+                  <TextBox Classes="Small" Name="SupportPointsInput" Grid.Row="1" Grid.Column="1" />
+                  <Button Classes="Small" Grid.Row="1" Grid.Column="2" Margin="6,0,0,0" HorizontalAlignment="Left"
+                          Content="Set" Click="ApplySupport_Click" />
+                </Grid>
+              </StackPanel>
+            </Border>
+            <TextBlock Grid.Row="1" Margin="8,0" TextWrapping="Wrap"
+                       Text="Historical support points are stored separately from this run. Values outside known game ranges may not be meaningful." />
+          </Grid>
+        </Grid>
+      </TabItem>
+    </TabControl>
+  </DockPanel>
 </Window>
