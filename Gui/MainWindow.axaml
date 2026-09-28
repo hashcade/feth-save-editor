@@ -104,6 +104,65 @@
         </ScrollViewer>
       </TabItem>
 
+      <TabItem Header="Storage">
+        <Grid Background="#F7F8FA" Margin="8" ColumnDefinitions="264,200,*,*" ColumnSpacing="8">
+          <Border Classes="section" Grid.Column="0">
+            <Grid RowDefinitions="Auto,*" RowSpacing="12">
+              <TextBlock Name="StorageCount" Text="Item List" FontWeight="SemiBold" />
+              <ListBox Classes="Small" Name="StorageList" Grid.Row="1"
+                       SelectionChanged="StorageList_SelectionChanged" />
+            </Grid>
+          </Border>
+          <StackPanel Grid.Column="1" Spacing="8">
+            <Border Classes="section">
+              <StackPanel Spacing="8">
+                <TextBlock Text="Item Editor" FontWeight="SemiBold" />
+                <ComboBox Classes="Small" Name="StorageItemCombo" />
+                <TextBlock Text="Durability" />
+                <TextBox Classes="Small" Name="StorageDurability" />
+                <TextBlock Text="Amount" />
+                <TextBox Classes="Small" Name="StorageAmount" />
+                <Button Classes="Small" Content="Save Changes" Click="SaveStorageItem_Click" />
+              </StackPanel>
+            </Border>
+            <Border Classes="section">
+              <StackPanel Spacing="8">
+                <TextBlock Text="Item Tools" FontWeight="SemiBold" />
+                <Button Classes="Small" Content="Sort Items" Click="SortStorage_Click" />
+                <Button Classes="Small" Content="Add Essential Items" Click="AddEssentialItems_Click" />
+                <TextBlock Text="Set Durability" />
+                <ComboBox Classes="Small" Name="StorageDurabilityMode" SelectedIndex="0">
+                  <ComboBoxItem Content="Normal maximum" />
+                  <ComboBoxItem Content="100 (infinite)" />
+                  <ComboBoxItem Content="Weapons 100, other maximum" />
+                </ComboBox>
+                <Button Classes="Small" Content="Apply to Inventory" Click="SetStorageDurability_Click" />
+              </StackPanel>
+            </Border>
+          </StackPanel>
+          <Border Classes="section" Grid.Column="2">
+            <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" RowSpacing="8">
+              <TextBlock Text="Misc Items" FontWeight="SemiBold" />
+              <Button Classes="Small" Grid.Row="1" Content="Get All (99)" Click="FillMisc_Click" />
+              <ListBox Classes="Small" Name="MiscList" Grid.Row="2"
+                       SelectionChanged="MiscList_SelectionChanged" />
+              <TextBox Classes="Small" Name="MiscAmount" Grid.Row="3" />
+              <Button Classes="Small" Name="SetMisc" Grid.Row="4" Content="Set Selected Amount" Click="SetMisc_Click" />
+            </Grid>
+          </Border>
+          <Border Classes="section" Grid.Column="3">
+            <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" RowSpacing="8">
+              <TextBlock Text="Gift Items" FontWeight="SemiBold" />
+              <Button Classes="Small" Grid.Row="1" Content="Get All (99)" Click="FillGifts_Click" />
+              <ListBox Classes="Small" Name="GiftList" Grid.Row="2"
+                       SelectionChanged="GiftList_SelectionChanged" />
+              <TextBox Classes="Small" Name="GiftAmount" Grid.Row="3" />
+              <Button Classes="Small" Grid.Row="4" Content="Set Selected Amount" Click="SetGift_Click" />
+            </Grid>
+          </Border>
+        </Grid>
+      </TabItem>
+
       <TabItem Header="NG+ Characters">
         <Grid Background="#F7F8FA" Margin="8" ColumnDefinitions="264,*" ColumnSpacing="8">
           <Border Classes="section" Grid.Column="0">

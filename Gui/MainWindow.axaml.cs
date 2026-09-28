@@ -126,6 +126,7 @@ public partial class MainWindow : Window
         }
 
         RefreshCurrentSummary();
+        RefreshStorage();
         RefreshCharacters();
         RefreshSupports();
         Status.Text = "Save loaded. Changes stay in memory until you save a new copy.";
