@@ -35,7 +35,7 @@ jobs:
         run: dotnet build Gui/FethEditor.Gui.csproj -c Release --nologo
 
       - name: Render GUI smoke test
-        run: dotnet run --project Gui.Smoke/Gui.Smoke.csproj -c Release --no-restore
+        run: dotnet run --project Gui.Smoke/Gui.Smoke.csproj -c Release
 
       - name: Publish standalone GUI
         run: dotnet publish Gui/FethEditor.Gui.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o dist/gui/${{ matrix.rid }}
