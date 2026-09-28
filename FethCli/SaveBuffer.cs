@@ -215,6 +215,23 @@ namespace FethCli
             }
         }
 
+        public void SetSkillRank(int slot, int skill, int rank, int experience)
+        {
+            if (skill < 0 || skill >= Database.MAX_SKILLS)
+                throw new ArgumentOutOfRangeException(nameof(skill));
+            if (rank < 0 || rank >= Database.SkillLevelupRank.Length)
+                throw new ArgumentOutOfRangeException(nameof(rank));
+            if (experience < 0 || experience >= Database.SkillLevelupRank[rank])
+                throw new ArgumentOutOfRangeException(nameof(experience));
+
+            string prefix = $"Characters[{slot}].data.";
+            Location level = Resolve(prefix + $"SkillLevel[{skill}]");
+            Location mirror = Resolve(prefix + $"SkillLevel2[{skill}]");
+            WriteNumber(level, rank);
+            WriteNumber(mirror, rank);
+            Set(prefix + $"SkillExp[{skill}]", experience);
+        }
+
         public void MaxClassExperience(int slot)
         {
             for (int i = 0; i < Database.MAX_CLASS; i++)

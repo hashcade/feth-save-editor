@@ -40,6 +40,8 @@ The output path must not already exist. `--in-place` is available instead of `--
 
 Other operations: `setName` (`value`), `sortItems`, `sortBattalions`, `inventoryDurability` (`mode`: `normal`, `unlimited`, or `weapons-unlimited`), `characterItemDurability` (`slot`), `maxSkillExp` (`slot`), `maxClassExp` (`slot`), `unlockAll` (`slot`, `kind`: `abilities` or `combat-arts`), `fillItems` (`kind`: `misc` or `gifts`, `amount`), and `addEssentialItems`. Bulk unlocking or filling may produce game-invalid combinations; test those changes separately.
 
+`setSkillRank` takes `slot`, zero-based `skill`, `rank`, and `experience`. It updates both the primary and mirrored skill rank/experience fields together. For example, Byleth's sword rank S+ is `{"op":"setSkillRank","slot":0,"skill":0,"rank":11,"experience":0}`. This operation goes beyond the GUI's experience-only controls; use it only with a valid in-game rank and test the result.
+
 `set` supports the GUI's mapped inventory, character, battalion, player, activity, support, gift, and quest-state fields. Use `get` for a numeric field and `inspect` for the structure; `gifts[0]` through `gifts[244]` are convenient aliases. `setBit` works on a character's `Abilities`, `CombatArts`, `ClassUnlockFlags`, `Flags`, or `ClassFlags` by zero-based bit index. Class mastery and skill experience edits follow the GUI's value limits and mirror fields where required.
 
 For full character records, use `export-character --input ... --slot 0 --output character.bin`, then `import-character --input ... --slot 0 --character character.bin --output ...`. Importing a record from another save is riskier than targeted edits; it replaces all bytes in that record, including fields not understood by the editor.

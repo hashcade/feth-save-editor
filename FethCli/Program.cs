@@ -157,6 +157,10 @@ namespace FethCli
                     case "maxSkillExp":
                         save.MaxSkillExperience(Value<int>(item, "slot"));
                         break;
+                    case "setSkillRank":
+                        save.SetSkillRank(Value<int>(item, "slot"), Value<int>(item, "skill"),
+                            Value<int>(item, "rank"), Value<int>(item, "experience"));
+                        break;
                     case "maxClassExp":
                         save.MaxClassExperience(Value<int>(item, "slot"));
                         break;
