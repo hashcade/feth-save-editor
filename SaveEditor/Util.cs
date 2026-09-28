@@ -8,7 +8,9 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+#if !CROSS_PLATFORM
 using System.Windows.Forms;
+#endif
 
 namespace SaveEditor
 {
@@ -165,6 +167,7 @@ namespace SaveEditor
 
         #endregion
 
+        #if !CROSS_PLATFORM
         #region Dictionary -> Combobox Utility
 
         public static void SetComboBoxDataSource(ComboBox cb, object src)
@@ -193,6 +196,7 @@ namespace SaveEditor
         }
 
         #endregion
+        #endif
 
         #region File I/O
 
@@ -494,6 +498,7 @@ namespace SaveEditor
 
         #endregion
 
+        #if !CROSS_PLATFORM
         #region FlagTable
 
         public static byte GetFlagTableByte(CheckedListBox clb)
@@ -618,6 +623,7 @@ namespace SaveEditor
         }
 
         #endregion
+        #endif
 
         private static uint rng_value = 0;
 

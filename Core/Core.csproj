@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>FethEditor.Core</AssemblyName>
+    <Nullable>disable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <DefineConstants>$(DefineConstants);CROSS_PLATFORM</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../SaveEditor/Database.cs" Link="Database.cs" />
+    <Compile Include="../SaveEditor/Enums.cs" Link="Enums.cs" />
+    <Compile Include="../SaveEditor/Util.cs" Link="Util.cs" />
+    <Compile Include="../SaveEditor/Structs/*.cs" Link="Structs/%(Filename)%(Extension)" />
+    <Compile Include="SaveBuffer.cs" />
+    <Compile Include="Resources.cs" />
+    <EmbeddedResource Include="../SaveEditor/Resources/*.bin.gz" LogicalName="%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

@@ -6,7 +6,9 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+#if !CROSS_PLATFORM
 using System.Web.Script.Serialization;
+#endif
 
 namespace SaveEditor.Structs
 {
@@ -297,6 +299,7 @@ namespace SaveEditor.Structs
             LoadItemDB(enmItemTypes.Special2, ITEM_ID_BASE_SPECIAL2);
         }
 
+        #if !CROSS_PLATFORM
         public void DumpToJson()
         {
             CreateJson("person.json", CharacterEntries);
@@ -312,6 +315,7 @@ namespace SaveEditor.Structs
             var serializer = new JavaScriptSerializer();
             File.WriteAllText(filename, serializer.Serialize(data));
         }
+        #endif
 
         public void LoadCharacterDB()
         {

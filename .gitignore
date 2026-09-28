@@ -4,3 +4,9 @@ SaveEditor/bin/
 DataUnpacker/bin/
 *.user
 dist/
+/Core/bin/
+/Core/obj/
+/Cli/bin/
+/Cli/obj/
+/Gui/bin/
+/Gui/obj/

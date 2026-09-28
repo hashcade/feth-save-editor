@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Web.Script.Serialization;
+using FethEditor.Core;
 using SaveEditor;
 using SaveEditor.Structs;
 

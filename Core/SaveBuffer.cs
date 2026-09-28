@@ -10,9 +10,9 @@ using System.Text.RegularExpressions;
 using SaveEditor;
 using SaveEditor.Structs;
 
-namespace FethCli
+namespace FethEditor.Core
 {
-    internal sealed class SaveBuffer
+    public sealed class SaveBuffer
     {
         private const int HeaderSize = 12;
         private static readonly Regex SegmentPattern = new Regex(@"^([A-Za-z_][A-Za-z_0-9]*)(?:\[(\d+)\])?$", RegexOptions.Compiled);
