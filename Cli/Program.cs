@@ -13,7 +13,7 @@ using FethEditor.Core;
 using SaveEditor;
 using SaveEditor.Structs;
 
-namespace FethCli
+namespace FethEditor.Cli
 {
     internal static class Program
     {
@@ -25,7 +25,7 @@ namespace FethCli
             {
                 if (args.Length == 0 || args[0] == "help" || args[0] == "--help")
                 {
-                    Console.WriteLine("FETH_Cli.exe inspect|get|apply|catalog|export-character|import-character --input <slot00> [options]");
+                    Console.WriteLine("FethEditor.Cli inspect|get|apply|catalog|export-character|import-character --input <slot00> [options]");
                     return 0;
                 }
 
@@ -356,7 +356,12 @@ namespace FethCli
             switch (type.ToLowerInvariant())
             {
                 case "items": return Database.ItemList.Select(entry => new { id = entry.Key, name = entry.Value }).ToArray();
-                case "characters": return Database.UnitList.Select(entry => new { id = entry.Key, name = entry.Value }).ToArray();
+                case "characters": return Database.UnitList.Select(entry => new
+                {
+                    id = entry.Key,
+                    name = entry.Value,
+                    mainCharacterId = entry.Key < 0 ? -1 : Database.BinaryDatabase.CharacterEntries[entry.Key].MainCharacterId
+                }).ToArray();
                 case "classes": return Database.ClassList.Select(entry => new { id = entry.Key, name = entry.Value }).ToArray();
                 case "battalions": return Database.BattalionList.Select(entry => new { id = entry.Key, name = entry.Value }).ToArray();
                 case "abilities": return Database.AbilityList.Select(entry => new { id = entry.Key, name = entry.Value }).ToArray();

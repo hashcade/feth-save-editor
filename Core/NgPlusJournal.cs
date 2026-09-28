@@ -15,8 +15,11 @@ namespace FethEditor.Core
         private const int ProfessorOffset = 0x17CE;
         private const int SupportOffset = 0x1576;
         private const int SkillOffset = 0x17D8;
-        private const int ClassOffset = SkillOffset + CharacterCount * SkillCount;
+        private const int ClassOffset = 0x19CC;
         private const int ClassBytesPerCharacter = 13;
+        private const int BaseCharacterCount = 35;
+        private const int AdditionalClassOffset = 0x1B93;
+        private const int AdditionalClassBits = 100;
 
         private readonly byte[] file;
         private readonly int player;
@@ -25,7 +28,8 @@ namespace FethEditor.Core
         {
             this.file = file ?? throw new ArgumentNullException(nameof(file));
             player = playerOffset;
-            if (player < 0 || player + ClassOffset + CharacterCount * ClassBytesPerCharacter > file.Length)
+            if (player < 0 || player + AdditionalClassOffset +
+                (CharacterCount - BaseCharacterCount) * AdditionalClassBits / 8 > file.Length)
                 throw new InvalidDataException("The NG+ journal extends beyond the save file.");
         }
 
@@ -61,8 +65,8 @@ namespace FethEditor.Core
         {
             CheckIndex(recordIndex, CharacterCount, nameof(recordIndex));
             CheckIndex(classId, ClassCount, nameof(classId));
-            int offset = player + ClassOffset + recordIndex * ClassBytesPerCharacter + classId / 8;
-            return (file[offset] & (1 << (classId % 8))) != 0;
+            var (offset, mask) = ClassBit(recordIndex, classId);
+            return (file[offset] & mask) != 0;
         }
 
         public void SetProfessorRank(int rank)
@@ -90,11 +94,19 @@ namespace FethEditor.Core
 
         public void SetClassMastered(int recordIndex, int classId, bool mastered)
         {
+            throw new NotSupportedException("NG+ class flag semantics are not verified; writing them is disabled.");
+        }
+
+        private (int offset, byte mask) ClassBit(int recordIndex, int classId)
+        {
             CheckIndex(recordIndex, CharacterCount, nameof(recordIndex));
             CheckIndex(classId, ClassCount, nameof(classId));
-            int offset = player + ClassOffset + recordIndex * ClassBytesPerCharacter + classId / 8;
-            byte mask = (byte)(1 << (classId % 8));
-            file[offset] = mastered ? (byte)(file[offset] | mask) : (byte)(file[offset] & ~mask);
+            if (recordIndex < BaseCharacterCount)
+                return (player + ClassOffset + recordIndex * ClassBytesPerCharacter + classId / 8,
+                    (byte)(1 << (classId % 8)));
+
+            int bit = (recordIndex - BaseCharacterCount) * AdditionalClassBits + classId;
+            return (player + AdditionalClassOffset + bit / 8, (byte)(1 << (bit % 8)));
         }
 
         public object Snapshot()
@@ -112,7 +124,7 @@ namespace FethEditor.Core
                     recordIndex = index,
                     name = GetCharacterName(index),
                     skillRanks = Enumerable.Range(0, SkillCount).Select(skill => GetSkillRank(index, skill)).ToArray(),
-                    masteredClassIds = Enumerable.Range(0, ClassCount)
+                    rawClassFlagIds = Enumerable.Range(0, ClassCount)
                         .Where(classId => IsClassMastered(index, classId)).ToArray()
                 }).ToArray();
             return new
@@ -120,17 +132,21 @@ namespace FethEditor.Core
                 professorRank = ProfessorRank,
                 supports,
                 characters,
-                note = "NG+ history is separate from current-run progress. Names follow the game's database order; verify changes in-game."
+                note = "NG+ history is separate from current-run progress. Class flags are raw, unverified data and cannot be edited."
             };
         }
 
         private static string CharacterName(int index)
         {
-            if (Database.BinaryDatabase == null || index >= Database.BinaryDatabase.CharacterEntries.Count)
+            if (Database.BinaryDatabase == null)
                 return "Record " + index;
-            var entry = Database.BinaryDatabase.CharacterEntries[index];
-            if (entry.MainCharacterId < 0) return "Record " + index;
-            return entry.UnitName;
+            var entries = Database.BinaryDatabase.CharacterEntries;
+            string name = Enumerable.Range(0, entries.Count)
+                .Where(id => entries[id].MainCharacterId == index)
+                .OrderByDescending(id => id >= 1000)
+                .Select(id => Database.GetUnitName(id))
+                .FirstOrDefault();
+            return string.IsNullOrWhiteSpace(name) ? "Record " + index : name;
         }
 
         private static string SupportName(int index)
