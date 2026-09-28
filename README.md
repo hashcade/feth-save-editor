@@ -1,6 +1,8 @@
-# fe3h-editor
+# feth-editor
 
 Save editor for Fire Emblem: Three Houses v1.2.0. This fork also fixes player names being cut off when they contain multibyte UTF-8 characters.
+
+The Windows release includes the graphical editor and `FETH_Cli.exe`. The CLI accepts JSON patches, making save inspection and editing scriptable for local agents. See [CLI.md](CLI.md) for commands, examples, and safety notes.
 
 ## Credits
 
