@@ -425,53 +425,46 @@
       </TabItem>
 
       <TabItem Name="DatabaseTab" Header="Database">
-        <TabControl Margin="8">
+        <suki:GlassCard Name="DatabaseCard" Classes="section" Margin="8">
+        <TabControl>
           <TabItem Header="Characters">
-            <Grid ColumnDefinitions="264,*" ColumnSpacing="8" Margin="0,8,0,0">
-              <Border Classes="section">
-                <Grid RowDefinitions="Auto,*" RowSpacing="12">
-                  <TextBlock Text="Character Database" FontWeight="SemiBold" />
-                  <ListBox Classes="Small" Name="DatabaseCharacters" Grid.Row="1"
-                           SelectionChanged="DatabaseCharacters_SelectionChanged" />
-                </Grid>
-              </Border>
-              <Border Classes="section" Grid.Column="1">
-                <TextBox Name="DatabaseCharacterDetails" IsReadOnly="True"
-                         AcceptsReturn="True" TextWrapping="Wrap" />
-              </Border>
+            <Grid ColumnDefinitions="320,*" ColumnSpacing="10" Margin="0,8,0,0">
+              <Grid RowDefinitions="Auto,*" RowSpacing="12">
+                <TextBlock Text="Character Database" FontWeight="SemiBold" />
+                <ListBox Classes="Small" Name="DatabaseCharacters" Grid.Row="1"
+                         SelectionChanged="DatabaseCharacters_SelectionChanged" />
+              </Grid>
+              <ScrollViewer Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock Name="DatabaseCharacterDetails" TextWrapping="Wrap" />
+              </ScrollViewer>
             </Grid>
           </TabItem>
           <TabItem Header="Classes">
-            <Grid ColumnDefinitions="264,*" ColumnSpacing="8" Margin="0,8,0,0">
-              <Border Classes="section">
-                <Grid RowDefinitions="Auto,*" RowSpacing="12">
-                  <TextBlock Text="Class Database" FontWeight="SemiBold" />
-                  <ListBox Classes="Small" Name="DatabaseClasses" Grid.Row="1"
-                           SelectionChanged="DatabaseClasses_SelectionChanged" />
-                </Grid>
-              </Border>
-              <Border Classes="section" Grid.Column="1">
-                <TextBox Name="DatabaseClassDetails" IsReadOnly="True"
-                         AcceptsReturn="True" TextWrapping="Wrap" />
-              </Border>
+            <Grid ColumnDefinitions="320,*" ColumnSpacing="10" Margin="0,8,0,0">
+              <Grid RowDefinitions="Auto,*" RowSpacing="12">
+                <TextBlock Text="Class Database" FontWeight="SemiBold" />
+                <ListBox Classes="Small" Name="DatabaseClasses" Grid.Row="1"
+                         SelectionChanged="DatabaseClasses_SelectionChanged" />
+              </Grid>
+              <ScrollViewer Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock Name="DatabaseClassDetails" TextWrapping="Wrap" />
+              </ScrollViewer>
             </Grid>
           </TabItem>
           <TabItem Header="Items">
-            <Grid ColumnDefinitions="264,*" ColumnSpacing="8" Margin="0,8,0,0">
-              <Border Classes="section">
-                <Grid RowDefinitions="Auto,*" RowSpacing="12">
-                  <TextBlock Text="Item Database" FontWeight="SemiBold" />
-                  <ListBox Classes="Small" Name="DatabaseItems" Grid.Row="1"
-                           SelectionChanged="DatabaseItems_SelectionChanged" />
-                </Grid>
-              </Border>
-              <Border Classes="section" Grid.Column="1">
-                <TextBox Name="DatabaseItemDetails" IsReadOnly="True"
-                         AcceptsReturn="True" TextWrapping="Wrap" />
-              </Border>
+            <Grid ColumnDefinitions="320,*" ColumnSpacing="10" Margin="0,8,0,0">
+              <Grid RowDefinitions="Auto,*" RowSpacing="12">
+                <TextBlock Text="Item Database" FontWeight="SemiBold" />
+                <ListBox Classes="Small" Name="DatabaseItems" Grid.Row="1"
+                         SelectionChanged="DatabaseItems_SelectionChanged" />
+              </Grid>
+              <ScrollViewer Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock Name="DatabaseItemDetails" TextWrapping="Wrap" />
+              </ScrollViewer>
             </Grid>
           </TabItem>
         </TabControl>
+        </suki:GlassCard>
       </TabItem>
 
       <TabItem Name="InheritanceCharactersTab" Header="NG+ Characters">

@@ -82,7 +82,8 @@ internal static class UiStrings
             if (control.TemplatedParent is not null) continue;
             switch (control)
             {
-                case TextBlock text when control.Name is not ("Status" or "SelectedCharacter" or "SelectedSupport")
+                case TextBlock text when control.Name is not ("Status" or "SelectedCharacter" or "SelectedSupport"
+                    or "DatabaseCharacterDetails" or "DatabaseClassDetails" or "DatabaseItemDetails")
                     && control.GetVisualParent() is not ContentPresenter { TemplatedParent: TabStripItem }:
                     Replace(control, text.Text, value => text.Text = value, language);
                     break;

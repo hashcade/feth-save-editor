@@ -242,6 +242,8 @@ if (args.Length > 0)
     if (tabs.Items.OfType<TabItem>().ElementAt(7).Header?.ToString() != "继承角色"
         || ((MenuItem)language.Items[11]!).Header?.ToString() != "✓ 简体中文")
         throw new InvalidOperationException("Inheritance labels or language names were not localized.");
+    if (!window.FindControl<TextBlock>("DatabaseCharacterDetails")!.Text!.Contains("贝雷特"))
+        throw new InvalidOperationException("Database details did not follow the selected language.");
     tabs.SelectedIndex = 0;
     Dispatcher.UIThread.RunJobs();
     string chineseScreenshot = Path.Combine(Path.GetTempPath(), "feth-editor-zh.png");
