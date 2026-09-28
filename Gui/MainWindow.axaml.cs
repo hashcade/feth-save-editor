@@ -372,12 +372,10 @@ public partial class MainWindow : Window
         ClassRows.Children.Clear();
         if (_save is null || _selectedCharacter < 0)
         {
-            SelectedCharacter.Text = "Select a character";
             return;
         }
 
         int character = _selectedCharacter;
-        SelectedCharacter.Text = DisplayName(_save.Inheritance.GetCharacterName(character));
         for (int skill = 0; skill < NgPlusJournal.SkillCount; skill++)
         {
             int skillIndex = skill;
@@ -406,6 +404,15 @@ public partial class MainWindow : Window
             SkillRows.Children.Add(row);
         }
         ShowClasses();
+    }
+
+    private void MaxInheritedSkills_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_save is null || _selectedCharacter < 0) return;
+        for (int skill = 0; skill < NgPlusJournal.SkillCount; skill++)
+            _save.Inheritance.SetSkillRank(_selectedCharacter, skill, SkillRanks.Length - 1);
+        ShowCharacter();
+        MarkChanged();
     }
 
     private void ShowClasses()

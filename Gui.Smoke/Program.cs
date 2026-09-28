@@ -260,6 +260,9 @@ if (args.Length > 0)
     if (tabs.Items.OfType<TabItem>().ElementAt(7).Header?.ToString() != "继承角色"
         || ((MenuItem)language.Items[11]!).Header?.ToString() != "✓ 简体中文")
         throw new InvalidOperationException("Inheritance labels or language names were not localized.");
+    if (window.FindControl<TextBox>("StorageSearch")!.PlaceholderText != "搜索…"
+        || window.FindControl<TextBox>("ClassSearch")!.PlaceholderText != "搜索…")
+        throw new InvalidOperationException("Shared search placeholder was not localized.");
     if (!window.FindControl<TextBox>("DatabaseCharacterDetails")!.Text!.Contains("贝雷特"))
         throw new InvalidOperationException("Database details did not follow the selected language.");
     tabs.SelectedIndex = 0;
@@ -287,6 +290,20 @@ if (args.Length > 0)
         (window.CaptureRenderedFrame() ?? throw new InvalidOperationException($"Chinese page {index} did not render."))
             .Save(pageScreenshot, PngBitmapEncoderOptions.Default);
         Console.WriteLine(pageScreenshot);
+        if (index == 6)
+        {
+            var databasePages = window.FindControl<TabControl>("DatabaseTabs")!;
+            foreach (var (databaseIndex, name) in new[] { (1, "classes"), (2, "items") })
+            {
+                databasePages.SelectedIndex = databaseIndex;
+                Dispatcher.UIThread.RunJobs();
+                string databaseScreenshot = Path.Combine(Path.GetTempPath(), $"feth-editor-zh-database-{name}.png");
+                (window.CaptureRenderedFrame() ?? throw new InvalidOperationException($"Database {name} did not render."))
+                    .Save(databaseScreenshot, PngBitmapEncoderOptions.Default);
+                Console.WriteLine(databaseScreenshot);
+            }
+            databasePages.SelectedIndex = 0;
+        }
     }
     tabs.SelectedIndex = 2;
     characterTabs.SelectedIndex = 0;
@@ -427,4 +444,79 @@ if (args.Length > 0)
     characterTabs.SelectedIndex = 2;
     if (((CheckBox)window.FindControl<StackPanel>("CurrentCharacterFlags")!.Children[0]).IsChecked != editedFlag)
         throw new InvalidOperationException("Character edit did not mark the save as changed.");
+
+    tabs.SelectedIndex = 1;
+    Dispatcher.UIThread.RunJobs();
+    var miscSearch = window.FindControl<TextBox>("MiscSearch")!;
+    miscSearch.Text = "010 ·";
+    Dispatcher.UIThread.RunJobs();
+    if (misc.ItemCount != 1 || !misc.Items[0]!.ToString()!.StartsWith("010 ·", StringComparison.Ordinal))
+        throw new InvalidOperationException($"Misc search did not select the requested source row: {misc.ItemCount} rows; first={misc.Items.FirstOrDefault()}.");
+    window.FindControl<TextBox>("MiscAmount")!.Text = "43";
+    window.FindControl<Button>("SetMisc")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    miscSearch.Text = string.Empty;
+    Dispatcher.UIThread.RunJobs();
+    if (!misc.Items[10]!.ToString()!.EndsWith(" · 43", StringComparison.Ordinal)
+        || !misc.Items[0]!.ToString()!.EndsWith(" · 42", StringComparison.Ordinal))
+        throw new InvalidOperationException("Editing a filtered misc row changed the wrong source item.");
+
+    tabs.SelectedIndex = 4;
+    Dispatcher.UIThread.RunJobs();
+    var questSearch = window.FindControl<TextBox>("QuestSearch")!;
+    questSearch.Text = "001 ·";
+    Dispatcher.UIThread.RunJobs();
+    if (quests.ItemCount != 1 || !quests.Items[0]!.ToString()!.StartsWith("001 ·", StringComparison.Ordinal))
+        throw new InvalidOperationException("Quest search did not select the requested source row.");
+    window.FindControl<ComboBox>("QuestState")!.SelectedIndex = 4;
+    window.FindControl<Button>("SetQuestStateButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    questSearch.Text = string.Empty;
+    Dispatcher.UIThread.RunJobs();
+    if (!quests.Items[1]!.ToString()!.EndsWith(" · 4", StringComparison.Ordinal)
+        || !quests.Items[0]!.ToString()!.EndsWith(" · 5", StringComparison.Ordinal))
+        throw new InvalidOperationException("Editing a filtered quest changed the wrong source item.");
+
+    var databaseTabs = window.FindControl<TabControl>("DatabaseTabs")!;
+    foreach (var (page, databasePage, searchName, listName) in new[]
+    {
+        (1, -1, "StorageSearch", "StorageList"),
+        (1, -1, "GiftSearch", "GiftList"),
+        (2, -1, "CurrentCharacterSearch", "CurrentCharacterList"),
+        (3, -1, "BattalionSearch", "BattalionList"),
+        (5, -1, "CurrentSupportSearch", "CurrentSupportList"),
+        (6, 0, "DatabaseCharacterSearch", "DatabaseCharacters"),
+        (6, 1, "DatabaseClassSearch", "DatabaseClasses"),
+        (6, 2, "DatabaseItemSearch", "DatabaseItems")
+    })
+    {
+        tabs.SelectedIndex = page;
+        if (databasePage >= 0) databaseTabs.SelectedIndex = databasePage;
+        Dispatcher.UIThread.RunJobs();
+        var list = window.FindControl<ListBox>(listName)!;
+        int originalCount = list.ItemCount;
+        var search = window.FindControl<TextBox>(searchName)!;
+        search.Text = "___not_a_real_entry___";
+        Dispatcher.UIThread.RunJobs();
+        if (list.ItemCount != 0)
+            throw new InvalidOperationException($"{searchName} did not filter its list.");
+        search.Text = string.Empty;
+        Dispatcher.UIThread.RunJobs();
+        if (list.ItemCount != originalCount)
+            throw new InvalidOperationException($"{searchName} did not restore its list.");
+    }
+
+    tabs.SelectedIndex = 7;
+    inheritanceTabs.SelectedIndex = 0;
+    Dispatcher.UIThread.RunJobs();
+    var inheritedSkills = window.FindControl<Panel>("SkillRows")!;
+    ((Grid)inheritedSkills.Children[0]).Children.OfType<ComboBox>().Single().SelectedIndex = 0;
+    var maxInheritedSkills = window.FindControl<Button>("MaxInheritedSkillsButton")!;
+    if (Grid.GetColumn(maxInheritedSkills) != 1 ||
+        maxInheritedSkills.HorizontalAlignment != Avalonia.Layout.HorizontalAlignment.Right ||
+        maxInheritedSkills.Bounds.Width >= 200)
+        throw new InvalidOperationException("Inherited skill action is not compact and right-aligned.");
+    maxInheritedSkills.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    inheritedSkills = window.FindControl<Panel>("SkillRows")!;
+    if (inheritedSkills.Children.OfType<Grid>()
+        .Any(row => row.Children.OfType<ComboBox>().Single().SelectedIndex != 11))
+        throw new InvalidOperationException("Unlock All did not maximize every inherited skill rank.");
 }

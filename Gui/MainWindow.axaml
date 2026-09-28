@@ -499,19 +499,22 @@
           </suki:GlassCard>
 
           <suki:GlassCard Name="InheritanceCharacterEditorCard" Classes="section" Grid.Column="1">
-            <Grid RowDefinitions="Auto,*" RowSpacing="10">
-              <TextBlock Name="SelectedCharacter" Margin="4,6,0,0" Text="Select a character"
-                         FontSize="17" FontWeight="SemiBold" />
-              <TabControl Name="InheritanceTabs" Grid.Row="1">
+              <TabControl Name="InheritanceTabs">
                 <TabItem Header="Skills">
                   <StackPanel Margin="0,8,0,0" Spacing="16" VerticalAlignment="Top">
-                    <TextBlock Text="Historical Skill Ranks" FontSize="14" FontWeight="SemiBold" />
+                    <Grid ColumnDefinitions="*,Auto">
+                      <TextBlock Text="Historical Skill Ranks" FontSize="14" FontWeight="SemiBold"
+                                 VerticalAlignment="Center" />
+                      <Button Name="MaxInheritedSkillsButton" Classes="Small" Grid.Column="1"
+                              Content="Unlock All" HorizontalAlignment="Right"
+                              Click="MaxInheritedSkills_Click" />
+                    </Grid>
                     <UniformGrid Name="SkillRows" Columns="2" />
                   </StackPanel>
                 </TabItem>
                 <TabItem Header="Class Mastery">
                   <Grid Margin="0,8,0,0" RowDefinitions="Auto,*" RowSpacing="12">
-                    <TextBox Classes="Small" Name="ClassSearch" PlaceholderText="Search classes..."
+                    <TextBox Classes="Small" Name="ClassSearch" PlaceholderText="Search..."
                              TextChanged="ClassSearch_TextChanged" />
                     <ScrollViewer Grid.Row="1">
                       <UniformGrid Name="ClassRows" Columns="2" />
@@ -519,7 +522,6 @@
                   </Grid>
                 </TabItem>
               </TabControl>
-            </Grid>
           </suki:GlassCard>
         </Grid>
       </TabItem>
