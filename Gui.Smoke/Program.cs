@@ -7,6 +7,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using FethEditor.Gui;
 using FethEditor.Core;
 
@@ -51,8 +52,13 @@ if (args.Length > 1)
     string systemScreenshot = Path.Combine(Path.GetTempPath(), "feth-editor-system.png");
     systemFrame.Save(systemScreenshot, PngBitmapEncoderOptions.Default);
     Console.WriteLine(systemScreenshot);
-    var row = (SystemFlagRow)systemWindow.FindControl<ListBox>("SystemFlags")!.Items[0]!;
-    row.Enabled = !row.Enabled;
+    var flagList = systemWindow.FindControl<ListBox>("SystemFlags")!;
+    var row = (SystemFlagRow)flagList.Items[0]!;
+    var firstCheck = flagList.GetVisualDescendants().OfType<CheckBox>().First();
+    firstCheck.IsChecked = !firstCheck.IsChecked;
+    Dispatcher.UIThread.RunJobs();
+    if (row.Enabled != firstCheck.IsChecked)
+        throw new InvalidOperationException("System flag checkbox did not update its model.");
     if (!systemWindow.FindControl<MenuItem>("WriteSystemMenu")!.IsEnabled)
         throw new InvalidOperationException("System flag edit did not enable saving.");
 
