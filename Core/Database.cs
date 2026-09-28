@@ -42,7 +42,16 @@ namespace SaveEditor
 
 
         public static int[] SkillLevelupRank = { 40, 60, 80, 120, 160, 220, 280, 360, 440, 760, 1080, 65535 };
-        public static int[] TeacherLevelupRank = { 0, 0, 0, 0, 0, 6400, 10900, 16300, 24000, 32800, MAX_INSTRUCT_EXP, 99999999 };
+        // Cumulative professor experience required to reach E through A+.
+        public static int[] TeacherLevelupRank = { 0, 100, 1500, 3600, 6400, 10900, 16300, 24000, 32800, MAX_INSTRUCT_EXP };
+
+        public static int GetProfessorRankFromExperience(int experience)
+        {
+            for (int rank = TeacherLevelupRank.Length - 1; rank > 0; rank--)
+                if (experience >= TeacherLevelupRank[rank])
+                    return rank;
+            return 0;
+        }
 
         public static List<short> EssentialItems = new List<short>
         {

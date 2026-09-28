@@ -90,13 +90,7 @@ namespace SaveEditor.Structs
 
         public int GetInstructLevel()
         {
-            for (int i = 0; i < Database.TeacherLevelupRank.Length; i++)
-            {
-                if (InstructExp < Database.TeacherLevelupRank[i])
-                    return i;
-            }
-
-            return 0;
+            return Database.GetProfessorRankFromExperience(InstructExp);
         }
 
         public string GetInstructRank()
@@ -194,13 +188,7 @@ namespace SaveEditor.Structs
 
         public int GetInstructLevel()
         {
-            for (int i = 0; i < Database.TeacherLevelupRank.Length; i++)
-            {
-                if (InstructExp < Database.TeacherLevelupRank[i])
-                    return i;
-            }
-
-            return 0;
+            return Database.GetProfessorRankFromExperience(InstructExp);
         }
 
         public string GetInstructRank()
