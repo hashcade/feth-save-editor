@@ -384,16 +384,33 @@ if (args.Length > 0)
         throw new InvalidOperationException("DLC and Jeritza NG+ names are missing.");
     if (historicalCharacters.Items.OfType<string>().Any(name => name.Contains("Aelfric", StringComparison.Ordinal)))
         throw new InvalidOperationException("Non-recruitable NPCs should not appear in the NG+ editor.");
+    tabs.SelectedIndex = 8;
+    Dispatcher.UIThread.RunJobs();
     var supportPreset = window.FindControl<ComboBox>("SupportRankPreset")!;
     if (supportPreset.ItemCount != 8 || supportPreset.SelectedItem?.ToString() != "S")
         throw new InvalidOperationException("NG+ support rank was not mapped from the stored value.");
+    var inheritedSupportPoints = window.FindControl<TextBox>("InheritedSupportPoints")!;
+    if (inheritedSupportPoints.Text != "1001")
+        throw new InvalidOperationException("NG+ support points were not shown exactly.");
+    inheritedSupportPoints.Text = "750";
+    Dispatcher.UIThread.RunJobs();
+    if (supportPreset.SelectedItem?.ToString() != "A" || inheritedSupportPoints.Text != "750")
+        throw new InvalidOperationException($"NG+ support points did not update the rank without rounding: rank={supportPreset.SelectedItem}, points={inheritedSupportPoints.Text}.");
+    if (window.FindControl<ListBox>("SupportList")!.Items[0]!.ToString()!.EndsWith(" · S", StringComparison.Ordinal) != true)
+        throw new InvalidOperationException("NG+ support edit was applied before pressing Set.");
+    window.FindControl<Button>("SetInheritedSupportButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    if (inheritedSupportPoints.Text != "750")
+        throw new InvalidOperationException("NG+ support points lost their exact value after saving.");
     supportPreset.SelectedIndex = 2;
+    if (inheritedSupportPoints.Text != "201")
+        throw new InvalidOperationException("NG+ support rank did not fill its point threshold.");
     window.FindControl<Button>("SetInheritedSupportButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
     if (window.FindControl<ListBox>("SupportList")!.Items[0]!.ToString()!.EndsWith(" · C+", StringComparison.Ordinal) != true)
         throw new InvalidOperationException("NG+ support rank edit did not update the list.");
     supportPreset.SelectedIndex = 7;
     window.FindControl<Button>("SetInheritedSupportButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
 
+    tabs.SelectedIndex = 1;
     var items = window.FindControl<ListBox>("StorageList")!;
     var misc = window.FindControl<ListBox>("MiscList")!;
     if (items.ItemCount != 400 || misc.ItemCount != 223)
@@ -409,21 +426,39 @@ if (args.Length > 0)
     if (!quests.Items[0]!.ToString()!.EndsWith(" · 5", StringComparison.Ordinal))
         throw new InvalidOperationException("Quest edit did not update the list.");
 
+    tabs.SelectedIndex = 5;
+    Dispatcher.UIThread.RunJobs();
     var supports = window.FindControl<ListBox>("CurrentSupportList")!;
     var currentSupportRank = window.FindControl<ComboBox>("CurrentSupportRank")!;
+    var currentSupportPoints = window.FindControl<TextBox>("CurrentSupportPoints")!;
     if (currentSupportRank.ItemCount != 8)
         throw new InvalidOperationException("Current support ranks were not loaded.");
+    string originalCurrentPoints = currentSupportPoints.Text ?? string.Empty;
+    currentSupportPoints.Text = "750";
+    Dispatcher.UIThread.RunJobs();
+    if (currentSupportRank.SelectedItem?.ToString() != "A" || currentSupportPoints.Text != "750")
+        throw new InvalidOperationException("Current support points did not update the rank without rounding.");
+    window.FindControl<Button>("SetCurrentSupportButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    if (currentSupportPoints.Text != "750" ||
+        !supports.Items[0]!.ToString()!.EndsWith(" · A", StringComparison.Ordinal))
+        throw new InvalidOperationException("Current support edit did not retain exact points.");
     currentSupportRank.SelectedIndex = 2;
+    if (currentSupportPoints.Text != "201")
+        throw new InvalidOperationException("Current support rank did not fill its point threshold.");
     window.FindControl<Button>("SetCurrentSupportButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
     if (!supports.Items[0]!.ToString()!.EndsWith(" · C+", StringComparison.Ordinal))
         throw new InvalidOperationException("Current support rank edit did not update the list.");
+    currentSupportPoints.Text = originalCurrentPoints;
+    window.FindControl<Button>("SetCurrentSupportButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
 
+    tabs.SelectedIndex = 3;
     var battalionExp = window.FindControl<TextBox>("BattalionExp")!;
     battalionExp.Text = "401";
     window.FindControl<Button>("SaveBattalionButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
     if (battalionExp.Text != "401")
         throw new InvalidOperationException("Battalion edit was not retained.");
 
+    tabs.SelectedIndex = 2;
     var character = window.FindControl<ListBox>("CurrentCharacterList")!;
     if (character.ItemCount == 0)
         throw new InvalidOperationException("Character list was not loaded.");

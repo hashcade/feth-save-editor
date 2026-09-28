@@ -36,13 +36,9 @@ public partial class MainWindow
     private void ShowCurrentSupport()
     {
         int index = SelectedSourceIndex(CurrentSupportList);
-        if (_save is null || index < 0) return;
-        int points = _save.Data.Player.CharacterSupportValues[index];
-        Choice[] ranks = SupportRanks
-            .Select(rank => new Choice(rank.Id, UiStrings.Translate(rank.Label, _databaseLanguage)))
-            .ToArray();
-        CurrentSupportRank.ItemsSource = ranks;
-        CurrentSupportRank.SelectedItem = ranks[System.Array.IndexOf(SupportRanks, SupportRankFor(points))];
+        int? points = _save is null || index < 0
+            ? null : _save.Data.Player.CharacterSupportValues[index];
+        ShowSupportInput(CurrentSupportRank, CurrentSupportPoints, points);
     }
 
     private void SetCurrentSupport_Click(object? sender, RoutedEventArgs e)
@@ -51,11 +47,9 @@ public partial class MainWindow
         if (_save is null || index < 0) return;
         try
         {
-            if (CurrentSupportRank.SelectedItem is not Choice rank)
-                throw new InvalidOperationException("Select a support rank.");
-            int points = _save.Data.Player.CharacterSupportValues[index];
-            if (SupportRankFor(points).Id == rank.Id) return;
-            _save.Set($"Player.CharacterSupportValues[{index}]", rank.Id);
+            ushort points = ParseUShort(CurrentSupportPoints, "Support points");
+            if (_save.Data.Player.CharacterSupportValues[index] == points) return;
+            _save.Set($"Player.CharacterSupportValues[{index}]", points);
             RefreshCurrentSupports(index);
             MarkChanged();
         }

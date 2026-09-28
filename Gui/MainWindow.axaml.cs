@@ -488,15 +488,11 @@ public partial class MainWindow : Window
     {
         if (_save is null || _selectedSupport < 0)
         {
-            SupportRankPreset.ItemsSource = null;
+            ShowSupportInput(SupportRankPreset, InheritedSupportPoints, null);
             return;
         }
         int points = _save.Inheritance.GetSupportPoints(_selectedSupport);
-        Choice[] ranks = SupportRanks
-            .Select(rank => new Choice(rank.Id, UiStrings.Translate(rank.Label, _databaseLanguage)))
-            .ToArray();
-        SupportRankPreset.ItemsSource = ranks;
-        SupportRankPreset.SelectedItem = ranks[Array.IndexOf(SupportRanks, SupportRankFor(points))];
+        ShowSupportInput(SupportRankPreset, InheritedSupportPoints, points);
     }
 
     private static Choice SupportRankFor(int points) =>
@@ -507,11 +503,9 @@ public partial class MainWindow : Window
         if (_save is null || _selectedSupport < 0) return;
         try
         {
-            if (SupportRankPreset.SelectedItem is not Choice choice)
-                throw new InvalidOperationException("Select a support rank.");
-            int current = _save.Inheritance.GetSupportPoints(_selectedSupport);
-            if (SupportRankFor(current).Id == choice.Id) return;
-            _save.Inheritance.SetSupportPoints(_selectedSupport, choice.Id);
+            ushort points = ParseUShort(InheritedSupportPoints, "Support points");
+            if (_save.Inheritance.GetSupportPoints(_selectedSupport) == points) return;
+            _save.Inheritance.SetSupportPoints(_selectedSupport, points);
             RefreshSupports();
             MarkChanged();
         }

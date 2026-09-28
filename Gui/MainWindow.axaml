@@ -430,8 +430,12 @@
           <suki:GlassCard Name="SupportEditorCard" Classes="section" Grid.Column="1">
             <StackPanel Width="340" HorizontalAlignment="Left" Spacing="8">
               <TextBlock Text="Talk Editor" FontWeight="SemiBold" />
-              <TextBlock Text="Current support rank" />
-              <ComboBox Classes="Small" Name="CurrentSupportRank" />
+              <TextBlock Text="Rank" />
+              <ComboBox Classes="Small" Name="CurrentSupportRank" Margin="-5,0"
+                        SelectionChanged="SupportRank_SelectionChanged" />
+              <TextBlock Text="Points" />
+              <TextBox Classes="Small" Name="CurrentSupportPoints"
+                       TextChanged="SupportPoints_TextChanged" />
               <Button Classes="Small" Name="SetCurrentSupportButton" Content="Set" Click="SetCurrentSupport_Click" />
             </StackPanel>
           </suki:GlassCard>
@@ -539,7 +543,12 @@
           <suki:GlassCard Name="InheritanceSupportEditorCard" Classes="section" Grid.Column="1">
             <StackPanel Width="340" HorizontalAlignment="Left" Spacing="8">
               <TextBlock Text="Inherited support rank" FontWeight="SemiBold" />
-              <ComboBox Classes="Small" Name="SupportRankPreset" />
+              <TextBlock Text="Rank" />
+              <ComboBox Classes="Small" Name="SupportRankPreset" Margin="-5,0"
+                        SelectionChanged="SupportRank_SelectionChanged" />
+              <TextBlock Text="Points" />
+              <TextBox Classes="Small" Name="InheritedSupportPoints"
+                       TextChanged="SupportPoints_TextChanged" />
               <Button Classes="Small" Name="SetInheritedSupportButton" Content="Set" Click="ApplySupport_Click" />
             </StackPanel>
           </suki:GlassCard>
