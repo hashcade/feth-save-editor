@@ -48,7 +48,7 @@ def main() -> None:
         assert summary["summary"]["Money"] == 0
         assert run(cli, "get", "--input", str(source), "--path", "Items[0].Id")["value"] == -1
         catalog = run(cli, "catalog", "--type", "classes")
-        assert len(catalog) == 100
+        assert len(catalog) == 101  # 100 classes plus the GUI's "none" sentinel.
 
         patch_file.write_text(json.dumps({
             "expectedSha256": summary["sha256"],

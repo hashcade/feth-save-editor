@@ -180,6 +180,97 @@ namespace FethCli
                 Buffer.BlockCopy(entries[i], 0, bytes, baseLoc.Offset + 8 * i, 8);
         }
 
+        public void SetInventoryDurability(string mode)
+        {
+            if (mode != "normal" && mode != "unlimited" && mode != "weapons-unlimited")
+                throw new ArgumentException("Durability mode must be normal, unlimited, or weapons-unlimited.");
+            for (int i = 0; i < SaveData_V23.ITEM_COUNT; i++)
+            {
+                short id = checked((short)(long)Get($"Items[{i}].Id"));
+                if (id == -1) continue;
+                int durability = mode == "unlimited" || (mode == "weapons-unlimited" && id >= 10 && id < 510)
+                    ? 100 : Database.GetItemDurability(id);
+                Set($"Items[{i}].Durability", durability);
+            }
+        }
+
+        public void SetCharacterItemDurability(int slot)
+        {
+            int count = checked((int)(long)Get($"Characters[{slot}].data.ItemCount"));
+            if (count > Database.MAX_CHARA_ITEMS)
+                throw new InvalidDataException("Character item count is invalid.");
+            for (int i = 0; i < count; i++)
+                if ((long)Get($"Characters[{slot}].data.Items[{i}].Id") != -1)
+                    Set($"Characters[{slot}].data.Items[{i}].Durability", 100);
+        }
+
+        public void MaxSkillExperience(int slot)
+        {
+            for (int i = 0; i < Database.MAX_SKILLS; i++)
+            {
+                int rank = checked((int)(long)Get($"Characters[{slot}].data.SkillLevel[{i}]"));
+                if (rank < 0 || rank >= Database.SkillLevelupRank.Length)
+                    throw new InvalidDataException("Character skill rank is outside the game's table.");
+                Set($"Characters[{slot}].data.SkillExp[{i}]", Database.SkillLevelupRank[rank] - 1);
+            }
+        }
+
+        public void MaxClassExperience(int slot)
+        {
+            for (int i = 0; i < Database.MAX_CLASS; i++)
+                Set($"Characters[{slot}].data.ClassExp[{i}]", Database.GetMaxClassExp(i));
+        }
+
+        public void UnlockAll(int slot, string kind)
+        {
+            string path;
+            int count;
+            if (kind == "abilities")
+            {
+                path = $"Characters[{slot}].data.Abilities";
+                count = Database.MAX_ABILITIES * 8;
+            }
+            else if (kind == "combat-arts")
+            {
+                path = $"Characters[{slot}].data.CombatArts";
+                count = Database.COMBAT_ARTS_COUNT;
+            }
+            else
+                throw new ArgumentException("Unlock kind must be abilities or combat-arts.");
+            for (int i = 0; i < count; i++) SetBit(path, i, true);
+        }
+
+        public void FillItems(string kind, byte amount)
+        {
+            if (kind == "misc")
+                for (int i = 0; i < Player_V23.COUNT_MISC_ITEMS; i++) Set($"Player.MiscItems[{i}]", amount);
+            else if (kind == "gifts")
+                for (int i = 0; i < Player_V23.COUNT_GIFT_ITEMS; i++) Set($"gifts[{i}]", amount);
+            else
+                throw new ArgumentException("Fill kind must be misc or gifts.");
+        }
+
+        public void AddEssentialItems()
+        {
+            foreach (short id in Database.EssentialItems.Distinct())
+            {
+                int slot = -1;
+                int free = -1;
+                for (int i = 0; i < SaveData_V23.ITEM_COUNT; i++)
+                {
+                    int itemId = checked((int)(long)Get($"Items[{i}].Id"));
+                    if (itemId == id) { slot = i; break; }
+                    if (itemId == -1 && free == -1) free = i;
+                }
+                if (slot == -1) slot = free;
+                if (slot == -1) throw new InvalidOperationException("Inventory has no free slot for essential items.");
+                Set($"Items[{slot}].Id", id);
+                Set($"Items[{slot}].Durability", Database.GetItemDurability(id));
+                Set($"Items[{slot}].Amount", 99);
+            }
+            SortItems();
+        }
+
         public IReadOnlyList<object> Differences()
         {
             var result = new List<object>();
@@ -295,8 +386,8 @@ namespace FethCli
                 throw new ArgumentOutOfRangeException(nameof(value), "Professor experience exceeds the GUI limit.");
             if (Regex.IsMatch(path, @"\.classlevel\[\d+\]$|\.currentclasslevel$", RegexOptions.IgnoreCase) && (value < 0 || value > Database.MAX_CLASS_LEVEL))
                 throw new ArgumentOutOfRangeException(nameof(value), "Class mastery must be 0 or 1.");
-            if (Regex.IsMatch(path, @"^activities\.queststatelist\[\d+\]$", RegexOptions.IgnoreCase) && (value < 0 || value > 3))
-                throw new ArgumentOutOfRangeException(nameof(value), "Quest state must be 0 through 3.");
+            if (Regex.IsMatch(path, @"^activities\.queststatelist\[\d+\]$", RegexOptions.IgnoreCase) && (value < 0 || value > 6))
+                throw new ArgumentOutOfRangeException(nameof(value), "Quest state must be 0 through 6.");
         }
 
         private sealed class Location

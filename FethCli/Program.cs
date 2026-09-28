@@ -148,6 +148,27 @@ namespace FethCli
                     case "sortBattalions":
                         save.SortBattalions();
                         break;
+                    case "inventoryDurability":
+                        save.SetInventoryDurability(Value<string>(item, "mode"));
+                        break;
+                    case "characterItemDurability":
+                        save.SetCharacterItemDurability(Value<int>(item, "slot"));
+                        break;
+                    case "maxSkillExp":
+                        save.MaxSkillExperience(Value<int>(item, "slot"));
+                        break;
+                    case "maxClassExp":
+                        save.MaxClassExperience(Value<int>(item, "slot"));
+                        break;
+                    case "unlockAll":
+                        save.UnlockAll(Value<int>(item, "slot"), Value<string>(item, "kind"));
+                        break;
+                    case "fillItems":
+                        save.FillItems(Value<string>(item, "kind"), checked((byte)Value<int>(item, "amount")));
+                        break;
+                    case "addEssentialItems":
+                        save.AddEssentialItems();
+                        break;
                     case "importCharacter":
                         save.ImportCharacter(Value<int>(item, "slot"), File.ReadAllBytes(Value<string>(item, "file")));
                         break;
