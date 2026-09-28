@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.IO;
 using SaveEditor;
 
@@ -24,10 +23,7 @@ internal static class UiPreferences
         catch (IOException) { }
         catch (UnauthorizedAccessException) { }
 
-        string system = CultureInfo.CurrentUICulture.Name;
-        return system.StartsWith("zh-Hans", StringComparison.OrdinalIgnoreCase)
-            || system.Equals("zh-CN", StringComparison.OrdinalIgnoreCase)
-                ? enmLanguage.zh_hans : enmLanguage.en_u;
+        return enmLanguage.en_u;
     }
 
     public static void Save(enmLanguage language)
