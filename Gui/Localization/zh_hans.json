@@ -1,6 +1,8 @@
 {
   "_File": "文件",
   "Language": "语言",
+  "Open save": "打开存档",
+  "Save copy": "另存副本",
   "_Load Save...": "打开存档…",
   "_Write Edited Copy...": "另存修改副本…",
   "_System Save Editor...": "系统存档编辑器…",

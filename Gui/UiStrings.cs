@@ -4,7 +4,9 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using Avalonia.Controls;
+using Avalonia.Controls.Presenters;
 using Avalonia.LogicalTree;
+using Avalonia.VisualTree;
 using SaveEditor;
 
 namespace FethEditor.Gui;
@@ -56,12 +58,13 @@ internal static class UiStrings
 
     public static string Translate(string value, enmLanguage language)
     {
-        if (Database.BinaryDatabase is not null && GameStrings.TryGetValue(value, out var text))
-            return Database.GetString(text.Id, text.Table) + (value.EndsWith(':') ? ":" : "");
         if (!Locales.TryGetValue(language, out var locale))
             Locales[language] = locale = LoadLocale(language);
-        return locale.TryGetValue(value, out string? translated)
-            ? translated : value;
+        if (locale.TryGetValue(value, out string? translated))
+            return translated;
+        if (Database.BinaryDatabase is not null && GameStrings.TryGetValue(value, out var text))
+            return Database.GetString(text.Id, text.Table) + (value.EndsWith(':') ? ":" : "");
+        return value;
     }
 
     public static string LanguageName(enmLanguage option, enmLanguage current)
@@ -75,9 +78,11 @@ internal static class UiStrings
     {
         foreach (Control control in root.GetLogicalDescendants().OfType<Control>().Prepend(root))
         {
+            if (control.TemplatedParent is not null) continue;
             switch (control)
             {
-                case TextBlock text when control.Name is not ("Status" or "SelectedCharacter" or "SelectedSupport"):
+                case TextBlock text when control.Name is not ("Status" or "SelectedCharacter" or "SelectedSupport")
+                    && control.GetVisualParent() is not ContentPresenter:
                     Replace(control, text.Text, value => text.Text = value, language);
                     break;
                 case MenuItem menu when menu.Header is string header:

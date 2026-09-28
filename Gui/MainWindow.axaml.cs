@@ -4,10 +4,12 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using FethEditor.Core;
 using SaveEditor;
 
@@ -75,12 +77,25 @@ public partial class MainWindow : Window
     private bool _loading;
     private bool _databaseReady;
     private enmLanguage _databaseLanguage = UiPreferences.Load();
+    private readonly DispatcherTimer _statusTimer = new() { Interval = TimeSpan.FromSeconds(6) };
 
     public MainWindow()
     {
         InitializeComponent();
         UpdateLanguageMenu();
         NgPlusProfessorRank.ItemsSource = SkillRanks.Take(10).ToArray();
+        _statusTimer.Tick += (_, _) =>
+        {
+            _statusTimer.Stop();
+            StatusNotice.IsVisible = false;
+        };
+        Status.PropertyChanged += (_, change) =>
+        {
+            if (change.Property != TextBlock.TextProperty) return;
+            _statusTimer.Stop();
+            StatusNotice.IsVisible = !string.IsNullOrWhiteSpace(Status.Text);
+            if (StatusNotice.IsVisible) _statusTimer.Start();
+        };
         EditorTabs.SelectionChanged += (_, _) => UiStrings.Apply(this, _databaseLanguage);
         UiStrings.Apply(this, _databaseLanguage);
     }
@@ -129,7 +144,7 @@ public partial class MainWindow : Window
                 RefreshDatabaseViewer();
             }
             UiStrings.Apply(this, _databaseLanguage);
-            Status.Text = UiStrings.Translate("Database language changed. Save bytes were not modified.", _databaseLanguage);
+            Status.Text = string.Empty;
         }
         catch (Exception error)
         {
@@ -191,6 +206,7 @@ public partial class MainWindow : Window
             ClassSearch.Text = string.Empty;
             SupportSearch.Text = string.Empty;
             SaveMenuItem.IsEnabled = false;
+            HeaderSaveButton.IsEnabled = false;
             _selectedCharacter = -1;
             _selectedSupport = -1;
         }
@@ -210,7 +226,7 @@ public partial class MainWindow : Window
         RefreshNgPlusProfessorRank();
         RefreshDatabaseViewer();
         UiStrings.Apply(this, _databaseLanguage);
-        Status.Text = UiStrings.Translate("Save loaded. Changes stay in memory until you save a new copy.", _databaseLanguage);
+        Status.Text = string.Empty;
     }
 
     private async void SaveCopy_Click(object? sender, RoutedEventArgs e)
@@ -347,7 +363,8 @@ public partial class MainWindow : Window
         for (int skill = 0; skill < NgPlusJournal.SkillCount; skill++)
         {
             int skillIndex = skill;
-            var row = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 12 };
+            var row = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal,
+                Spacing = 12, Margin = new Avalonia.Thickness(0, 0, 12, 12) };
             row.Children.Add(new TextBlock
             {
                 Text = Database.GetString(7214 + skill), Width = 130,
@@ -384,7 +401,8 @@ public partial class MainWindow : Window
             var check = new CheckBox
             {
                 Content = $"{classId:D2} · {name}",
-                IsChecked = _save.Inheritance.IsClassMastered(character, classId)
+                IsChecked = _save.Inheritance.IsClassMastered(character, classId),
+                Margin = new Avalonia.Thickness(0, 0, 8, 8)
             };
             check.IsCheckedChanged += (_, _) =>
             {
@@ -593,9 +611,8 @@ public partial class MainWindow : Window
     {
         if (_save is null) return;
         SaveMenuItem.IsEnabled = _save.ChangedBytes > 0;
-        Status.Text = _save.ChangedBytes > 0
-            ? $"{_save.ChangedBytes} save bytes changed in memory. Save an edited copy to keep them."
-            : "No changes to save bytes.";
+        HeaderSaveButton.IsEnabled = SaveMenuItem.IsEnabled;
+        Status.Text = string.Empty;
     }
 
     private static string DisplayName(string name) =>

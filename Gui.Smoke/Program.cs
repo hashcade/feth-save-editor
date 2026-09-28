@@ -108,13 +108,26 @@ if (args.Length > 0)
     for (int index = 0; index < supportedLanguages.Length; index++)
     {
         menuItems[index].RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
-        if (tabs.Items.OfType<TabItem>().ElementAt(1).Header?.ToString() != Database.GetString(1814, 1))
+        var expectedStorage = supportedLanguages[index] == enmLanguage.zh_hans
+            ? "物品" : Database.GetString(1814, 1);
+        if (tabs.Items.OfType<TabItem>().ElementAt(1).Header?.ToString() != expectedStorage)
             throw new InvalidOperationException($"Game text did not follow {supportedLanguages[index]}.");
     }
     ((MenuItem)language.Items[11]!).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
-    if (!window.FindControl<TextBlock>("Status")!.Text!.Contains("没有修改", StringComparison.Ordinal)
-        || tabs.Items.OfType<TabItem>().First().Header?.ToString() != "主页")
+    Dispatcher.UIThread.RunJobs();
+    var appTitle = window.FindControl<TextBlock>("AppTitle")!;
+    if (appTitle.Text != "FETH Editor" || appTitle.Bounds.Width < 100)
+        throw new InvalidOperationException($"App header collapsed after language change: {appTitle.Text}, width {appTitle.Bounds.Width}.");
+    if (tabs.Items.OfType<TabItem>().First().Header?.ToString() != "主页"
+        || tabs.Items.OfType<TabItem>().ElementAt(1).Header?.ToString() != "物品"
+        || tabs.Items.OfType<TabItem>().ElementAt(3).Header?.ToString() != "骑士团"
+        || tabs.Items.OfType<TabItem>().ElementAt(4).Header?.ToString() != "任务"
+        || tabs.Items.OfType<TabItem>().ElementAt(5).Header?.ToString() != "支援对话")
         throw new InvalidOperationException("Chinese interface was not applied.");
+    var headerButtons = window.GetVisualDescendants().OfType<Button>().ToArray();
+    if (!headerButtons.Any(button => Equals(button.Content, "打开存档"))
+        || !headerButtons.Any(button => Equals(button.Content, "另存副本")))
+        throw new InvalidOperationException("Header actions were not localized.");
     if (tabs.Items.OfType<TabItem>().ElementAt(7).Header?.ToString() != "继承角色"
         || ((MenuItem)language.Items[11]!).Header?.ToString() != "✓ 简体中文")
         throw new InvalidOperationException("Inheritance labels or language names were not localized.");
@@ -124,12 +137,26 @@ if (args.Length > 0)
     (window.CaptureRenderedFrame() ?? throw new InvalidOperationException("Chinese UI did not render."))
         .Save(chineseScreenshot, PngBitmapEncoderOptions.Default);
     Console.WriteLine(chineseScreenshot);
+    var untranslatedTabs = window.GetVisualDescendants().OfType<TextBlock>()
+        .Where(text => text.Text is "Roster" or "Barracks" or "Quests" or "Support Conversations")
+        .ToArray();
+    if (untranslatedTabs.Length > 0)
+        throw new InvalidOperationException("Visual tab headers are not localized: "
+            + string.Join(", ", untranslatedTabs.Select(text => $"{text.Text} ({text.GetVisualParent()?.GetType().Name}, {text.Name})")));
     tabs.SelectedIndex = 7;
     Dispatcher.UIThread.RunJobs();
     string inheritanceScreenshot = Path.Combine(Path.GetTempPath(), "feth-editor-zh-inheritance.png");
     (window.CaptureRenderedFrame() ?? throw new InvalidOperationException("Inheritance UI did not render."))
         .Save(inheritanceScreenshot, PngBitmapEncoderOptions.Default);
     Console.WriteLine(inheritanceScreenshot);
+    var inheritanceTabs = window.FindControl<TabControl>("InheritanceTabs")!;
+    inheritanceTabs.SelectedIndex = 1;
+    window.InvalidateVisual();
+    Dispatcher.UIThread.RunJobs();
+    string masteryScreenshot = Path.Combine(Path.GetTempPath(), "feth-editor-class-mastery.png");
+    (window.CaptureRenderedFrame() ?? throw new InvalidOperationException("Class mastery UI did not render."))
+        .Save(masteryScreenshot, PngBitmapEncoderOptions.Default);
+    Console.WriteLine(masteryScreenshot);
     ((MenuItem)language.Items[1]!).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
     if (tabs.Items.OfType<TabItem>().First().Header?.ToString() != "Main")
         throw new InvalidOperationException("English interface was not restored.");
@@ -142,10 +169,10 @@ if (args.Length > 0)
     if (historicalRank.SelectedIndex != 9)
         throw new InvalidOperationException("NG+ professor rank was not loaded from the sample save.");
     historicalRank.SelectedIndex = 8;
-    if (!window.FindControl<TextBlock>("Status")!.Text!.Contains("changed", StringComparison.OrdinalIgnoreCase))
+    if (!window.FindControl<MenuItem>("SaveMenuItem")!.IsEnabled)
         throw new InvalidOperationException("NG+ professor rank edit did not mark the save as changed.");
     tabs.SelectedIndex = 7;
-    var classRows = window.FindControl<StackPanel>("ClassRows")!;
+    var classRows = window.FindControl<Panel>("ClassRows")!;
     var firstClass = classRows.Children.OfType<CheckBox>().First();
     if (!firstClass.IsEnabled)
         throw new InvalidOperationException("NG+ class mastery editing is disabled.");
@@ -217,6 +244,9 @@ if (args.Length > 0)
     var flags = window.FindControl<StackPanel>("CurrentCharacterFlags")!;
     var firstFlag = (CheckBox)flags.Children[0];
     firstFlag.IsChecked = !firstFlag.IsChecked;
-    if (!window.FindControl<TextBlock>("Status")!.Text!.Contains("changed", StringComparison.OrdinalIgnoreCase))
+    bool editedFlag = firstFlag.IsChecked == true;
+    characterTabs.SelectedIndex = 0;
+    characterTabs.SelectedIndex = 2;
+    if (((CheckBox)window.FindControl<StackPanel>("CurrentCharacterFlags")!.Children[0]).IsChecked != editedFlag)
         throw new InvalidOperationException("Character edit did not mark the save as changed.");
 }
