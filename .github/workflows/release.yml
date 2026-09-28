@@ -1,0 +1,67 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: microsoft/setup-msbuild@v3
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Verify tag version
+        shell: pwsh
+        run: |
+          $version = (Get-Content VERSION -Raw).Trim()
+          if ($env:GITHUB_REF_NAME -ne "v$version") { throw "Tag does not match VERSION" }
+
+      - name: Build .NET Framework projects
+        run: msbuild FireEmblemThreeHouse.sln /t:Rebuild /p:Configuration=Release /p:Platform="Any CPU" /v:minimal
+
+      - name: Package and verify downloads
+        run: python tools/package.py
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: fe3h-editor-release
+          path: dist/*
+          if-no-files-found: error
+
+      - name: Publish prerelease
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $version = (Get-Content VERSION -Raw).Trim()
+          gh release create $env:GITHUB_REF_NAME `
+            dist/FETH_SaveEditor.exe `
+            "dist/fe3h-editor-v$version.zip" `
+            dist/SHA256SUMS `
+            --verify-tag --generate-notes --prerelease
+          if ($LASTEXITCODE -ne 0) { throw "Failed to publish release" }
+
+      - name: Verify downloadable files
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $version = (Get-Content VERSION -Raw).Trim()
+          New-Item -ItemType Directory -Path release-download | Out-Null
+          gh release download $env:GITHUB_REF_NAME --dir release-download
+          if ($LASTEXITCODE -ne 0) { throw "Failed to download release" }
+          foreach ($name in @("FETH_SaveEditor.exe", "fe3h-editor-v$version.zip")) {
+            $expected = (Get-FileHash "dist/$name" -Algorithm SHA256).Hash
+            $actual = (Get-FileHash "release-download/$name" -Algorithm SHA256).Hash
+            if ($expected -ne $actual) { throw "Download checksum mismatch: $name" }
+          }
