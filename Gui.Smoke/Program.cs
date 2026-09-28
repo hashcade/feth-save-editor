@@ -59,6 +59,13 @@ if (Math.Abs(storageMiscCard.Bounds.Height - storageHeight) > 1 ||
     Math.Abs(storageGiftCard.Bounds.Height - storageHeight) > 1 ||
     Math.Abs(storageEditorCard.Bounds.Height + storageToolsCard.Bounds.Height + 10 - storageHeight) > 1)
     throw new InvalidOperationException("Storage cards do not fill equally tall columns.");
+tabs.SelectedIndex = 3;
+Dispatcher.UIThread.RunJobs();
+var battalionListCard = window.FindControl<Control>("BattalionListCard")!;
+var battalionEditorCard = window.FindControl<Control>("BattalionEditorCard")!;
+if (battalionListCard.Bounds.Width >= battalionEditorCard.Bounds.Width ||
+    Math.Abs(battalionListCard.Bounds.Height - battalionEditorCard.Bounds.Height) > 1)
+    throw new InvalidOperationException("Battalion cards are not aligned with a narrower list column.");
 for (int index = 0; index < tabs.ItemCount; index++)
 {
     tabs.SelectedIndex = index;

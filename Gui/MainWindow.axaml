@@ -357,33 +357,31 @@
       </TabItem>
 
       <TabItem Name="BattalionTab" Header="Battalion">
-        <Grid Margin="8" ColumnDefinitions="264,220,*" ColumnSpacing="8">
-          <Border Classes="section" Grid.Column="0">
+        <Grid Margin="8" ColumnDefinitions="360,*" ColumnSpacing="10">
+          <suki:GlassCard Name="BattalionListCard" Classes="section" Grid.Column="0">
             <Grid RowDefinitions="Auto,*" RowSpacing="12">
               <TextBlock Text="Battalion List" FontWeight="SemiBold" />
               <ListBox Classes="Small" Name="BattalionList" Grid.Row="1"
                        SelectionChanged="BattalionList_SelectionChanged" />
             </Grid>
-          </Border>
-          <StackPanel Grid.Column="1" Spacing="8">
-            <Border Classes="section">
-              <StackPanel Spacing="8">
-                <TextBlock Text="Battalion Editor" FontWeight="SemiBold" />
-                <TextBlock Text="Character" />
-                <ComboBox Classes="Small" Name="BattalionCharacter" />
-                <TextBlock Text="Type" />
-                <ComboBox Classes="Small" Name="BattalionType" />
-                <TextBlock Text="Experience" />
-                <TextBox Classes="Small" Name="BattalionExp" />
-                <TextBlock Text="Stamina" />
-                <TextBox Classes="Small" Name="BattalionStamina" />
-                <TextBlock Text="Skill" />
-                <ComboBox Classes="Small" Name="BattalionSkill" />
-                <Button Classes="Small" Name="SaveBattalionButton" Content="Save Changes" Click="SaveBattalion_Click" />
-              </StackPanel>
-            </Border>
-            <Button Classes="Small" Content="Sort Battalion" Click="SortBattalion_Click" />
-          </StackPanel>
+          </suki:GlassCard>
+          <suki:GlassCard Name="BattalionEditorCard" Classes="section" Grid.Column="1">
+            <StackPanel Width="340" HorizontalAlignment="Left" Spacing="8">
+              <TextBlock Text="Battalion Editor" FontWeight="SemiBold" />
+              <TextBlock Text="Character" />
+              <ComboBox Classes="Small" Name="BattalionCharacter" />
+              <TextBlock Text="Type" />
+              <ComboBox Classes="Small" Name="BattalionType" />
+              <TextBlock Text="Experience" />
+              <TextBox Classes="Small" Name="BattalionExp" />
+              <TextBlock Text="Stamina" />
+              <TextBox Classes="Small" Name="BattalionStamina" />
+              <TextBlock Text="Skill" />
+              <ComboBox Classes="Small" Name="BattalionSkill" />
+              <Button Classes="Small" Name="SaveBattalionButton" Content="Save Changes" Click="SaveBattalion_Click" />
+              <Button Classes="Small" Content="Sort Battalion" Click="SortBattalion_Click" />
+            </StackPanel>
+          </suki:GlassCard>
         </Grid>
       </TabItem>
 
