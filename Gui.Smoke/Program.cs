@@ -45,4 +45,22 @@ if (args.Length > 0)
     window.FindControl<Button>("SetMisc")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
     if (!misc.Items[0]!.ToString()!.EndsWith(" · 42", StringComparison.Ordinal))
         throw new InvalidOperationException("Misc item edit did not update the list.");
+
+    var quests = window.FindControl<ListBox>("QuestList")!;
+    window.FindControl<ComboBox>("QuestState")!.SelectedIndex = 5;
+    window.FindControl<Button>("SetQuestStateButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    if (!quests.Items[0]!.ToString()!.EndsWith(" · 5", StringComparison.Ordinal))
+        throw new InvalidOperationException("Quest edit did not update the list.");
+
+    var supports = window.FindControl<ListBox>("CurrentSupportList")!;
+    window.FindControl<TextBox>("CurrentSupportPoints")!.Text = "1234";
+    window.FindControl<Button>("SetCurrentSupportButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    if (!supports.Items[0]!.ToString()!.EndsWith(" · 1234", StringComparison.Ordinal))
+        throw new InvalidOperationException("Current support edit did not update the list.");
+
+    var battalionExp = window.FindControl<TextBox>("BattalionExp")!;
+    battalionExp.Text = "401";
+    window.FindControl<Button>("SaveBattalionButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    if (battalionExp.Text != "401")
+        throw new InvalidOperationException("Battalion edit was not retained.");
 }

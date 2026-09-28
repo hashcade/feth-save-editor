@@ -127,6 +127,9 @@ public partial class MainWindow : Window
 
         RefreshCurrentSummary();
         RefreshStorage();
+        RefreshBattalions();
+        RefreshQuests();
+        RefreshCurrentSupports();
         RefreshCharacters();
         RefreshSupports();
         Status.Text = "Save loaded. Changes stay in memory until you save a new copy.";
