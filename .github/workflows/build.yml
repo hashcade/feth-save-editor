@@ -2,7 +2,7 @@ name: build
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -10,6 +10,43 @@ permissions:
   contents: read
 
 jobs:
+  gui:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2025
+            rid: win-x64
+          - os: macos-15
+            rid: osx-arm64
+          - os: macos-15
+            rid: osx-x64
+          - os: ubuntu-24.04
+            rid: linux-x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build GUI
+        run: dotnet build Gui/FethEditor.Gui.csproj -c Release --nologo
+
+      - name: Render GUI smoke test
+        run: dotnet run --project Gui.Smoke/Gui.Smoke.csproj -c Release --no-restore
+
+      - name: Publish standalone GUI
+        run: dotnet publish Gui/FethEditor.Gui.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o dist/gui/${{ matrix.rid }}
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: feth-gui-${{ matrix.rid }}
+          path: dist/gui/${{ matrix.rid }}/
+          if-no-files-found: error
+          retention-days: 14
+
   cli:
     strategy:
       fail-fast: false
