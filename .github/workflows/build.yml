@@ -10,6 +10,51 @@ permissions:
   contents: read
 
 jobs:
+  cli:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2025
+            rid: win-x64
+            executable: FethEditor.Cli.exe
+          - os: macos-15
+            rid: osx-arm64
+            executable: FethEditor.Cli
+          - os: macos-15
+            rid: osx-x64
+            executable: FethEditor.Cli
+          - os: ubuntu-24.04
+            rid: linux-x64
+            executable: FethEditor.Cli
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Build CLI
+        run: dotnet build Cli/Cli.csproj -c Release --nologo
+
+      - name: Verify save editing
+        run: python tools/test_cli.py --cli Cli/bin/Release/net10.0/${{ matrix.executable }}
+
+      - name: Publish standalone CLI
+        run: dotnet publish Cli/Cli.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -o dist/${{ matrix.rid }}
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: feth-cli-${{ matrix.rid }}
+          path: dist/${{ matrix.rid }}/
+          if-no-files-found: error
+          retention-days: 14
+
   windows:
     runs-on: windows-2025
     steps:

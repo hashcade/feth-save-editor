@@ -1,6 +1,8 @@
 # Command-line save editor
 
-`FETH_Cli.exe` runs on Windows with .NET Framework 4.7.2. Keep it beside `FETH_SaveEditor.exe` from the same release archive; it uses the GUI's data tables and translations. It accepts version-23 `slotXX` and `auto` saves from Fire Emblem: Three Houses v1.2.0. It deliberately rejects `system` and `suspend` files.
+`FethEditor.Cli` runs on Windows, macOS, and Linux. Download the matching self-contained CI artifact or build from source with `dotnet build Cli/Cli.csproj -c Release`. The older Windows release also contains `FETH_Cli.exe`; keep that legacy executable beside `FETH_SaveEditor.exe`. Both CLIs accept version-23 `slotXX` and `auto` saves from Fire Emblem: Three Houses v1.2.0 and reject `system` and `suspend` files.
+
+On macOS or Linux, replace `FETH_Cli.exe` in the examples below with `./FethEditor.Cli`. On Windows, use `FethEditor.Cli.exe` for the modern standalone build. The source build requires .NET 10; the self-contained downloads include the runtime. An unsigned macOS download may need local approval in macOS security settings.
 
 The CLI patches only named, mapped fields. Unknown bytes are preserved. `inspect` distinguishes current-run data from read-only NG+ journal history. An edited save still needs an in-game test.
 
