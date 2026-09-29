@@ -75,11 +75,14 @@ def main() -> None:
         assert run(cli, "catalog", "--type", "items", "--id", "22")["details"]
         assert run(cli, "catalog", "--type", "battalion-skills")
         assert run(cli, "catalog", "--type", "support-ranks")[-1] == {"rank": "S", "points": 1001}
+        support_catalog = run(cli, "catalog", "--type", "supports")
+        assert support_catalog[1]["maximumRank"] == "S"
+        assert support_catalog[65]["ranks"] == ["None", "C", "B"]
 
         rank_patch = directory / "rank.json"
         rank_patch.write_text(json.dumps({"operations": [
             {"op": "setProfessorRank", "rank": 9},
-            {"op": "setSupportRank", "index": 1, "rank": "A+"},
+            {"op": "setSupportRank", "index": 1, "rank": "A"},
             {"op": "setNgPlusSupportRank", "index": 2, "rank": "S"},
         ]}), encoding="utf-8")
         rank_target = directory / "rank-slot00"
@@ -88,9 +91,36 @@ def main() -> None:
         assert run(cli, "get", "--input", str(rank_target),
                    "--path", "Activities.InstructExp")["value"] == 44500
         assert run(cli, "inspect", "--input", str(rank_target),
-                   "--section", "supports")["supports"][1]["rank"] == "A+"
+                   "--section", "supports")["supports"][1]["rank"] == "A"
         assert run(cli, "inspect", "--input", str(rank_target),
                    "--section", "inheritance")["inheritance"]["supports"][2]["maxPoints"] == 1001
+
+        invalid_rank_patch = directory / "invalid-support-rank.json"
+        invalid_rank_patch.write_text(json.dumps({"operations": [
+            {"op": "setSupportRank", "index": 1, "rank": "A+"},
+        ]}), encoding="utf-8")
+        invalid_rank_target = directory / "invalid-support-rank-slot00"
+        run(cli, "apply", "--input", str(source), "--patch", str(invalid_rank_patch),
+            "--output", str(invalid_rank_target), success=False)
+        assert not invalid_rank_target.exists()
+
+        max_rank_patch = directory / "max-support-ranks.json"
+        max_rank_patch.write_text(json.dumps({"operations": [
+            {"op": "maxSupportRank", "index": 65},
+            {"op": "maxNgPlusSupportRank", "index": 65},
+            {"op": "maxNgPlusSupports"},
+        ]}), encoding="utf-8")
+        max_rank_target = directory / "max-support-ranks-slot00"
+        run(cli, "apply", "--input", str(source), "--patch", str(max_rank_patch),
+            "--output", str(max_rank_target))
+        assert run(cli, "inspect", "--input", str(max_rank_target),
+                   "--section", "supports")["supports"][65]["rank"] == "B"
+        max_history = run(cli, "inspect", "--input", str(max_rank_target),
+                          "--section", "inheritance")["inheritance"]["supports"]
+        assert max_history[0]["maxPoints"] == 1001
+        assert max_history[35]["maxPoints"] == 0
+        assert max_history[62]["maxPoints"] == 801
+        assert max_history[65]["maxPoints"] == 301
 
         item_patch = directory / "character-item.json"
         item_patch.write_text(json.dumps({"operations": [
