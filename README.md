@@ -1,24 +1,28 @@
 # FETH Save Editor
 
-Save editor for Fire Emblem: Three Houses v1.2.0. It also fixes player names being cut off when they contain multibyte UTF-8 characters.
+Edit Fire Emblem: Three Houses saves, including inherited New Game+ progress.
 
-The cross-platform .NET 10 GUI and CLI are built for Windows, macOS, and Linux in CI. The GUI edits current-run saves, NG+ history, and `system` flags. Save a modified copy; an existing destination gets a backup before replacement. A mismatched checksum is reported and repaired when the save is written. Version-5 `system` saves are upgraded to version 7 when written. CI artifacts are available from the latest [build run](https://github.com/jinghaihan/feth-save-editor/actions/workflows/build.yml).
+## What you can edit
 
-![English Roster page with a synthetic save](docs/roster-en.png)
+- Current run: money, renown, items, characters, battalions, quests, and supports.
+- NG+: inherited professor rank, character skills and class mastery, and supports.
+- System save: unlock flags alongside the selected slot.
 
-The screenshot uses generated sample data, not a player's save.
+![Roster editor](docs/roster-en.png)
 
-To run the new GUI from source with the .NET 10 SDK:
+## Get started
+
+Download the GUI from the latest [build](https://github.com/jinghaihan/feth-save-editor/actions/workflows/build.yml), open a `slotXX` or `auto` save, make your edits, then save a copy to another folder. Keep your original save until you have checked the edited copy in-game. The editor targets Fire Emblem: Three Houses v1.2.0.
+
+To run from source with the .NET 10 SDK:
 
 ```sh
 dotnet run --project Gui/FethEditor.Gui.csproj -c Release
 ```
 
-The CLI accepts JSON patches for current-run data, NG+ history, and `system` flags. See [CLI.md](CLI.md) for commands, examples, and safety notes.
+For scripted edits, see the [CLI guide](CLI.md).
 
 ## Credits
 
 - [imouto1994/fe3h-editor](https://github.com/imouto1994/fe3h-editor): the original project this editor was derived from.
-- [Falo's v1.2.0 Beta1 release on GBAtemp](https://gbatemp.net/threads/fire-emblem-three-houses-general-hacking.544144/post-8948080): the source, game data, and bundled Windows executables used for the v1.2.0 update. The [original archive](https://www.dropbox.com/s/8ip17sw610xkirh/FireEmblemThreeHouse_SaveEditor_v1.2.0_Beta1.7z?dl=1) is linked from that post.
-
-Open `FethEditor.slnx` in Visual Studio or build it with `dotnet build FethEditor.slnx`.
+- [Falo's v1.2.0 Beta1 release](https://gbatemp.net/threads/fire-emblem-three-houses-general-hacking.544144/post-8948080): v1.2.0 save support and game data.
