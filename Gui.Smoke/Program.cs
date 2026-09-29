@@ -32,6 +32,74 @@ AppBuilder.Configure<App>()
     .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false })
     .SetupWithoutStarting();
 
+if (args.Length == 2 && args[0] == "--readme-roster")
+{
+    Database.Init(enmLanguage.en_u);
+    string samplePath = Path.Combine(Path.GetTempPath(), $"feth-readme-{Guid.NewGuid():N}");
+    try
+    {
+        byte[] sample = new byte[Save.SIZE_SAVE_V23];
+        BitConverter.GetBytes(Save.CURRENT_VERSION).CopyTo(sample, 4);
+        BitConverter.GetBytes(sample.Length).CopyTo(sample, 8);
+        for (int index = 0; index < SaveData_V23.ITEM_COUNT; index++)
+            BitConverter.GetBytes((short)-1).CopyTo(sample, 12 + index * Item.SIZE);
+        for (int slot = 0; slot < SaveData_V23.CHARACTER_COUNT; slot++)
+        {
+            int offset = 12 + 0x644 + slot * Character_V23.SIZE;
+            for (int item = 0; item < Database.MAX_CHARA_ITEMS; item++)
+                BitConverter.GetBytes((short)-1).CopyTo(sample, offset + item * Item.SIZE);
+            sample[offset + 0x1E] = Database.BATTALION_COUNT;
+            BitConverter.GetBytes((short)-1).CopyTo(sample, offset + 0x24);
+        }
+        int[] cast = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+        for (int slot = 0; slot < cast.Length; slot++)
+        {
+            int offset = 12 + 0x644 + slot * Character_V23.SIZE;
+            BitConverter.GetBytes((short)cast[slot]).CopyTo(sample, offset + 0x24);
+            sample[offset + 0x4A] = (byte)(25 - slot);
+            sample[offset + 0x4C] = (byte)(36 - slot);
+        }
+        BitConverter.GetBytes(SaveBufferChecksum(sample)).CopyTo(sample, 0);
+        File.WriteAllBytes(samplePath, sample);
+        var sampleSave = SaveBuffer.Open(samplePath);
+        foreach (var (field, value) in new (string, int)[]
+        {
+            ("Strength", 19), ("Magic", 14), ("Dexterity", 17), ("Speed", 18),
+            ("Luck", 15), ("Defense", 14), ("Resistance", 12), ("Movement", 5), ("Charm", 21)
+        })
+            sampleSave.Set($"Characters[0].data.{field}", value);
+        int[] equippedAbilities = [4, 9, 14, 19, 24];
+        for (int index = 0; index < equippedAbilities.Length; index++)
+            sampleSave.Set($"Characters[0].data.EquippedAbilities[{index}]", equippedAbilities[index]);
+        for (int index = 0; index < 3; index++)
+            sampleSave.Set($"Characters[0].data.EquippedCombatArts[{index}]", index);
+        File.WriteAllBytes(samplePath, sampleSave.FinishedBytes());
+        var screenshotWindow = new MainWindow();
+        screenshotWindow.Show();
+        screenshotWindow.LoadSave(samplePath);
+        screenshotWindow.FindControl<TabControl>("EditorTabs")!.SelectedIndex = 2;
+        Dispatcher.UIThread.RunJobs();
+        var frame = screenshotWindow.CaptureRenderedFrame()
+            ?? throw new InvalidOperationException("English Roster screenshot did not render.");
+        frame.Save(args[1], PngBitmapEncoderOptions.Default);
+        screenshotWindow.Close();
+        Console.WriteLine(args[1]);
+    }
+    finally
+    {
+        if (File.Exists(samplePath)) File.Delete(samplePath);
+    }
+    return;
+}
+
+static uint SaveBufferChecksum(byte[] bytes)
+{
+    uint total = 0;
+    for (int index = 12; index < bytes.Length; index++)
+        unchecked { total += bytes[index]; }
+    return total;
+}
+
 var window = new MainWindow();
 if (window.Icon is null)
     throw new InvalidOperationException("The main window has no application icon.");
@@ -413,7 +481,7 @@ if (args.Length > 1)
         Directory.Delete(cleanFolder, true);
     }
     var languageMenu = window.FindControl<MenuItem>("LanguageMenu")!;
-    ((MenuItem)languageMenu.Items[11]!).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+    ((MenuItem)languageMenu.Items[languageMenu.Items.Count - 1]!).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
     Dispatcher.UIThread.RunJobs();
     Dispatcher.UIThread.RunJobs();
     if (tabs.Items.OfType<TabItem>().ElementAt(9).Header?.ToString() != "系统存档"

@@ -1,8 +1,12 @@
-# feth-editor
+# FETH Save Editor
 
 Save editor for Fire Emblem: Three Houses v1.2.0. It also fixes player names being cut off when they contain multibyte UTF-8 characters.
 
-The cross-platform .NET 10 GUI and CLI are built for Windows, macOS, and Linux in CI. The GUI edits current-run saves, NG+ history, and `system` flags. It can overwrite a save or write a new file; overwriting creates a backup first. A mismatched checksum is reported and repaired when the save is written. Version-5 `system` saves are upgraded to version 7 when written. CI artifacts are available from the latest [build run](https://github.com/jinghaihan/feth-save-editor/actions/workflows/build.yml).
+The cross-platform .NET 10 GUI and CLI are built for Windows, macOS, and Linux in CI. The GUI edits current-run saves, NG+ history, and `system` flags. Save a modified copy; an existing destination gets a backup before replacement. A mismatched checksum is reported and repaired when the save is written. Version-5 `system` saves are upgraded to version 7 when written. CI artifacts are available from the latest [build run](https://github.com/jinghaihan/feth-save-editor/actions/workflows/build.yml).
+
+![English Roster page with a synthetic save](docs/roster-en.png)
+
+The screenshot uses generated sample data, not a player's save.
 
 To run the new GUI from source with the .NET 10 SDK:
 
@@ -10,7 +14,7 @@ To run the new GUI from source with the .NET 10 SDK:
 dotnet run --project Gui/FethEditor.Gui.csproj -c Release
 ```
 
-The CLI accepts JSON patches, including NG+ history edits. See [CLI.md](CLI.md) for commands, examples, and safety notes.
+The CLI accepts JSON patches for current-run data, NG+ history, and `system` flags. See [CLI.md](CLI.md) for commands, examples, and safety notes.
 
 ## Credits
 
