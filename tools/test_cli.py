@@ -178,6 +178,42 @@ def main() -> None:
         assert max_history[62]["maxPoints"] == 801
         assert max_history[65]["maxPoints"] == 301
 
+        bulk_patch = directory / "bulk-unlocks.json"
+        bulk_patch.write_text(json.dumps({"operations": [
+            {"op": "set", "path": "Player.CharacterSupportValues[0]", "value": 1200},
+            {"op": "maxSupports"},
+            {"op": "maxNgPlusSupports"},
+            {"op": "unlockNgPlusRoster"},
+        ]}), encoding="utf-8")
+        bulk_target = directory / "bulk-unlocked-slot00"
+        run(cli, "apply", "--input", str(source), "--patch", str(bulk_patch),
+            "--output", str(bulk_target))
+        current_supports = run(cli, "inspect", "--input", str(bulk_target),
+                               "--section", "supports")["supports"]
+        assert current_supports[0]["rank"] == "S"
+        assert current_supports[0]["value"] == 1200
+        assert current_supports[65]["rank"] == "B"
+        assert current_supports[35]["value"] == 0
+        bulk_history = run(cli, "inspect", "--input", str(bulk_target),
+                           "--section", "inheritance")["inheritance"]
+        assert bulk_history["supports"][0]["maxPoints"] == 1001
+        assert bulk_history["supports"][65]["maxPoints"] == 301
+        assert bulk_history["supports"][35]["maxPoints"] == 0
+        for record in [*range(35), *range(38, 42), 43, 44]:
+            assert bulk_history["characters"][record]["skillRanks"] == [11] * 11
+        for record in [35, 36, 37, 42]:
+            assert bulk_history["characters"][record]["skillRanks"] == [0] * 11
+        assert 42 in bulk_history["characters"][0]["masteredClassIds"]
+        assert 54 not in bulk_history["characters"][0]["masteredClassIds"]
+        assert 54 in bulk_history["characters"][1]["masteredClassIds"]
+        assert 40 in bulk_history["characters"][2]["masteredClassIds"]
+        assert 44 in bulk_history["characters"][3]["masteredClassIds"]
+        assert 17 in bulk_history["characters"][4]["masteredClassIds"]
+        assert 91 in bulk_history["characters"][43]["masteredClassIds"]
+        assert 23 not in bulk_history["characters"][1]["masteredClassIds"]
+        assert run(cli, "apply", "--input", str(bulk_target),
+                   "--patch", str(bulk_patch), "--dry-run")["changedBytes"] == 0
+
         item_patch = directory / "character-item.json"
         item_patch.write_text(json.dumps({"operations": [
             {"op": "setCharacterItem", "slot": 0, "itemSlot": 0, "id": 22},

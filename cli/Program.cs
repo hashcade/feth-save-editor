@@ -222,6 +222,12 @@ namespace FethEditor.Cli
                     case "maxNgPlusSupports":
                         save.Inheritance.ReachMaxSupportRanks();
                         break;
+                    case "maxSupports":
+                        save.ReachMaxSupportRanks();
+                        break;
+                    case "unlockNgPlusRoster":
+                        save.Inheritance.UnlockAllPlayableSkillsAndClasses();
+                        break;
                     case "setNgPlusSkillRank":
                         save.Inheritance.SetSkillRank(Value<int>(item, "recordIndex"), Value<int>(item, "skill"),
                             Value<int>(item, "rank"));

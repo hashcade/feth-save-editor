@@ -11,10 +11,10 @@ Edit Fire Emblem: Three Houses saves, including inherited New Game+ progress.
 - **Roster:** Edit character stats, equipped abilities and combat arts, held items, skill experience, learned magic, flags, class experience and mastery, unlocked abilities and combat arts, and import or export individual characters.
 - **Battalions:** Change battalion type, assigned character, experience, stamina, and skill; sort the list or fill missing battalions from the curated collection.
 - **Quests:** Search quests and change their state.
-- **Support:** Edit the current run's support ranks and underlying points.
+- **Support:** Edit the current run's support ranks and underlying points, or raise every pair to its available maximum.
 - **Database:** Look up characters, classes, and items without changing the save.
-- **NG+ Roster:** Edit inherited skill ranks and class mastery for each character, or unlock them in bulk.
-- **NG+ Support:** Edit inherited support ranks and points separately from the current run.
+- **NG+ Roster:** Edit inherited skill ranks and class mastery for each character, or unlock every playable character in bulk.
+- **NG+ Support:** Edit inherited support ranks and points separately from the current run, or raise every pair to its available maximum.
 - **System:** Edit save-slot and unlock flags in the system save found alongside the selected slot.
 
 Switch languages from the top menu. The interface and game-data names use the selected language where translations are available.

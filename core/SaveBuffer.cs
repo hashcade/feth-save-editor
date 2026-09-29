@@ -74,6 +74,20 @@ namespace FethEditor.Core
             Set(path, Math.Max((long)Get(path), target));
         }
 
+        public int ReachMaxSupportRanks()
+        {
+            int updated = 0;
+            for (int index = 0; index < Player_V23.COUNT_SUPPORT; index++)
+            {
+                if (SupportPairRanks.MaxRank(index) == "None") continue;
+                string path = $"Player.CharacterSupportValues[{index}]";
+                if ((long)Get(path) >= SupportPairRanks.MaxRankPoints(index)) continue;
+                ReachMaxSupportRank(index);
+                updated++;
+            }
+            return updated;
+        }
+
         public object Get(string path)
         {
             if (path.Equals("playerName", StringComparison.OrdinalIgnoreCase))

@@ -60,6 +60,22 @@ public partial class MainWindow
         }
     }
 
+    private void MaxAllCurrentSupports_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_save is null) return;
+        try
+        {
+            int updated = _save.ReachMaxSupportRanks();
+            if (updated == 0) return;
+            RefreshCurrentSupports(SelectedSourceIndex(CurrentSupportList));
+            MarkChanged();
+        }
+        catch (Exception error)
+        {
+            Status.Text = error.Message;
+        }
+    }
+
     private void SetCurrentSupport_Click(object? sender, RoutedEventArgs e)
     {
         int index = SelectedSourceIndex(CurrentSupportList);

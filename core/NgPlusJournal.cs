@@ -11,6 +11,7 @@ namespace FethEditor.Core
     {
         public const int CharacterCount = 45;
         public const int SkillCount = 11;
+        public const int MaxSkillRank = 11;
         public const int ClassCount = 100;
         private const int ProfessorOffset = 0x17CE;
         private const int SupportOffset = 0x1576;
@@ -88,18 +89,24 @@ namespace FethEditor.Core
             SetSupportPoints(index, Math.Max(GetSupportPoints(index), target));
         }
 
-        public void ReachMaxSupportRanks()
+        public int ReachMaxSupportRanks()
         {
+            int updated = 0;
             for (int index = 0; index < Player_V23.COUNT_SUPPORT; index++)
-                if (SupportPairRanks.MaxRank(index) != "None")
-                    ReachMaxSupportRank(index);
+            {
+                if (SupportPairRanks.MaxRank(index) == "None"
+                    || GetSupportPoints(index) >= SupportPairRanks.MaxRankPoints(index)) continue;
+                ReachMaxSupportRank(index);
+                updated++;
+            }
+            return updated;
         }
 
         public void SetSkillRank(int recordIndex, int skillIndex, int rank)
         {
             CheckIndex(recordIndex, CharacterCount, nameof(recordIndex));
             CheckIndex(skillIndex, SkillCount, nameof(skillIndex));
-            if (rank < 0 || rank > 11) throw new ArgumentOutOfRangeException(nameof(rank));
+            if (rank < 0 || rank > MaxSkillRank) throw new ArgumentOutOfRangeException(nameof(rank));
             file[player + SkillOffset + recordIndex * SkillCount + skillIndex] = (byte)rank;
         }
 
@@ -117,6 +124,29 @@ namespace FethEditor.Core
             for (int classId = 0; classId < ClassCount; classId++)
                 if (ClassEligibility.IsAvailable(recordIndex, classId))
                     SetClassMastered(recordIndex, classId, true);
+        }
+
+        public int UnlockAllPlayableSkillsAndClasses()
+        {
+            int updated = 0;
+            for (int record = 0; record < CharacterCount; record++)
+            {
+                if (!ClassEligibility.IsPlayableRecord(record)) continue;
+                for (int skill = 0; skill < SkillCount; skill++)
+                {
+                    if (GetSkillRank(record, skill) >= MaxSkillRank) continue;
+                    SetSkillRank(record, skill, MaxSkillRank);
+                    updated++;
+                }
+                for (int classId = 0; classId < ClassCount; classId++)
+                {
+                    if (!ClassEligibility.IsAvailable(record, classId)
+                        || IsClassMastered(record, classId)) continue;
+                    SetClassMastered(record, classId, true);
+                    updated++;
+                }
+            }
+            return updated;
         }
 
         private (int offset, byte mask) ClassBit(int recordIndex, int classId)

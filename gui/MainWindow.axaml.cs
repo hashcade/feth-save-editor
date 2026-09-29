@@ -484,6 +484,22 @@ public partial class MainWindow : Window
         MarkChanged();
     }
 
+    private void UnlockAllRoster_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_save is null) return;
+        try
+        {
+            int updated = _save.Inheritance.UnlockAllPlayableSkillsAndClasses();
+            if (updated == 0) return;
+            ShowCharacter();
+            MarkChanged();
+        }
+        catch (Exception error)
+        {
+            Status.Text = error.Message;
+        }
+    }
+
     private void ShowClasses()
     {
         ClassRows.Children.Clear();
@@ -570,6 +586,22 @@ public partial class MainWindow : Window
             int before = _save.Inheritance.GetSupportPoints(_selectedSupport);
             _save.Inheritance.ReachMaxSupportRank(_selectedSupport);
             if (_save.Inheritance.GetSupportPoints(_selectedSupport) == before) return;
+            RefreshSupports();
+            MarkChanged();
+        }
+        catch (Exception error)
+        {
+            Status.Text = error.Message;
+        }
+    }
+
+    private void MaxAllInheritedSupports_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_save is null) return;
+        try
+        {
+            int updated = _save.Inheritance.ReachMaxSupportRanks();
+            if (updated == 0) return;
             RefreshSupports();
             MarkChanged();
         }

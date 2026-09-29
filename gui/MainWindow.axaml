@@ -440,12 +440,14 @@
       <TabItem Name="SupportTab" Header="Support">
         <Grid Margin="8" ColumnDefinitions="320,*" ColumnSpacing="10">
           <suki:GlassCard Name="SupportListCard" Classes="section" Grid.Column="0">
-            <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
+            <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="8">
               <TextBlock Text="Support List" FontWeight="SemiBold" />
               <TextBox Classes="Small" Name="CurrentSupportSearch" Grid.Row="1" PlaceholderText="Search..."
                        TextChanged="SearchableList_TextChanged" />
               <ListBox Classes="Small" Name="CurrentSupportList" Grid.Row="2"
                        SelectionChanged="CurrentSupportList_SelectionChanged" />
+              <Button Classes="Small" Name="MaxAllCurrentSupportsButton" Grid.Row="3"
+                      Content="Reach All Maximum Ranks" Click="MaxAllCurrentSupports_Click" />
             </Grid>
           </suki:GlassCard>
           <suki:GlassCard Name="SupportEditorCard" Classes="section" Grid.Column="1">
@@ -515,7 +517,7 @@
       <TabItem Name="InheritanceCharactersTab" Header="NG+ Roster">
         <Grid Margin="8" ColumnDefinitions="264,*" ColumnSpacing="10">
           <suki:GlassCard Name="InheritanceCharacterListCard" Classes="section" Grid.Column="0">
-            <Grid RowDefinitions="Auto,*" RowSpacing="12">
+            <Grid RowDefinitions="Auto,*,Auto" RowSpacing="12">
               <TextBlock Text="Character List" FontWeight="SemiBold" />
               <Grid Grid.Row="1" RowDefinitions="Auto,*" RowSpacing="5">
                 <TextBox Classes="Small" Name="CharacterSearch" PlaceholderText="Search..."
@@ -523,6 +525,8 @@
                 <ListBox Classes="Small" Name="CharacterList" Grid.Row="1"
                          SelectionChanged="CharacterList_SelectionChanged" />
               </Grid>
+              <Button Classes="Small" Name="UnlockAllRosterButton" Grid.Row="2"
+                      Content="Unlock All Skills &amp; Classes" Click="UnlockAllRoster_Click" />
             </Grid>
           </suki:GlassCard>
 
@@ -530,7 +534,7 @@
             <Grid>
               <TabControl Name="InheritanceTabs">
                 <TabItem Name="InheritedSkillsTab" Header="Skills">
-                  <StackPanel Margin="0,8,0,0" VerticalAlignment="Top">
+                  <StackPanel Margin="0,20,0,0" VerticalAlignment="Top">
                     <UniformGrid Name="SkillRows" Columns="2" MaxWidth="760" HorizontalAlignment="Center" />
                   </StackPanel>
                 </TabItem>
@@ -560,12 +564,14 @@
       <TabItem Name="InheritanceSupportTab" Header="NG+ Support">
         <Grid Margin="8" ColumnDefinitions="320,*" ColumnSpacing="10">
           <suki:GlassCard Name="InheritanceSupportListCard" Classes="section" Grid.Column="0">
-            <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
+            <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="8">
               <TextBlock Text="Support List" FontWeight="SemiBold" />
               <TextBox Classes="Small" Name="SupportSearch" Grid.Row="1" PlaceholderText="Search..."
                        TextChanged="SupportSearch_TextChanged" />
               <ListBox Classes="Small" Name="SupportList" Grid.Row="2"
                        SelectionChanged="SupportList_SelectionChanged" />
+              <Button Classes="Small" Name="MaxAllInheritedSupportsButton" Grid.Row="3"
+                      Content="Reach All Maximum Ranks" Click="MaxAllInheritedSupports_Click" />
             </Grid>
           </suki:GlassCard>
           <suki:GlassCard Name="InheritanceSupportEditorCard" Classes="section" Grid.Column="1">
