@@ -24,8 +24,8 @@ def merge_publishes(gui: Path, cli: Path, destination: Path, rid: str) -> None:
             if not source.is_file():
                 continue
             relative = source.relative_to(published)
-            if relative.suffix.lower() == ".pdb" or relative.parts[0] == "Database":
-                continue  # Symbols are not needed; Core embeds the game database.
+            if relative.suffix.lower() == ".pdb":
+                continue
             target = destination / relative
             if target.exists():
                 if not filecmp.cmp(source, target, shallow=False):

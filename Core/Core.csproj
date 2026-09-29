@@ -18,10 +18,10 @@
     <Compile Include="VerifiedFileWriter.cs" />
     <Compile Include="NgPlusJournal.cs" />
     <Compile Include="Resources.cs" />
-    <EmbeddedResource Include="Resources/fixed_persondata.bin.gz" LogicalName="fixed_persondata.bin.gz" />
-    <EmbeddedResource Include="Resources/fixed_classdata.bin.gz" LogicalName="fixed_classdata.bin.gz" />
-    <EmbeddedResource Include="Resources/fixed_data.bin.gz" LogicalName="fixed_data.bin.gz" />
-    <EmbeddedResource Include="Resources/msgdata.bin.gz" LogicalName="msgdata.bin.gz" />
+    <EmbeddedResource Include="Resources/fixed_persondata.bin.gz" LogicalName="fixed_persondata.bin.gz" WithCulture="false" />
+    <EmbeddedResource Include="Resources/fixed_classdata.bin.gz" LogicalName="fixed_classdata.bin.gz" WithCulture="false" />
+    <EmbeddedResource Include="Resources/fixed_data.bin.gz" LogicalName="fixed_data.bin.gz" WithCulture="false" />
+    <EmbeddedResource Include="Resources/msgdata.bin.gz" LogicalName="msgdata.bin.gz" WithCulture="false" />
     <Content Include="Resources/*.bin.gz" Link="Database/%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
