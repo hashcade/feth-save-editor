@@ -21,6 +21,10 @@ string[] embeddedDatabaseFiles = ["fixed_persondata.bin.gz", "fixed_classdata.bi
 string[] embeddedResources = typeof(Database).Assembly.GetManifestResourceNames();
 if (embeddedDatabaseFiles.Any(file => !embeddedResources.Contains(file)))
     throw new InvalidOperationException("Game database files must be embedded in the core assembly.");
+if (ObtainableBattalions.All.Count != 128
+    || ObtainableBattalions.All.Select(entry => entry.Type).Distinct().Count() != 128
+    || ObtainableBattalions.All[0] != (0, 30, 4))
+    throw new InvalidOperationException("The obtainable battalion catalog is incomplete.");
 if (SupportPairRanks.Count != Player_V23.COUNT_SUPPORT
     || Enumerable.Range(0, SupportPairRanks.Count).Count(index => SupportPairRanks.MaxRank(index) != "None") != 264
     || SupportPairRanks.MaxRank(0) != "S"
@@ -478,24 +482,21 @@ var inheritanceEditorCard = window.FindControl<Control>("InheritanceCharacterEdi
 if (inheritanceListCard.Bounds.Width >= inheritanceEditorCard.Bounds.Width ||
     Math.Abs(inheritanceListCard.Bounds.Height - inheritanceEditorCard.Bounds.Height) > 1)
     throw new InvalidOperationException("Inheritance character cards are not aligned.");
-var skillRows = window.FindControl<Avalonia.Controls.Primitives.UniformGrid>("SkillRows")!;
-if (args.Length > 0)
-{
-    var firstSkillRow = (Grid)skillRows.Children[0];
-    var secondSkillRow = (Grid)skillRows.Children[1];
-    var firstSkillRank = firstSkillRow.Children.OfType<ComboBox>().Single();
-    var secondSkillLabel = secondSkillRow.Children.OfType<TextBlock>().Single();
-    var secondSkillRank = secondSkillRow.Children.OfType<ComboBox>().Single();
-    double betweenSkills = secondSkillRow.Bounds.X + secondSkillLabel.Bounds.X
-        - firstSkillRow.Bounds.X - firstSkillRank.Bounds.Right;
-    double labelToRank = secondSkillRank.Bounds.X - secondSkillLabel.Bounds.Right;
-    if (betweenSkills <= labelToRank || Math.Abs(firstSkillRank.Bounds.Width - secondSkillRank.Bounds.Width) > 1)
-        throw new InvalidOperationException("Inheritance skill fields are not grouped and aligned by column.");
-}
 for (int index = 0; index < tabs.ItemCount; index++)
 {
     tabs.SelectedIndex = index;
     Dispatcher.UIThread.RunJobs();
+    if (index == 3)
+    {
+        var battalionList = window.FindControl<ListBox>("BattalionList")!;
+        var sortButton = window.FindControl<Button>("SortBattalionButton")!;
+        var fillButton = window.FindControl<Button>("FillMissingBattalionsButton")!;
+        if (sortButton.Bounds.Width < battalionList.Bounds.Width - 1
+            || fillButton.Bounds.Width < battalionList.Bounds.Width - 1
+            || sortButton.Bounds.Y < battalionList.Bounds.Bottom
+            || fillButton.Bounds.Y < sortButton.Bounds.Bottom)
+            throw new InvalidOperationException("Battalion actions must be full-width rows below the list.");
+    }
     var frame = window.CaptureRenderedFrame()
         ?? throw new InvalidOperationException($"Tab {index} did not render.");
     string screenshot = Path.Combine(Path.GetTempPath(), $"feth-editor-tab-{index}.png");

@@ -442,9 +442,9 @@ public partial class MainWindow : Window
             int skillIndex = skill;
             var row = new Grid
             {
-                ColumnDefinitions = new ColumnDefinitions("56,200"),
+                ColumnDefinitions = new ColumnDefinitions("110,200"),
                 ColumnSpacing = 8,
-                Margin = new Avalonia.Thickness(0, 0, 0, 12)
+                Margin = new Avalonia.Thickness(0, 0, 32, 12)
             };
             row.Children.Add(new TextBlock
             {

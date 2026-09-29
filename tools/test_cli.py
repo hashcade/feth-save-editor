@@ -74,10 +74,66 @@ def main() -> None:
         assert run(cli, "catalog", "--type", "classes", "--id", "0")["details"]
         assert run(cli, "catalog", "--type", "items", "--id", "22")["details"]
         assert run(cli, "catalog", "--type", "battalion-skills")
+        battalion_catalog = run(cli, "catalog", "--type", "obtainable-battalions")
+        assert len(battalion_catalog) == 128
+        assert len({entry["id"] for entry in battalion_catalog}) == 128
+        assert battalion_catalog[0] == {
+            "id": 0, "name": "Church of Seiros Soldiers",
+            "experience": 400, "stamina": 30, "skill": 4,
+        }
         assert run(cli, "catalog", "--type", "support-ranks")[-1] == {"rank": "S", "points": 1001}
         support_catalog = run(cli, "catalog", "--type", "supports")
         assert support_catalog[1]["maximumRank"] == "S"
         assert support_catalog[65]["ranks"] == ["None", "C", "B"]
+
+        battalion_raw = bytearray(raw)
+        battalion_start = player + 0xA30
+        for slot in range(200):
+            struct.pack_into("<hHHBB", battalion_raw, battalion_start + slot * 8,
+                             -1, 0, 0, 200, 0)
+        existing_battalion = (-1, 77, 43, 20, 1)
+        struct.pack_into("<hHHBB", battalion_raw, battalion_start, *existing_battalion)
+        character_start = 12 + 0x644
+        battalion_raw[character_start + 0x4A] = 1
+        struct.pack_into("<hHHBB", battalion_raw, character_start + 0x18,
+                         -1, 11, 55, 10, 3)
+        struct.pack_into("<I", battalion_raw, 0, checksum(battalion_raw))
+        battalion_source = directory / "battalion-source"
+        battalion_source.write_bytes(battalion_raw)
+        battalion_patch = directory / "battalion-patch.json"
+        battalion_patch.write_text(json.dumps({"operations": [
+            {"op": "fillMissingBattalions"},
+        ]}), encoding="utf-8")
+        battalion_target = directory / "all-battalions"
+        run(cli, "apply", "--input", str(battalion_source), "--patch", str(battalion_patch),
+            "--output", str(battalion_target))
+        battalion_data = battalion_target.read_bytes()
+        entries = [struct.unpack_from("<hHHBB", battalion_data, battalion_start + slot * 8)
+                   for slot in range(200)]
+        assert next(entry for entry in entries if entry[3] == 20) == existing_battalion
+        owned_types = {entry[3] for entry in entries if entry[3] < 200}
+        assert len(owned_types) == 127
+        assert 10 not in owned_types  # Equipped by a character, not duplicated in barracks.
+        assert owned_types | {10} == {entry["id"] for entry in battalion_catalog}
+        assert next(entry for entry in entries if entry[3] == 0) == (-1, 400, 30, 0, 4)
+        assert battalion_source.read_bytes() == battalion_raw
+        assert run(cli, "apply", "--input", str(battalion_target),
+                   "--patch", str(battalion_patch), "--dry-run")["changedBytes"] == 0
+
+        full_battalion_raw = bytearray(battalion_raw)
+        for slot in range(200):
+            struct.pack_into("<hHHBB", full_battalion_raw, battalion_start + slot * 8,
+                             *existing_battalion)
+        struct.pack_into("<I", full_battalion_raw, 0, checksum(full_battalion_raw))
+        full_battalion_source = directory / "full-battalion-source"
+        full_battalion_source.write_bytes(full_battalion_raw)
+        full_battalion_target = directory / "full-battalion-target"
+        error = run(cli, "apply", "--input", str(full_battalion_source),
+                    "--patch", str(battalion_patch), "--output", str(full_battalion_target),
+                    success=False)
+        assert "free battalion slots" in error["error"]
+        assert not full_battalion_target.exists()
+        assert full_battalion_source.read_bytes() == full_battalion_raw
 
         rank_patch = directory / "rank.json"
         rank_patch.write_text(json.dumps({"operations": [

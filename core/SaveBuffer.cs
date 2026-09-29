@@ -195,6 +195,40 @@ namespace FethEditor.Core
                 Buffer.BlockCopy(entries[i], 0, bytes, baseLoc.Offset + 8 * i, 8);
         }
 
+        public int FillMissingBattalions()
+        {
+            SaveData_V23 data = Data;
+            var ownedTypes = new HashSet<int>(data.Player.Battalions
+                .Where(battalion => battalion.Type < Database.BATTALION_COUNT)
+                .Select(battalion => (int)battalion.Type));
+            foreach (Character_V23 character in data.Characters)
+                if (character.data.Id >= 0 && character.data.Level > 0
+                    && character.data.EquippedBattalion.Type < Database.BATTALION_COUNT)
+                    ownedTypes.Add(character.data.EquippedBattalion.Type);
+
+            var missing = ObtainableBattalions.All
+                .Where(template => !ownedTypes.Contains(template.Type)).ToArray();
+            int[] freeSlots = data.Player.Battalions
+                .Select((battalion, index) => (battalion, index))
+                .Where(entry => entry.battalion.Type == Database.BATTALION_COUNT)
+                .Select(entry => entry.index).ToArray();
+            if (missing.Length > freeSlots.Length)
+                throw new InvalidOperationException(
+                    $"Need {missing.Length} free battalion slots, but only {freeSlots.Length} remain.");
+
+            for (int i = 0; i < missing.Length; i++)
+            {
+                string path = $"Player.Battalions[{freeSlots[i]}].";
+                Set(path + "CharacterId", -1);
+                Set(path + "Exp", ObtainableBattalions.Experience);
+                Set(path + "Stamina", missing[i].Stamina);
+                Set(path + "Type", missing[i].Type);
+                Set(path + "Skill", missing[i].Skill);
+            }
+            if (missing.Length > 0) SortBattalions();
+            return missing.Length;
+        }
+
         public void SetInventoryDurability(string mode)
         {
             if (mode != "normal" && mode != "unlimited" && mode != "weapons-unlimited")

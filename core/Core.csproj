@@ -15,6 +15,7 @@
     <Compile Include="ClassEligibility.cs" />
     <Compile Include="SupportRankPresets.cs" />
     <Compile Include="SupportPairRanks.cs" />
+    <Compile Include="ObtainableBattalions.cs" />
     <Compile Include="SystemBuffer.cs" />
     <Compile Include="VerifiedFileWriter.cs" />
     <Compile Include="NgPlusJournal.cs" />

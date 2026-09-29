@@ -167,6 +167,9 @@ namespace FethEditor.Cli
                     case "sortBattalions":
                         save.SortBattalions();
                         break;
+                    case "fillMissingBattalions":
+                        save.FillMissingBattalions();
+                        break;
                     case "inventoryDurability":
                         save.SetInventoryDurability(Value<string>(item, "mode"));
                         break;
@@ -499,6 +502,11 @@ namespace FethEditor.Cli
                 }).ToArray();
                 case "classes": return Database.ClassList.Select(entry => new { id = entry.Key, name = entry.Value }).ToArray();
                 case "battalions": return Database.BattalionList.Select(entry => new { id = entry.Key, name = entry.Value }).ToArray();
+                case "obtainable-battalions": return ObtainableBattalions.All.Select(entry => new
+                {
+                    id = entry.Type, name = Database.GetBattalionName(entry.Type),
+                    experience = ObtainableBattalions.Experience, stamina = entry.Stamina, skill = entry.Skill
+                }).ToArray();
                 case "battalion-skills": return Database.BattalionSkillList.Select(entry => new { id = entry.Key, name = entry.Value }).ToArray();
                 case "abilities": return Database.AbilityList.Select(entry => new { id = entry.Key, name = entry.Value }).ToArray();
                 case "arts": return Database.CombatArtList.Select(entry => new { id = entry.Key, name = entry.Value }).ToArray();

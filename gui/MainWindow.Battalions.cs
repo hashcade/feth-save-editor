@@ -111,4 +111,25 @@ public partial class MainWindow
             Status.Text = error.Message;
         }
     }
+
+    private void FillMissingBattalions_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_save is null) return;
+        try
+        {
+            int added = _save.FillMissingBattalions();
+            if (added > 0)
+            {
+                RefreshBattalions();
+                MarkChanged();
+            }
+            Status.Text = added == 0
+                ? UiStrings.Translate("All obtainable battalions are already owned.", _databaseLanguage)
+                : UiStrings.Format("Added {0} missing battalions.", _databaseLanguage, added);
+        }
+        catch (Exception error)
+        {
+            Status.Text = error.Message;
+        }
+    }
 }
