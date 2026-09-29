@@ -38,4 +38,4 @@ For scripted edits, see the [CLI guide](CLI.md).
 
 ## License
 
-[MIT](./LICENSE) License © [Jing Haihan](https://github.com/jinghaihan) for my original contributions. The [upstream repository](https://github.com/imouto1994/fe3h-editor) has no license; this MIT license does not cover its code or assets.
+[MIT](./LICENSE) License © [jinghaihan](https://github.com/jinghaihan) for my original contributions. The [upstream repository](https://github.com/imouto1994/fe3h-editor) has no license; this MIT license does not cover its code or assets.
