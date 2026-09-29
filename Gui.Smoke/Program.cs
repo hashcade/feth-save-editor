@@ -45,25 +45,56 @@ if (!dancers.SequenceEqual(expectedDancers)
     || !ClassEligibility.IsAvailable(0, 1)
     || ClassEligibility.IsAvailable(0, 0)
     || !ClassEligibility.IsAvailable(2, 0)
-    || !ClassEligibility.IsAvailable(0, 42)
-    || !ClassEligibility.IsAvailable(1, 42)
     || ClassEligibility.IsAvailable(0, 23)
     || ClassEligibility.IsAvailable(1, 13)
-    || ClassEligibility.IsAvailable(3, 40)
-    || !ClassEligibility.IsAvailable(2, 40)
-    || !ClassEligibility.IsAvailable(43, 59)
-    || ClassEligibility.IsAvailable(44, 59)
     || !ClassEligibility.IsAvailable(38, 84)
     || !ClassEligibility.IsAvailable(41, 85)
-    || ClassEligibility.RecordForUnit(1040) != 38
-    || ClassEligibility.RecordForUnit(1046) != 44
     || Enumerable.Range(0, 100).Count(id => ClassEligibility.IsAvailable(0, id)) != 37
     || Enumerable.Range(0, 100).Count(id => ClassEligibility.IsAvailable(1, id)) != 36)
     throw new InvalidOperationException("Playable class or White Heron Cup eligibility is incorrect.");
-foreach (int record in Enumerable.Range(0, NgPlusJournal.CharacterCount)
-    .Where(ClassEligibility.IsPlayableRecord))
+int[] playableRecords = Enumerable.Range(0, NgPlusJournal.CharacterCount)
+    .Where(ClassEligibility.IsPlayableRecord).ToArray();
+foreach (int record in playableRecords)
     foreach (int classId in Enumerable.Range(0, NgPlusJournal.ClassCount))
         _ = ClassEligibility.IsAvailable(record, classId);
+
+// Check every exclusive class against every playable record, not just one representative.
+(int ClassId, int[] Owners)[] exclusiveClasses =
+[
+    (6, [2, 3, 4]),           // Lord
+    (17, [4]),                // Barbarossa
+    (40, [2]),                // Emperor
+    (42, [0, 1]),             // Enlightened One
+    (44, [3]),                // Great Lord
+    (56, [2]),                // Armored Lord
+    (57, [3]),                // High Lord
+    (58, [4]),                // Wyvern Master
+    (59, [43])                // Death Knight
+];
+foreach (var (classId, owners) in exclusiveClasses)
+    foreach (int record in playableRecords)
+        if (ClassEligibility.IsAvailable(record, classId) != owners.Contains(record))
+            throw new InvalidOperationException($"Class {classId} has the wrong owner: record {record}.");
+foreach (int classId in new[] { 41, 45, 46, 47, 48, 55, 91 })
+    if (playableRecords.Any(record => ClassEligibility.IsAvailable(record, classId)))
+        throw new InvalidOperationException($"NPC class {classId} became available to a playable character.");
+foreach (var (unitId, record) in new[]
+{
+    (0, 0), (1, 1), (2, 2), (3, 3), (4, 4),
+    (1040, 38), (1041, 39), (1042, 40), (1043, 41), (1045, 43), (1046, 44)
+})
+    if (ClassEligibility.RecordForUnit(unitId) != record)
+        throw new InvalidOperationException($"Unit {unitId} does not map to record {record}.");
+foreach (int record in new[] { 0, 1, 2, 3, 4, 43 })
+{
+    var journal = new NgPlusJournal(new byte[0x2000], 0);
+    journal.SetClassMastered(record, 60, true); // An existing non-playable flag must survive the bulk edit.
+    journal.UnlockAvailableClasses(record);
+    for (int classId = 0; classId < NgPlusJournal.ClassCount; classId++)
+        if (journal.IsClassMastered(record, classId) !=
+            (classId == 60 || ClassEligibility.IsAvailable(record, classId)))
+            throw new InvalidOperationException($"Bulk unlock wrote the wrong flag: record {record}, class {classId}.");
+}
 if (args.Length > 0)
 {
     var save = SaveBuffer.Open(args[0]);
