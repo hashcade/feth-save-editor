@@ -75,6 +75,14 @@ if (!dancers.SequenceEqual(expectedDancers)
     || Enumerable.Range(0, 100).Count(id => ClassEligibility.IsAvailable(0, id)) != 37
     || Enumerable.Range(0, 100).Count(id => ClassEligibility.IsAvailable(1, id)) != 36)
     throw new InvalidOperationException("Playable class or White Heron Cup eligibility is incorrect.");
+foreach (var (record, startingClass) in new[]
+{
+    (26, 0), (27, 0), (28, 0), (29, 1),
+    (30, 0), (31, 0), (32, 0), (33, 1), (34, 1)
+})
+    foreach (int classId in new[] { 0, 1 })
+        if (ClassEligibility.IsAvailable(record, classId) != (classId == startingClass))
+            throw new InvalidOperationException($"Record {record} has the wrong Noble/Commoner class.");
 int[] playableRecords = Enumerable.Range(0, NgPlusJournal.CharacterCount)
     .Where(ClassEligibility.IsPlayableRecord).ToArray();
 foreach (int record in playableRecords)
@@ -116,7 +124,7 @@ foreach (var (unitId, record) in new[]
 })
     if (ClassEligibility.RecordForUnit(unitId) != record)
         throw new InvalidOperationException($"Unit {unitId} does not map to record {record}.");
-foreach (int record in new[] { 0, 1, 2, 3, 4, 43 })
+foreach (int record in new[] { 0, 1, 2, 3, 4, 26, 27, 28, 29, 30, 31, 32, 33, 43 })
 {
     var journal = new NgPlusJournal(new byte[0x2000], 0);
     journal.SetClassMastered(record, 60, true); // An existing non-playable flag must survive the bulk edit.
@@ -127,10 +135,17 @@ foreach (int record in new[] { 0, 1, 2, 3, 4, 43 })
         if (journal.IsClassMastered(record, classId) !=
             (classId == 60 || ClassEligibility.IsAvailable(record, classId)))
             throw new InvalidOperationException($"Bulk unlock wrote the wrong flag: record {record}, class {classId}.");
+    if (record is >= 26 and <= 33)
+    {
+        int baseClass = record is 29 or 33 ? 1 : 0;
+        if (!journal.IsClassMastered(record, baseClass)
+            || journal.IsClassMastered(record, 1 - baseClass))
+            throw new InvalidOperationException($"Faculty record {record} unlocked the wrong base class.");
+    }
 }
 if (args.Length > 0)
 {
-    foreach (int record in new[] { 0, 1, 2, 3, 4, 43 })
+    foreach (int record in new[] { 0, 1, 2, 3, 4, 26, 27, 28, 29, 30, 31, 32, 33, 43 })
     {
         var save = SaveBuffer.Open(args[0]);
         int slot = Array.FindIndex(save.Data.Characters, character =>
@@ -161,6 +176,13 @@ if (args.Length > 0)
                 throw new InvalidOperationException($"Special class {classId} was not maxed for record {record}.");
         if (after.CurrentClassExp != after.ClassExp[after.Class])
             throw new InvalidOperationException($"Current class experience was not synchronized for record {record}.");
+        if (record is >= 26 and <= 33)
+        {
+            int baseClass = record is 29 or 33 ? 1 : 0;
+            if (after.ClassExp[baseClass] != Database.GetMaxClassExp(baseClass)
+                || after.ClassExp[1 - baseClass] != before.ClassExp[1 - baseClass])
+                throw new InvalidOperationException($"Faculty record {record} maxed the wrong base class.");
+        }
     }
     var historySave = SaveBuffer.Open(args[0]);
     var history = historySave.Inheritance;
