@@ -34,9 +34,8 @@ public partial class MainWindow
         try
         {
             var battalions = _save.Data.Player.Battalions;
-            int free = battalions.Count(battalion => battalion.Type == Database.BATTALION_COUNT);
-            BattalionFreeSlots.Text = UiStrings.Format("Free: {0}/{1} ({2}%)", _databaseLanguage,
-                free, battalions.Length, 100 * free / battalions.Length);
+            int occupied = battalions.Count(battalion => battalion.Type != Database.BATTALION_COUNT);
+            BattalionUsage.Text = $"{occupied}/{battalions.Length} ({100d * occupied / battalions.Length:0.#}%)";
             SetSearchRows(BattalionList, BattalionSearch, battalions
                 .Select(battalion => battalion.GetBarracksName())
                 .ToArray(), selectedIndex);

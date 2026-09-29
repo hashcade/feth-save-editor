@@ -110,7 +110,7 @@ internal static class UiStrings
             if (control.TemplatedParent is not null) continue;
             switch (control)
             {
-                case TextBlock text when control.Name is not ("Status" or "BattalionFreeSlots"
+                case TextBlock text when control.Name is not ("Status" or "BattalionUsage"
                     or "StorageCount" or "CurrentCharacterTitle" or "CurrentClassInfo"
                     or "EquippedBattalionValue" or "StorageSlotLabel")
                     && (control.GetVisualParent() is not ContentPresenter presenter

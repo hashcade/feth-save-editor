@@ -299,10 +299,10 @@ if (battalionListCard.Bounds.Width >= battalionEditorCard.Bounds.Width ||
 if (args.Length > 0)
 {
     var battalions = SaveBuffer.Open(args[0]).Data.Player.Battalions;
-    int free = battalions.Count(battalion => battalion.Type == Database.BATTALION_COUNT);
-    string expected = $"Free: {free}/{battalions.Length} ({100 * free / battalions.Length}%)";
-    if (window.FindControl<TextBlock>("BattalionFreeSlots")?.Text != expected)
-        throw new InvalidOperationException("Battalion free slots or percentage are incorrect.");
+    int occupied = battalions.Count(battalion => battalion.Type != Database.BATTALION_COUNT);
+    string expected = $"{occupied}/{battalions.Length} ({100d * occupied / battalions.Length:0.#}%)";
+    if (window.FindControl<TextBlock>("BattalionUsage")?.Text != expected)
+        throw new InvalidOperationException("Battalion occupancy or percentage is incorrect.");
 }
 tabs.SelectedIndex = 4;
 Dispatcher.UIThread.RunJobs();
