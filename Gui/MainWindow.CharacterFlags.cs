@@ -43,7 +43,7 @@ public partial class MainWindow
             int bit = index;
             var check = new CheckBox
             {
-                Content = $"{index:D3} · {name(index)}",
+                Content = name(index),
                 IsChecked = isChecked(index)
             };
             check.IsCheckedChanged += (_, _) =>

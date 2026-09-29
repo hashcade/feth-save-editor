@@ -574,6 +574,14 @@ if (args.Length > 0)
     characterTabs.SelectedIndex = 2;
     var flags = window.FindControl<StackPanel>("CurrentCharacterFlags")!;
     var firstFlag = (CheckBox)flags.Children[0];
+    if (firstFlag.Content?.ToString() != "Is Available"
+        || ((CheckBox)window.FindControl<StackPanel>("CurrentClassUnlockFlags")!.Children[0]).Content?.ToString()
+            != Database.GetUnitClassName(0)
+        || ((CheckBox)window.FindControl<StackPanel>("CurrentAbilityFlags")!.Children[0]).Content?.ToString()
+            != Database.GetAbilityName(0, false)
+        || ((CheckBox)window.FindControl<StackPanel>("CurrentArtFlags")!.Children[0]).Content?.ToString()
+            != Database.GetCombatArtName(0))
+        throw new InvalidOperationException("Named character flags still display redundant debug indices.");
     firstFlag.IsChecked = !firstFlag.IsChecked;
     bool editedFlag = firstFlag.IsChecked == true;
     characterTabs.SelectedIndex = 0;
