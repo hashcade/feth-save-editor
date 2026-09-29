@@ -452,6 +452,8 @@ if (args.Length > 0)
     if (!historicalCharacters.Items.OfType<string>().Any(name => name.Contains("Yuri", StringComparison.Ordinal))
         || !historicalCharacters.Items.OfType<string>().Any(name => name.Contains("Jeritza", StringComparison.Ordinal)))
         throw new InvalidOperationException("DLC and Jeritza NG+ names are missing.");
+    if (historicalCharacters.Items[0]!.ToString()!.StartsWith("00 ·", StringComparison.Ordinal))
+        throw new InvalidOperationException("NG+ roster still displays technical row numbers.");
     if (historicalCharacters.Items.OfType<string>().Any(name => name.Contains("Aelfric", StringComparison.Ordinal)))
         throw new InvalidOperationException("Non-recruitable NPCs should not appear in the NG+ editor.");
     tabs.SelectedIndex = 8;
@@ -485,6 +487,10 @@ if (args.Length > 0)
     var misc = window.FindControl<ListBox>("MiscList")!;
     if (items.ItemCount != 400 || misc.ItemCount != 223)
         throw new InvalidOperationException("Storage lists were not loaded.");
+    if (items.Items[0]!.ToString()!.StartsWith("[", StringComparison.Ordinal)
+        || misc.Items[0]!.ToString()!.StartsWith("000 ·", StringComparison.Ordinal)
+        || window.FindControl<TextBlock>("StorageSlotLabel")!.Text != "Slot 0")
+        throw new InvalidOperationException("Storage displays technical indices in the list or hides the slot detail.");
     window.FindControl<TextBox>("MiscAmount")!.Text = "42";
     window.FindControl<Button>("SetMisc")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
     if (!misc.Items[0]!.ToString()!.EndsWith(" · 42", StringComparison.Ordinal))
@@ -493,7 +499,7 @@ if (args.Length > 0)
     var quests = window.FindControl<ListBox>("QuestList")!;
     window.FindControl<ComboBox>("QuestState")!.SelectedIndex = 5;
     window.FindControl<Button>("SetQuestStateButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-    if (!quests.Items[0]!.ToString()!.EndsWith(" · 5", StringComparison.Ordinal))
+    if (!quests.Items[0]!.ToString()!.EndsWith(" · Unk_0x05", StringComparison.Ordinal))
         throw new InvalidOperationException("Quest edit did not update the list.");
 
     tabs.SelectedIndex = 5;
@@ -523,6 +529,8 @@ if (args.Length > 0)
 
     tabs.SelectedIndex = 3;
     var battalionExp = window.FindControl<TextBox>("BattalionExp")!;
+    if (window.FindControl<ComboBox>("BattalionCharacter")!.Items[1]!.ToString()!.StartsWith("0000 -", StringComparison.Ordinal))
+        throw new InvalidOperationException("Battalion character choices still display technical IDs.");
     battalionExp.Text = "401";
     window.FindControl<Button>("SaveBattalionButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
     if (battalionExp.Text != "401")
@@ -532,6 +540,10 @@ if (args.Length > 0)
     var character = window.FindControl<ListBox>("CurrentCharacterList")!;
     if (character.ItemCount == 0)
         throw new InvalidOperationException("Character list was not loaded.");
+    if (window.FindControl<TextBlock>("CurrentCharacterTitle")!.Text != "Character Identity:"
+        || window.FindControl<ComboBox>("CurrentCharacterId")!.SelectedItem!.ToString()!
+            .StartsWith("0001 -", StringComparison.Ordinal))
+        throw new InvalidOperationException("Character header still displays unrelated slot and unit IDs.");
     var battalionLabel = window.FindControl<StackPanel>("CharacterStatRows")!.Children
         .OfType<TextBlock>().LastOrDefault();
     if (battalionLabel?.Text?.StartsWith("Equipped Battalion:", StringComparison.Ordinal) != true)
@@ -565,9 +577,9 @@ if (args.Length > 0)
     tabs.SelectedIndex = 1;
     Dispatcher.UIThread.RunJobs();
     var miscSearch = window.FindControl<TextBox>("MiscSearch")!;
-    miscSearch.Text = "010 ·";
+    miscSearch.Text = "010";
     Dispatcher.UIThread.RunJobs();
-    if (misc.ItemCount != 1 || !misc.Items[0]!.ToString()!.StartsWith("010 ·", StringComparison.Ordinal))
+    if (misc.ItemCount != 1 || misc.Items[0]!.ToString()!.StartsWith("010 ·", StringComparison.Ordinal))
         throw new InvalidOperationException($"Misc search did not select the requested source row: {misc.ItemCount} rows; first={misc.Items.FirstOrDefault()}.");
     window.FindControl<TextBox>("MiscAmount")!.Text = "43";
     window.FindControl<Button>("SetMisc")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
@@ -580,19 +592,31 @@ if (args.Length > 0)
     tabs.SelectedIndex = 4;
     Dispatcher.UIThread.RunJobs();
     var questSearch = window.FindControl<TextBox>("QuestSearch")!;
-    questSearch.Text = "001 ·";
+    questSearch.Text = "001";
     Dispatcher.UIThread.RunJobs();
-    if (quests.ItemCount != 1 || !quests.Items[0]!.ToString()!.StartsWith("001 ·", StringComparison.Ordinal))
+    if (quests.ItemCount != 1 || quests.Items[0]!.ToString()!.StartsWith("001 ·", StringComparison.Ordinal))
         throw new InvalidOperationException("Quest search did not select the requested source row.");
     window.FindControl<ComboBox>("QuestState")!.SelectedIndex = 4;
     window.FindControl<Button>("SetQuestStateButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
     questSearch.Text = string.Empty;
     Dispatcher.UIThread.RunJobs();
-    if (!quests.Items[1]!.ToString()!.EndsWith(" · 4", StringComparison.Ordinal)
-        || !quests.Items[0]!.ToString()!.EndsWith(" · 5", StringComparison.Ordinal))
+    if (!quests.Items[1]!.ToString()!.EndsWith(" · Finished1", StringComparison.Ordinal)
+        || !quests.Items[0]!.ToString()!.EndsWith(" · Unk_0x05", StringComparison.Ordinal))
         throw new InvalidOperationException("Editing a filtered quest changed the wrong source item.");
 
     var databaseTabs = window.FindControl<TabControl>("DatabaseTabs")!;
+    tabs.SelectedIndex = 6;
+    databaseTabs.SelectedIndex = 2;
+    Dispatcher.UIThread.RunJobs();
+    int itemId = Database.BinaryDatabase.ItemEntries.Keys.Max();
+    var databaseItemSearch = window.FindControl<TextBox>("DatabaseItemSearch")!;
+    databaseItemSearch.Text = itemId.ToString();
+    Dispatcher.UIThread.RunJobs();
+    if (window.FindControl<ListBox>("DatabaseItems")!.ItemCount == 0
+        || !window.FindControl<TextBox>("DatabaseItemDetails")!.Text!.StartsWith($"ID: {itemId}\n", StringComparison.Ordinal))
+        throw new InvalidOperationException("Database item ID search did not preserve the sparse source ID.");
+    databaseItemSearch.Text = string.Empty;
+    Dispatcher.UIThread.RunJobs();
     foreach (var (page, databasePage, searchName, listName) in new[]
     {
         (1, -1, "StorageSearch", "StorageList"),

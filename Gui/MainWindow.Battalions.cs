@@ -18,7 +18,8 @@ public partial class MainWindow
     {
         if (_save is null) return;
         _battalionCharacters ??= Database.UnitList.OrderBy(pair => pair.Key)
-            .Select(pair => new Choice(pair.Key, pair.Value)).ToArray();
+            .Select(pair => new Choice(pair.Key,
+                pair.Key < 0 ? pair.Value : Database.GetUnitName(pair.Key))).ToArray();
         _battalionTypes ??= Database.BattalionList.OrderBy(pair => pair.Key)
             .Select(pair => new Choice(pair.Key == -1 ? Database.BATTALION_COUNT : pair.Key, pair.Value))
             .ToArray();
@@ -34,7 +35,7 @@ public partial class MainWindow
         {
             var battalions = _save.Data.Player.Battalions;
             SetSearchRows(BattalionList, BattalionSearch, battalions
-                .Select((battalion, index) => $"[{index:D3}] {battalion.GetBarracksName()}")
+                .Select(battalion => battalion.GetBarracksName())
                 .ToArray(), selectedIndex);
         }
         finally

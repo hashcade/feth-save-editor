@@ -100,7 +100,7 @@ internal static class UiStrings
             {
                 case TextBlock text when control.Name is not ("Status" or "SystemStatus"
                     or "StorageCount" or "CurrentCharacterTitle" or "CurrentClassInfo"
-                    or "EquippedBattalionValue")
+                    or "EquippedBattalionValue" or "StorageSlotLabel")
                     && control.GetVisualParent() is not ContentPresenter { TemplatedParent: TabStripItem }:
                     Replace(control, text.Text, value => text.Text = value, language);
                     break;

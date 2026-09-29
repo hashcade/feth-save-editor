@@ -22,7 +22,7 @@ public partial class MainWindow
                 + $"{character.CurrentClassExp} · "
                 + $"{UiStrings.Translate("Mastery:", _databaseLanguage)} {character.CurrentClassLevel}";
             CurrentClassExpList.ItemsSource = Enumerable.Range(0, Database.MAX_CLASS)
-                .Select(index => $"{index:D3} · {Database.GetClassName(index)} · "
+                .Select(index => $"{Database.GetClassName(index)} · "
                     + $"{character.ClassExp[index]} / {character.ClassLevel[index]}")
                 .ToArray();
             CurrentClassExpList.SelectedIndex = character.Class < Database.MAX_CLASS

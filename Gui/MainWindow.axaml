@@ -136,7 +136,10 @@
           <Grid Grid.Column="1" RowDefinitions="*,*" RowSpacing="10">
             <suki:GlassCard Name="StorageEditorCard" Classes="section">
               <StackPanel Spacing="8">
-                <TextBlock Text="Item Editor" FontWeight="SemiBold" />
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Text="Item Editor" FontWeight="SemiBold" />
+                  <TextBlock Name="StorageSlotLabel" Grid.Column="1" />
+                </Grid>
                 <ComboBox Classes="Small" Name="StorageItemCombo" />
                 <TextBlock Text="Durability" />
                 <TextBox Classes="Small" Name="StorageDurability" />

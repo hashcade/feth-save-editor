@@ -33,12 +33,12 @@ public partial class MainWindow
             StorageCount.Text = $"{UiStrings.Translate("Item List", _databaseLanguage)} "
                 + $"{data.ItemCount} / {data.Items.Length}";
             SetSearchRows(StorageList, StorageSearch,
-                data.Items.Select((item, index) => $"[{index:D3}] {item}").ToArray(), itemIndex);
+                data.Items.Select(item => item.ToString()).ToArray(), itemIndex);
             SetSearchRows(MiscList, MiscSearch, Enumerable.Range(0, Player_V23.COUNT_MISC_ITEMS)
-                .Select(index => $"{index:D3} · {Database.GetMiscItemName(index)} · {data.Player.MiscItems[index]}")
+                .Select(index => $"{Database.GetMiscItemName(index)} · {data.Player.MiscItems[index]}")
                 .ToArray(), miscIndex);
             SetSearchRows(GiftList, GiftSearch, Enumerable.Range(0, Player_V23.COUNT_GIFT_ITEMS)
-                .Select(index => $"{index:D3} · {Database.GetGiftItemName(index)} · {data.Player.GetGiftItem(index)}")
+                .Select(index => $"{Database.GetGiftItemName(index)} · {data.Player.GetGiftItem(index)}")
                 .ToArray(), giftIndex);
         }
         finally
@@ -69,6 +69,7 @@ public partial class MainWindow
     {
         int index = SelectedSourceIndex(StorageList);
         if (_save is null || index < 0) return;
+        StorageSlotLabel.Text = UiStrings.Format("Slot {0}", _databaseLanguage, index);
         var item = _save.Data.Items[index];
         StorageItemCombo.SelectedItem = _itemChoices?.FirstOrDefault(choice => choice.Id == item.Id);
         StorageDurability.Text = item.Durability.ToString(CultureInfo.InvariantCulture);

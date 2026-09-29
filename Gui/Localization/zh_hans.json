@@ -136,6 +136,8 @@
   "System Save Editor": "系统存档编辑器",
   "Load a system save to begin.": "请先打开系统存档。",
   "Save Slots": "存档槽位",
+  "Slot {0}": "槽位 {0}",
+  "Character Identity:": "角色身份：",
   "System Flags": "系统标志",
   "Unavailable": "未开放",
   "Available": "可接取",

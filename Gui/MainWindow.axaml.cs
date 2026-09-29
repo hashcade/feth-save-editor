@@ -371,7 +371,7 @@ public partial class MainWindow : Window
         }
         _loading = true;
         CharacterList.ItemsSource = _visibleCharacters
-            .Select(index => $"{index:D2} · {DisplayName(_save.Inheritance.GetCharacterName(index))}").ToArray();
+            .Select(index => DisplayName(_save.Inheritance.GetCharacterName(index))).ToArray();
         int selected = _visibleCharacters.IndexOf(_selectedCharacter);
         CharacterList.SelectedIndex = selected >= 0 ? selected : _visibleCharacters.Count > 0 ? 0 : -1;
         _loading = false;
@@ -444,7 +444,7 @@ public partial class MainWindow : Window
             int selectedClass = classId;
             var check = new CheckBox
             {
-                Content = $"{classId:D2} · {name}",
+                Content = name,
                 IsChecked = _save.Inheritance.IsClassMastered(character, classId),
                 Margin = new Avalonia.Thickness(0, 0, 8, 8)
             };
@@ -485,7 +485,7 @@ public partial class MainWindow : Window
         }
         _loading = true;
         SupportList.ItemsSource = _visibleSupports.Select(index =>
-            $"{index:D3} · {DisplaySupportName(_save.Inheritance.GetSupportName(index))} · "
+            $"{DisplaySupportName(_save.Inheritance.GetSupportName(index))} · "
             + UiStrings.Translate(SupportRankFor(_save.Inheritance.GetSupportPoints(index)).Label, _databaseLanguage)).ToArray();
         int selected = _visibleSupports.IndexOf(_selectedSupport);
         SupportList.SelectedIndex = selected >= 0 ? selected : _visibleSupports.Count > 0 ? 0 : -1;

@@ -13,15 +13,17 @@ public partial class MainWindow
         if (_save is null) return;
         QuestState.ItemsSource = Enum.GetValues<enmQuestState>()
             .Select(state => new Choice((int)state,
-                $"{(int)state} · {UiStrings.Translate(state.GetDescription(), _databaseLanguage)}"))
+                UiStrings.Translate(state.GetDescription(), _databaseLanguage)))
             .ToArray();
+        var states = QuestState.ItemsSource.Cast<Choice>().ToDictionary(choice => choice.Id, choice => choice.Label);
         var quests = _save.Data.Activities.QuestStateList;
         bool previousLoading = _loading;
         _loading = true;
         try
         {
             SetSearchRows(QuestList, QuestSearch, quests.Select((state, index) =>
-                $"{index:D3} · {Database.GetQuestName(index)} · {state}").ToArray(), selectedIndex);
+                $"{Database.GetQuestName(index)} · {(states.TryGetValue(state, out string? label) ? label : state.ToString())}")
+                .ToArray(), selectedIndex);
         }
         finally
         {

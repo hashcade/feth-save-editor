@@ -32,7 +32,8 @@ public partial class MainWindow
     {
         if (_save is null) return;
         _characterIds ??= Database.UnitList.OrderBy(pair => pair.Key)
-            .Select(pair => new Choice(pair.Key, pair.Value)).ToArray();
+            .Select(pair => new Choice(pair.Key,
+                pair.Key < 0 ? pair.Value : Database.GetUnitName(pair.Key))).ToArray();
         _abilityChoices ??= Database.AbilityList.Where(pair => pair.Key >= 0 && pair.Key < 255)
             .OrderBy(pair => pair.Key).Select(pair => new Choice(pair.Key, pair.Value))
             .Append(new Choice(255, Database.STR_NONE)).ToArray();
@@ -46,7 +47,7 @@ public partial class MainWindow
         {
             var characters = _save.Data.Characters;
             SetSearchRows(CurrentCharacterList, CurrentCharacterSearch, characters
-                .Select((character, index) => $"[{index:D3}] {Database.GetUnitName(character.data.Id)}"
+                .Select(character => $"{Database.GetUnitName(character.data.Id)}"
                     + $" · Lv.{character.data.Level}")
                 .ToArray(), selectedIndex);
             _currentCharacter = SelectedSourceIndex(CurrentCharacterList);
@@ -73,7 +74,7 @@ public partial class MainWindow
         _loading = true;
         try
         {
-            CurrentCharacterTitle.Text = $"[{_currentCharacter:D3}] {Database.GetUnitName(character.Id)}";
+            CurrentCharacterTitle.Text = UiStrings.Translate("Character Identity:", _databaseLanguage);
             CurrentCharacterId.SelectedItem = _characterIds?.FirstOrDefault(choice => choice.Id == character.Id);
             PopulateCharacterStats(character);
             PopulateCharacterItems(character);

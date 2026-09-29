@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Avalonia.Controls;
 
@@ -7,7 +8,7 @@ namespace FethEditor.Gui;
 
 public partial class MainWindow
 {
-    private readonly Dictionary<ListBox, (string[] Labels, int[] VisibleIndices)> _searchRows = new();
+    private readonly Dictionary<ListBox, (string[] Labels, int[] VisibleIndices, int[]? SearchIds)> _searchRows = new();
 
     private int SelectedSourceIndex(ListBox list)
     {
@@ -16,9 +17,12 @@ public partial class MainWindow
         return rows.VisibleIndices[list.SelectedIndex];
     }
 
-    private void SetSearchRows(ListBox list, TextBox search, string[] labels, int selectedSourceIndex)
+    private void SetSearchRows(ListBox list, TextBox search, string[] labels, int selectedSourceIndex,
+        int[]? searchIds = null)
     {
-        _searchRows[list] = (labels, []);
+        if (searchIds is not null && searchIds.Length != labels.Length)
+            throw new ArgumentException("Search IDs must match the list length.", nameof(searchIds));
+        _searchRows[list] = (labels, [], searchIds);
         FilterSearchRows(list, search, selectedSourceIndex);
     }
 
@@ -28,9 +32,11 @@ public partial class MainWindow
         int selected = selectedSourceIndex ?? SelectedSourceIndex(list);
         string query = search.Text?.Trim() ?? string.Empty;
         int[] visible = Enumerable.Range(0, rows.Labels.Length)
-            .Where(index => rows.Labels[index].Contains(query, StringComparison.OrdinalIgnoreCase))
+            .Where(index => rows.Labels[index].Contains(query, StringComparison.OrdinalIgnoreCase)
+                || (rows.SearchIds?[index] ?? index).ToString("D3", CultureInfo.InvariantCulture)
+                    .Contains(query, StringComparison.OrdinalIgnoreCase))
             .ToArray();
-        _searchRows[list] = (rows.Labels, visible);
+        _searchRows[list] = (rows.Labels, visible, rows.SearchIds);
         bool previousLoading = _loading;
         _loading = true;
         try

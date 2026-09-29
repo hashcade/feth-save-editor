@@ -17,7 +17,7 @@ public partial class MainWindow
         try
         {
             SetSearchRows(CurrentSupportList, CurrentSupportSearch, supports.Select((points, index) =>
-                $"{index:D3} · {DisplaySupportName(Database.GetSupportTalkName(index))} · "
+                $"{DisplaySupportName(Database.GetSupportTalkName(index))} · "
                 + UiStrings.Translate(SupportRankFor(points).Label, _databaseLanguage))
                 .ToArray(), selectedIndex);
         }
