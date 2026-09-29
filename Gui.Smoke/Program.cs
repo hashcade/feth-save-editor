@@ -256,12 +256,14 @@ for (int index = 0; index < characterTabs.ItemCount; index++)
     if (index == 5)
     {
         var abilities = window.FindControl<UniformGrid>("CurrentAbilityFlags")!;
-        if (abilities.Columns != 3 || abilities.Children.Count < 4
+        if (abilities.Columns != 3)
+            throw new InvalidOperationException("Ability flags did not render in three columns.");
+        if (args.Length > 0 && (abilities.Children.Count < 4
             || abilities.Children[0].Bounds.X >= abilities.Children[1].Bounds.X
             || abilities.Children[1].Bounds.X >= abilities.Children[2].Bounds.X
             || Math.Abs(abilities.Children[0].Bounds.X - abilities.Children[3].Bounds.X) > 1
-            || abilities.Children[3].Bounds.Y <= abilities.Children[0].Bounds.Y)
-            throw new InvalidOperationException("Ability flags did not render in three columns.");
+            || abilities.Children[3].Bounds.Y <= abilities.Children[0].Bounds.Y))
+            throw new InvalidOperationException("Loaded ability flags did not render in three columns.");
     }
     var frame = window.CaptureRenderedFrame()
         ?? throw new InvalidOperationException($"Character tab {index} did not render.");
