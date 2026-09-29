@@ -365,6 +365,7 @@ namespace SaveEditor
             if(BinaryDatabase.IsItemInRange(enmItemTypes.Special2, id)) result =
                 GetString(8436 + (id - BinaryDB.ITEM_ID_BASE_SPECIAL2)); //1.0.0: , 1.1.0: 8432, 1.2.0: 8436
 
+            if (string.IsNullOrWhiteSpace(result)) return $"ID {id:D4}";
             if(debug || result == STR_UNKNOWN) return $"{id:D4} - {result}";
             return result;
         }
@@ -421,6 +422,7 @@ namespace SaveEditor
 
             string result = GetString(10142 + id); //1.0.0: , 1.1.0: 10138, 1.2.0: 10142
 
+            if (string.IsNullOrWhiteSpace(result)) return $"ID {id:D3}";
             if(debug) return $"[{id:D3} - {result}]";
             return result;
         }
@@ -443,6 +445,7 @@ namespace SaveEditor
 
             string result = GetString(6614 + id); //1.0.0: , 1.1.0: 6610, 1.2.0: 6614
 
+            if (string.IsNullOrWhiteSpace(result)) return $"ID {id:D3}";
             if(debug) return $"[{id:D3} - {result}]";
             return result;
         }
@@ -452,6 +455,7 @@ namespace SaveEditor
             if (id == -1) return STR_NONE;
 
             string result = GetString(3453 + id); //1.0.0: , 1.1.0: 3452, 1.2.0: 3453
+            if (string.IsNullOrWhiteSpace(result)) result = $"ID {id:D3}";
 
             var @class = BinaryDatabase.ClassEntries[id];
 

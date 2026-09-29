@@ -36,7 +36,7 @@ namespace FethEditor.Core
                 return CanEnterWhiteHeronCup(record);
             if (classId == 44 || classId == 57)
                 return record == 3;
-            if (classId == 59)
+            if (classId == 91)
                 return record == 43;
 
             bool female = IsFemale(record);

@@ -10,6 +10,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
 using SaveEditor;
+using SukiUI;
 
 namespace FethEditor.Gui;
 
@@ -93,6 +94,18 @@ internal static class UiStrings
 
     public static void Apply(Control root, enmLanguage language)
     {
+        string sukiLocale = language switch
+        {
+            enmLanguage.zh_hans => "zh-CN",
+            enmLanguage.jp => "ja-JP",
+            enmLanguage.de => "de-DE",
+            enmLanguage.fr_u or enmLanguage.fr_e => "fr-FR",
+            enmLanguage.es_u or enmLanguage.es_e => "es-ES",
+            enmLanguage.it => "it-IT",
+            _ => "en-US"
+        };
+        var theme = SukiTheme.GetInstance();
+        if (theme.Locale != sukiLocale) theme.Locale = sukiLocale;
         foreach (Control control in root.GetLogicalDescendants().OfType<Control>().Prepend(root))
         {
             if (control.TemplatedParent is not null) continue;

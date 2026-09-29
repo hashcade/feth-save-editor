@@ -515,11 +515,11 @@
                   </StackPanel>
                 </TabItem>
                 <TabItem Name="InheritedClassesTab" Header="Class Mastery">
-                  <Grid Margin="0,8,0,0" RowDefinitions="Auto,*" RowSpacing="12">
+                  <Grid Margin="0,20,0,0" RowDefinitions="Auto,*" RowSpacing="12">
                     <TextBox Classes="Small" Name="ClassSearch" PlaceholderText="Search..."
                              TextChanged="ClassSearch_TextChanged" />
                     <ScrollViewer Grid.Row="1">
-                      <UniformGrid Name="ClassRows" Columns="2" />
+                      <UniformGrid Name="ClassRows" Columns="3" />
                     </ScrollViewer>
                   </Grid>
                 </TabItem>

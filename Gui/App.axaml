@@ -5,6 +5,6 @@
              RequestedThemeVariant="Light">
 
     <Application.Styles>
-        <suki:SukiTheme ThemeColor="Blue" Locale="zh-CN" />
+        <suki:SukiTheme ThemeColor="Blue" />
     </Application.Styles>
 </Application>

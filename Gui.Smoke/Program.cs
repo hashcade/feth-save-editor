@@ -13,6 +13,7 @@ using FethEditor.Gui;
 using FethEditor.Core;
 using SaveEditor;
 using SaveEditor.Structs;
+using SukiUI;
 
 int[] professorThresholds = [0, 100, 1500, 3600, 6400, 10900, 16300, 24000, 32800, 44500];
 for (int rank = 0; rank < professorThresholds.Length; rank++)
@@ -37,6 +38,21 @@ if (args.Length > 0)
 Dispatcher.UIThread.RunJobs();
 if (Database.BinaryDatabase is null)
     Database.Init(enmLanguage.en_u);
+void VerifyDisplayNames()
+{
+    foreach (var (kind, names) in new (string, string[])[]
+    {
+        ("items", Database.BinaryDatabase!.ItemEntries.Keys.Select(id => Database.GetItemName(id)).ToArray()),
+        ("classes", Enumerable.Range(0, Database.MAX_CLASS).Select(id => Database.GetClassName(id)).ToArray()),
+        ("misc", Enumerable.Range(0, Player_V23.COUNT_MISC_ITEMS).Select(id => Database.GetMiscItemName(id)).ToArray()),
+        ("gifts", Enumerable.Range(0, Player_V23.COUNT_GIFT_ITEMS).Select(id => Database.GetGiftItemName(id)).ToArray()),
+        ("magic", Enumerable.Range(0, Database.MAGIC_COUNT).Select(id => Database.GetMagicSkillName(id)).ToArray()),
+        ("battalion skills", Enumerable.Range(0, Database.BATTALION_SKILL_COUNT).Select(id => Database.GetBattalionSkillName(id)).ToArray())
+    })
+        if (names.Any(string.IsNullOrWhiteSpace))
+            throw new InvalidOperationException($"The {kind} list contains unnamed rows.");
+}
+VerifyDisplayNames();
 int[] dancers = Enumerable.Range(0, NgPlusJournal.CharacterCount)
     .Where(record => ClassEligibility.IsAvailable(record, 43)).ToArray();
 int[] expectedDancers = Enumerable.Range(2, 24).Append(27).Concat(Enumerable.Range(38, 4)).ToArray();
@@ -69,13 +85,21 @@ foreach (int record in playableRecords)
     (56, [2]),                // Armored Lord
     (57, [3]),                // High Lord
     (58, [4]),                // Wyvern Master
-    (59, [43])                // Death Knight
+    (91, [43])                // Jeritza's playable Death Knight class
 ];
+int[] masteredSpecialClasses = Enumerable.Range(0, Database.MAX_CLASS)
+    .Where(classId => Database.GetClassName(classId).EndsWith('★')
+        && Database.GetMaxClassExp(classId) > 0 && classId is not (41 or 43))
+    .ToArray();
+int[] uncoveredSpecialClasses = masteredSpecialClasses.Except(exclusiveClasses.Select(entry => entry.ClassId)).ToArray();
+if (uncoveredSpecialClasses.Length > 0)
+    throw new InvalidOperationException("The exclusive-class test matrix misses: "
+        + string.Join(", ", uncoveredSpecialClasses.Select(classId => $"{classId} {Database.GetClassName(classId)}")));
 foreach (var (classId, owners) in exclusiveClasses)
     foreach (int record in playableRecords)
         if (ClassEligibility.IsAvailable(record, classId) != owners.Contains(record))
             throw new InvalidOperationException($"Class {classId} has the wrong owner: record {record}.");
-foreach (int classId in new[] { 41, 45, 46, 47, 48, 55, 91 })
+foreach (int classId in new[] { 41, 45, 46, 47, 48, 55, 59 })
     if (playableRecords.Any(record => ClassEligibility.IsAvailable(record, classId)))
         throw new InvalidOperationException($"NPC class {classId} became available to a playable character.");
 foreach (var (unitId, record) in new[]
@@ -97,13 +121,19 @@ foreach (int record in new[] { 0, 1, 2, 3, 4, 43 })
 }
 if (args.Length > 0)
 {
-    var save = SaveBuffer.Open(args[0]);
-    int slot = Array.FindIndex(save.Data.Characters, character =>
-        ClassEligibility.RecordForUnit(character.data.Id) is 0 or 1);
-    if (slot >= 0)
+    foreach (int record in new[] { 0, 1, 2, 3, 4, 43 })
     {
+        var save = SaveBuffer.Open(args[0]);
+        int slot = Array.FindIndex(save.Data.Characters, character =>
+            ClassEligibility.RecordForUnit(character.data.Id) == record);
+        if (slot < 0 && record == 0)
+        {
+            slot = Array.FindIndex(save.Data.Characters, character => character.data.Id == 1);
+            if (slot >= 0) save.Set($"Characters[{slot}].data.Id", 0);
+        }
+        if (slot < 0)
+            throw new InvalidOperationException($"The fixture is missing special-class record {record}.");
         var before = save.Data.Characters[slot].data;
-        int record = ClassEligibility.RecordForUnit(before.Id);
         save.MaxClassExperience(slot);
         var after = save.Data.Characters[slot].data;
         for (int classId = 0; classId < Database.MAX_CLASS; classId++)
@@ -111,12 +141,17 @@ if (args.Length > 0)
             int expected = ClassEligibility.IsAvailable(record, classId)
                 ? Database.GetMaxClassExp(classId) : before.ClassExp[classId];
             if (after.ClassExp[classId] != expected || after.ClassLevel[classId] != before.ClassLevel[classId])
-                throw new InvalidOperationException($"Max class experience changed an unavailable class or mastery flag: {classId}.");
+                throw new InvalidOperationException($"Max class experience was wrong for record {record}, class {classId}.");
         }
+        foreach (int classId in exclusiveClasses.Where(entry => entry.Owners.Contains(record))
+            .Select(entry => entry.ClassId))
+            if (Database.GetMaxClassExp(classId) <= 0 || after.ClassExp[classId] != Database.GetMaxClassExp(classId))
+                throw new InvalidOperationException($"Special class {classId} was not maxed for record {record}.");
         if (after.CurrentClassExp != after.ClassExp[after.Class])
-            throw new InvalidOperationException("Current class experience was not synchronized.");
+            throw new InvalidOperationException($"Current class experience was not synchronized for record {record}.");
     }
-    var history = save.Inheritance;
+    var historySave = SaveBuffer.Open(args[0]);
+    var history = historySave.Inheritance;
     bool[] masteredBefore = Enumerable.Range(0, NgPlusJournal.ClassCount)
         .Select(classId => history.IsClassMastered(34, classId)).ToArray();
     history.UnlockAvailableClasses(34);
@@ -397,11 +432,24 @@ if (args.Length > 0)
     for (int index = 0; index < supportedLanguages.Length; index++)
     {
         menuItems[index].RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+        VerifyDisplayNames();
         var expectedStorage = supportedLanguages[index] == enmLanguage.zh_hans ? "物品"
             : supportedLanguages[index] is enmLanguage.en_u or enmLanguage.en_e ? "Items"
             : Database.GetString(1814, 1);
         if (tabs.Items.OfType<TabItem>().ElementAt(1).Header?.ToString() != expectedStorage)
             throw new InvalidOperationException($"Navigation label did not follow {supportedLanguages[index]}.");
+        string expectedThemeLocale = supportedLanguages[index] switch
+        {
+            enmLanguage.zh_hans => "zh-CN",
+            enmLanguage.jp => "ja-JP",
+            enmLanguage.de => "de-DE",
+            enmLanguage.fr_u or enmLanguage.fr_e => "fr-FR",
+            enmLanguage.es_u or enmLanguage.es_e => "es-ES",
+            enmLanguage.it => "it-IT",
+            _ => "en-US"
+        };
+        if (SukiTheme.GetInstance().Locale != expectedThemeLocale)
+            throw new InvalidOperationException($"SukiUI locale did not follow {supportedLanguages[index]}.");
     }
     ((MenuItem)language.Items[11]!).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
     Dispatcher.UIThread.RunJobs();
@@ -513,9 +561,32 @@ if (args.Length > 0)
     (window.CaptureRenderedFrame() ?? throw new InvalidOperationException("Class mastery UI did not render."))
         .Save(masteryScreenshot, PngBitmapEncoderOptions.Default);
     Console.WriteLine(masteryScreenshot);
+    var inheritedClassRows = window.FindControl<Avalonia.Controls.Primitives.UniformGrid>("ClassRows")!;
+    if (inheritedClassRows.Columns != 3 || inheritedClassRows.Children.Count < 3
+        || inheritedClassRows.Children[0].Bounds.Y != inheritedClassRows.Children[1].Bounds.Y
+        || inheritedClassRows.Children[1].Bounds.Y != inheritedClassRows.Children[2].Bounds.Y
+        || inheritedClassRows.Children[0].Bounds.X >= inheritedClassRows.Children[1].Bounds.X
+        || inheritedClassRows.Children[1].Bounds.X >= inheritedClassRows.Children[2].Bounds.X)
+        throw new InvalidOperationException("NG+ class mastery entries are not laid out in three columns.");
+    var unlockClasses = window.FindControl<Button>("UnlockInheritedClassesButton")!;
+    var classSearchInput = window.FindControl<TextBox>("ClassSearch")!;
+    double buttonBottom = unlockClasses.TranslatePoint(new Point(0, unlockClasses.Bounds.Height), window)!.Value.Y;
+    double searchTop = classSearchInput.TranslatePoint(new Point(0, 0), window)!.Value.Y;
+    if (searchTop - buttonBottom < 8)
+        throw new InvalidOperationException("NG+ class unlock action overlaps the search field.");
     ((MenuItem)language.Items[1]!).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
     if (tabs.Items.OfType<TabItem>().First().Header?.ToString() != "Main")
         throw new InvalidOperationException("English interface was not restored.");
+    foreach (int page in Enumerable.Range(0, tabs.ItemCount))
+    {
+        tabs.SelectedIndex = page;
+        Dispatcher.UIThread.RunJobs();
+        var chineseLabels = window.GetVisualDescendants().OfType<TextBlock>()
+            .Where(text => text.IsVisible && text.Text?.Any(ch => ch is >= '\u3400' and <= '\u9fff') == true)
+            .Select(text => text.Text).Distinct().ToArray();
+        if (chineseLabels.Length > 0)
+            throw new InvalidOperationException($"Chinese labels on English page {page}: {string.Join(" | ", chineseLabels)}");
+    }
     tabs.SelectedIndex = 0;
     Dispatcher.UIThread.RunJobs();
     var currentProfessorRank = window.FindControl<ComboBox>("CurrentProfessorRank")!;
@@ -734,7 +805,7 @@ if (args.Length > 0)
     tabs.SelectedIndex = 6;
     databaseTabs.SelectedIndex = 2;
     Dispatcher.UIThread.RunJobs();
-    int itemId = Database.BinaryDatabase.ItemEntries.Keys.Max();
+    int itemId = Database.BinaryDatabase!.ItemEntries.Keys.Max();
     var databaseItemSearch = window.FindControl<TextBox>("DatabaseItemSearch")!;
     databaseItemSearch.Text = itemId.ToString();
     Dispatcher.UIThread.RunJobs();
