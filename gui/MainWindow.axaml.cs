@@ -21,9 +21,6 @@ public partial class MainWindow : Window
     private static readonly string[] SkillRanks =
         ["E", "E+", "D", "D+", "C", "C+", "B", "B+", "A", "A+", "S", "S+"];
 
-    private static readonly Choice[] SupportRanks = SupportRankPresets.Values
-        .Select(preset => new Choice(preset.Points, preset.Name)).ToArray();
-
     private static readonly (string Label, string Path)[] GameFields =
     [
         ("Chapter:", "Player.Chapter"),
@@ -544,7 +541,8 @@ public partial class MainWindow : Window
         _loading = true;
         SupportList.ItemsSource = _visibleSupports.Select(index =>
             $"{DisplaySupportName(_save.Inheritance.GetSupportName(index))} · "
-            + UiStrings.Translate(SupportRankFor(_save.Inheritance.GetSupportPoints(index)).Label, _databaseLanguage)).ToArray();
+            + UiStrings.Translate(SupportPairRanks.RankForPoints(index,
+                _save.Inheritance.GetSupportPoints(index)), _databaseLanguage)).ToArray();
         int selected = _visibleSupports.IndexOf(_selectedSupport);
         SupportList.SelectedIndex = selected >= 0 ? selected : _visibleSupports.Count > 0 ? 0 : -1;
         _loading = false;
@@ -557,15 +555,29 @@ public partial class MainWindow : Window
     {
         if (_save is null || _selectedSupport < 0)
         {
-            ShowSupportInput(SupportRankPreset, InheritedSupportPoints, null);
+            ShowSupportInput(SupportRankPreset, InheritedSupportPoints, -1, null);
             return;
         }
         int points = _save.Inheritance.GetSupportPoints(_selectedSupport);
-        ShowSupportInput(SupportRankPreset, InheritedSupportPoints, points);
+        ShowSupportInput(SupportRankPreset, InheritedSupportPoints, _selectedSupport, points);
     }
 
-    private static Choice SupportRankFor(int points) =>
-        SupportRanks.Last(rank => points >= rank.Id);
+    private void MaxInheritedSupport_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_save is null || _selectedSupport < 0) return;
+        try
+        {
+            int before = _save.Inheritance.GetSupportPoints(_selectedSupport);
+            _save.Inheritance.ReachMaxSupportRank(_selectedSupport);
+            if (_save.Inheritance.GetSupportPoints(_selectedSupport) == before) return;
+            RefreshSupports();
+            MarkChanged();
+        }
+        catch (Exception error)
+        {
+            Status.Text = error.Message;
+        }
+    }
 
     private void ApplySupport_Click(object? sender, RoutedEventArgs e)
     {

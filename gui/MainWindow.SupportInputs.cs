@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 using Avalonia.Controls;
+using FethEditor.Core;
 
 namespace FethEditor.Gui;
 
@@ -9,16 +10,27 @@ public partial class MainWindow
 {
     private bool _updatingSupportInputs;
 
-    private void ShowSupportInput(ComboBox rank, TextBox pointsInput, int? points)
+    private void ShowSupportInput(ComboBox rank, TextBox pointsInput, int index, int? points)
     {
         _updatingSupportInputs = true;
         try
         {
-            rank.ItemsSource = points is null ? null : SupportRanks
-                .Select(choice => new Choice(choice.Id, UiStrings.Translate(choice.Label, _databaseLanguage)))
+            string maximum = index < 0 ? "None" : SupportPairRanks.MaxRank(index);
+            TextBlock maximumLabel = ReferenceEquals(rank, CurrentSupportRank)
+                ? CurrentSupportMaxRank : InheritedSupportMaxRank;
+            Button maximumButton = ReferenceEquals(rank, CurrentSupportRank)
+                ? MaxCurrentSupportButton : MaxInheritedSupportButton;
+            maximumLabel.Text = UiStrings.Translate("Maximum rank:", _databaseLanguage)
+                + " " + (maximum == "None" ? "-" : maximum);
+            maximumButton.IsEnabled = points is not null && maximum != "None";
+            Choice[] choices = points is null || index < 0 ? [] : SupportPairRanks.AvailableRanks(index)
+                .Select(name => new Choice(SupportRankPresets.PointsFor(name),
+                    UiStrings.Translate(name, _databaseLanguage)))
                 .ToArray();
+            rank.ItemsSource = choices;
             rank.SelectedIndex = points is null
-                ? -1 : Array.IndexOf(SupportRanks, SupportRankFor(points.Value));
+                ? -1 : Array.FindIndex(choices, choice => choice.Id == SupportRankPresets.PointsFor(
+                    SupportPairRanks.RankForPoints(index, points.Value)));
             pointsInput.Text = points?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
         }
         finally
@@ -52,10 +64,15 @@ public partial class MainWindow
             return;
         ComboBox rank = ReferenceEquals(pointsInput, CurrentSupportPoints)
             ? CurrentSupportRank : SupportRankPreset;
+        int index = ReferenceEquals(rank, CurrentSupportRank)
+            ? SelectedSourceIndex(CurrentSupportList) : _selectedSupport;
+        if (index < 0) return;
         _updatingSupportInputs = true;
         try
         {
-            rank.SelectedIndex = Array.IndexOf(SupportRanks, SupportRankFor(points));
+            int target = SupportRankPresets.PointsFor(SupportPairRanks.RankForPoints(index, points));
+            rank.SelectedIndex = Array.FindIndex(rank.Items.OfType<Choice>().ToArray(),
+                choice => choice.Id == target);
         }
         finally
         {

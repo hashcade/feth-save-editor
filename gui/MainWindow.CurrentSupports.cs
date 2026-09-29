@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using FethEditor.Core;
 using SaveEditor;
 
 namespace FethEditor.Gui;
@@ -18,7 +19,7 @@ public partial class MainWindow
         {
             SetSearchRows(CurrentSupportList, CurrentSupportSearch, supports.Select((points, index) =>
                 $"{DisplaySupportName(Database.GetSupportTalkName(index))} · "
-                + UiStrings.Translate(SupportRankFor(points).Label, _databaseLanguage))
+                + UiStrings.Translate(SupportPairRanks.RankForPoints(index, points), _databaseLanguage))
                 .ToArray(), selectedIndex);
         }
         finally
@@ -38,7 +39,25 @@ public partial class MainWindow
         int index = SelectedSourceIndex(CurrentSupportList);
         int? points = _save is null || index < 0
             ? null : _save.Data.Player.CharacterSupportValues[index];
-        ShowSupportInput(CurrentSupportRank, CurrentSupportPoints, points);
+        ShowSupportInput(CurrentSupportRank, CurrentSupportPoints, index, points);
+    }
+
+    private void MaxCurrentSupport_Click(object? sender, RoutedEventArgs e)
+    {
+        int index = SelectedSourceIndex(CurrentSupportList);
+        if (_save is null || index < 0) return;
+        try
+        {
+            int before = _save.Data.Player.CharacterSupportValues[index];
+            _save.ReachMaxSupportRank(index);
+            if (_save.Data.Player.CharacterSupportValues[index] == before) return;
+            RefreshCurrentSupports(index);
+            MarkChanged();
+        }
+        catch (Exception error)
+        {
+            Status.Text = error.Message;
+        }
     }
 
     private void SetCurrentSupport_Click(object? sender, RoutedEventArgs e)

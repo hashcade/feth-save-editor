@@ -67,6 +67,13 @@ namespace FethEditor.Core
 
         public NgPlusJournal Inheritance => new NgPlusJournal(bytes, Resolve("Player").Offset);
 
+        public void ReachMaxSupportRank(int index)
+        {
+            int target = SupportPairRanks.MaxRankPoints(index);
+            string path = $"Player.CharacterSupportValues[{index}]";
+            Set(path, Math.Max((long)Get(path), target));
+        }
+
         public object Get(string path)
         {
             if (path.Equals("playerName", StringComparison.OrdinalIgnoreCase))

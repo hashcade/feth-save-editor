@@ -21,6 +21,36 @@ string[] embeddedDatabaseFiles = ["fixed_persondata.bin.gz", "fixed_classdata.bi
 string[] embeddedResources = typeof(Database).Assembly.GetManifestResourceNames();
 if (embeddedDatabaseFiles.Any(file => !embeddedResources.Contains(file)))
     throw new InvalidOperationException("Game database files must be embedded in the core assembly.");
+if (SupportPairRanks.Count != Player_V23.COUNT_SUPPORT
+    || Enumerable.Range(0, SupportPairRanks.Count).Count(index => SupportPairRanks.MaxRank(index) != "None") != 264
+    || SupportPairRanks.MaxRank(0) != "S"
+    || SupportPairRanks.MaxRank(34) != "S"
+    || !SupportPairRanks.AvailableRanks(34).SequenceEqual(new[] { "None", "S" })
+    || SupportPairRanks.MaxRank(59) != "B+"
+    || SupportPairRanks.MaxRank(65) != "B"
+    || SupportPairRanks.MaxRank(62) != "A+"
+    || SupportPairRanks.MaxRank(264) != "A"
+    || SupportPairRanks.MaxRank(35) != "None"
+    || SupportPairRanks.MaxRank(267) != "None"
+    || SupportPairRanks.RankForPoints(65, 1001) != "B"
+    || SupportPairRanks.RankForPoints(64, 1001) != "A")
+    throw new InvalidOperationException("Pair-specific support conversation ranks are incorrect.");
+try
+{
+    SupportPairRanks.PointsFor(65, "S");
+    throw new InvalidOperationException("A non-Byleth S rank was accepted.");
+}
+catch (ArgumentException) { }
+var maxJournal = new NgPlusJournal(new byte[0x2000], 0);
+maxJournal.SetSupportPoints(34, 1200);
+maxJournal.SetSupportPoints(65, 1001);
+maxJournal.ReachMaxSupportRanks();
+if (maxJournal.GetSupportPoints(34) != 1200
+    || maxJournal.GetSupportPoints(65) != 1001
+    || maxJournal.GetSupportPoints(59) != 451
+    || maxJournal.GetSupportPoints(62) != 801
+    || maxJournal.GetSupportPoints(35) != 0)
+    throw new InvalidOperationException("Bulk NG+ support maximums changed hidden or invalid values.");
 for (int rank = 0; rank < professorThresholds.Length; rank++)
 {
     if (Database.TeacherLevelupRank[rank] != professorThresholds[rank]
@@ -52,6 +82,27 @@ if (args.Length == 2 && args[0] == "--about-screenshot")
     frame.Save(args[1], PngBitmapEncoderOptions.Default);
     about.Close();
     Console.WriteLine(args[1]);
+    return;
+}
+
+if (args.Length == 3 && args[0] == "--support-screenshots")
+{
+    Database.Init(enmLanguage.en_u);
+    var screenshotWindow = new MainWindow();
+    screenshotWindow.Show();
+    screenshotWindow.LoadSave(args[2]);
+    foreach (var (tabIndex, filename) in new[] { (5, "support.png"), (8, "ng-plus-support.png") })
+    {
+        screenshotWindow.FindControl<TabControl>("EditorTabs")!.SelectedIndex = tabIndex;
+        screenshotWindow.FindControl<ListBox>(tabIndex == 5 ? "CurrentSupportList" : "SupportList")!.SelectedIndex = 65;
+        Dispatcher.UIThread.RunJobs();
+        var frame = screenshotWindow.CaptureRenderedFrame()
+            ?? throw new InvalidOperationException("Support window did not render.");
+        string output = Path.Combine(args[1], filename);
+        frame.Save(output, PngBitmapEncoderOptions.Default);
+        Console.WriteLine(output);
+    }
+    screenshotWindow.Close();
     return;
 }
 
@@ -937,7 +988,8 @@ if (args.Length > 0)
     tabs.SelectedIndex = 8;
     Dispatcher.UIThread.RunJobs();
     var supportPreset = window.FindControl<ComboBox>("SupportRankPreset")!;
-    if (supportPreset.ItemCount != 8 || supportPreset.SelectedItem?.ToString() != "S")
+    if (supportPreset.ItemCount != 6 || supportPreset.SelectedItem?.ToString() != "S"
+        || window.FindControl<TextBlock>("InheritedSupportMaxRank")!.Text != "Maximum rank: S")
         throw new InvalidOperationException("NG+ support rank was not mapped from the stored value.");
     var inheritedSupportPoints = window.FindControl<TextBox>("InheritedSupportPoints")!;
     if (inheritedSupportPoints.Text != "1001")
@@ -957,8 +1009,15 @@ if (args.Length > 0)
     window.FindControl<Button>("SetInheritedSupportButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
     if (window.FindControl<ListBox>("SupportList")!.Items[0]!.ToString()!.EndsWith(" · C+", StringComparison.Ordinal) != true)
         throw new InvalidOperationException("NG+ support rank edit did not update the list.");
-    supportPreset.SelectedIndex = 7;
+    supportPreset.SelectedIndex = supportPreset.ItemCount - 1;
     window.FindControl<Button>("SetInheritedSupportButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    window.FindControl<ListBox>("SupportList")!.SelectedIndex = 65;
+    Dispatcher.UIThread.RunJobs();
+    if (window.FindControl<TextBlock>("InheritedSupportMaxRank")!.Text != "Maximum rank: B")
+        throw new InvalidOperationException("NG+ support cap does not follow the selected pair.");
+    window.FindControl<Button>("MaxInheritedSupportButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    if (inheritedSupportPoints.Text != "301")
+        throw new InvalidOperationException("NG+ maximum button did not use the pair-specific rank.");
 
     tabs.SelectedIndex = 1;
     var items = window.FindControl<ListBox>("StorageList")!;
@@ -988,7 +1047,8 @@ if (args.Length > 0)
     var supports = window.FindControl<ListBox>("CurrentSupportList")!;
     var currentSupportRank = window.FindControl<ComboBox>("CurrentSupportRank")!;
     var currentSupportPoints = window.FindControl<TextBox>("CurrentSupportPoints")!;
-    if (currentSupportRank.ItemCount != 8)
+    if (currentSupportRank.ItemCount != 6
+        || window.FindControl<TextBlock>("CurrentSupportMaxRank")!.Text != "Maximum rank: S")
         throw new InvalidOperationException("Current support ranks were not loaded.");
     string originalCurrentPoints = currentSupportPoints.Text ?? string.Empty;
     currentSupportPoints.Text = "750";
@@ -1007,6 +1067,13 @@ if (args.Length > 0)
         throw new InvalidOperationException("Current support rank edit did not update the list.");
     currentSupportPoints.Text = originalCurrentPoints;
     window.FindControl<Button>("SetCurrentSupportButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    supports.SelectedIndex = 65;
+    Dispatcher.UIThread.RunJobs();
+    if (window.FindControl<TextBlock>("CurrentSupportMaxRank")!.Text != "Maximum rank: B")
+        throw new InvalidOperationException("Current support cap does not follow the selected pair.");
+    window.FindControl<Button>("MaxCurrentSupportButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    if (currentSupportPoints.Text != "301")
+        throw new InvalidOperationException("Current support maximum button did not use the pair-specific rank.");
 
     tabs.SelectedIndex = 3;
     var battalionExp = window.FindControl<TextBox>("BattalionExp")!;

@@ -112,7 +112,8 @@ internal static class UiStrings
             {
                 case TextBlock text when control.Name is not ("Status" or "BattalionUsage"
                     or "StorageCount" or "CurrentCharacterTitle" or "CurrentClassInfo"
-                    or "EquippedBattalionValue" or "StorageSlotLabel")
+                    or "EquippedBattalionValue" or "StorageSlotLabel"
+                    or "CurrentSupportMaxRank" or "InheritedSupportMaxRank")
                     && (control.GetVisualParent() is not ContentPresenter presenter
                         || ReferenceEquals(presenter.Content, control)):
                     Replace(control, text.Text, value => text.Text = value, language);

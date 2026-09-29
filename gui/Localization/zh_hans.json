@@ -114,6 +114,8 @@
   "This is separate from the current run's Instruct Exp and rank on Main.": "这与本周目的指导经验和等级分开保存。",
   "Historical Skill Ranks": "可继承的技能等级",
   "Inherited support rank": "可继承的支援等级",
+  "Maximum rank:": "最高等级：",
+  "Reach maximum rank": "达到最高等级",
   "None": "无",
   "Search...": "搜索…",
   "Load a version-23 slot or auto save to begin.": "请先打开 1.2.0 版本的 slot 或 auto 存档。",

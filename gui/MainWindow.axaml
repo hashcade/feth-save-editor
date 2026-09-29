@@ -448,12 +448,15 @@
           <suki:GlassCard Name="SupportEditorCard" Classes="section" Grid.Column="1">
             <StackPanel Width="340" HorizontalAlignment="Left" Spacing="8">
               <TextBlock Text="Support Editor" FontWeight="SemiBold" />
+              <TextBlock Name="CurrentSupportMaxRank" Text="Maximum rank: -" />
               <TextBlock Text="Rank" />
               <ComboBox Classes="Small" Name="CurrentSupportRank" Margin="-5,0"
                         SelectionChanged="SupportRank_SelectionChanged" />
               <TextBlock Text="Points" />
               <TextBox Classes="Small" Name="CurrentSupportPoints"
                        TextChanged="SupportPoints_TextChanged" />
+              <Button Classes="Small" Name="MaxCurrentSupportButton" Content="Reach maximum rank"
+                      Click="MaxCurrentSupport_Click" />
               <Button Classes="Small" Name="SetCurrentSupportButton" Content="Set" Click="SetCurrentSupport_Click" />
             </StackPanel>
           </suki:GlassCard>
@@ -565,12 +568,15 @@
           <suki:GlassCard Name="InheritanceSupportEditorCard" Classes="section" Grid.Column="1">
             <StackPanel Width="340" HorizontalAlignment="Left" Spacing="8">
               <TextBlock Text="Inherited support rank" FontWeight="SemiBold" />
+              <TextBlock Name="InheritedSupportMaxRank" Text="Maximum rank: -" />
               <TextBlock Text="Rank" />
               <ComboBox Classes="Small" Name="SupportRankPreset" Margin="-5,0"
                         SelectionChanged="SupportRank_SelectionChanged" />
               <TextBlock Text="Points" />
               <TextBox Classes="Small" Name="InheritedSupportPoints"
                        TextChanged="SupportPoints_TextChanged" />
+              <Button Classes="Small" Name="MaxInheritedSupportButton" Content="Reach maximum rank"
+                      Click="MaxInheritedSupport_Click" />
               <Button Classes="Small" Name="SetInheritedSupportButton" Content="Set" Click="ApplySupport_Click" />
             </StackPanel>
           </suki:GlassCard>

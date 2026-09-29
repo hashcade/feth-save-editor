@@ -197,7 +197,10 @@ namespace FethEditor.Cli
                     case "setSupportRank":
                         int supportIndex = Value<int>(item, "index");
                         save.Set($"Player.CharacterSupportValues[{supportIndex}]",
-                            SupportRankPresets.PointsFor(Value<string>(item, "rank")));
+                            SupportPairRanks.PointsFor(supportIndex, Value<string>(item, "rank")));
+                        break;
+                    case "maxSupportRank":
+                        save.ReachMaxSupportRank(Value<int>(item, "index"));
                         break;
                     case "setNgPlusProfessorRank":
                         save.Inheritance.SetProfessorRank(Value<int>(item, "rank"));
@@ -206,8 +209,15 @@ namespace FethEditor.Cli
                         save.Inheritance.SetSupportPoints(Value<int>(item, "index"), Value<int>(item, "points"));
                         break;
                     case "setNgPlusSupportRank":
-                        save.Inheritance.SetSupportPoints(Value<int>(item, "index"),
-                            SupportRankPresets.PointsFor(Value<string>(item, "rank")));
+                        int inheritedSupportIndex = Value<int>(item, "index");
+                        save.Inheritance.SetSupportPoints(inheritedSupportIndex,
+                            SupportPairRanks.PointsFor(inheritedSupportIndex, Value<string>(item, "rank")));
+                        break;
+                    case "maxNgPlusSupportRank":
+                        save.Inheritance.ReachMaxSupportRank(Value<int>(item, "index"));
+                        break;
+                    case "maxNgPlusSupports":
+                        save.Inheritance.ReachMaxSupportRanks();
                         break;
                     case "setNgPlusSkillRank":
                         save.Inheritance.SetSkillRank(Value<int>(item, "recordIndex"), Value<int>(item, "skill"),
@@ -459,7 +469,8 @@ namespace FethEditor.Cli
             if (section == "all" || section == "supports")
                 result["supports"] = data.Player.CharacterSupportValues.Select((value, id) => new
                 { id, name = SafeName(() => Database.GetSupportTalkName(id)), value,
-                    rank = SupportRankPresets.NameFor(value) }).ToArray();
+                    rank = SupportPairRanks.RankForPoints(id, value),
+                    maximumRank = SupportPairRanks.MaxRank(id) }).ToArray();
             if (result.Count == 3) throw new ArgumentException("Unknown section: " + section);
             return result;
         }
@@ -492,7 +503,11 @@ namespace FethEditor.Cli
                 case "abilities": return Database.AbilityList.Select(entry => new { id = entry.Key, name = entry.Value }).ToArray();
                 case "arts": return Database.CombatArtList.Select(entry => new { id = entry.Key, name = entry.Value }).ToArray();
                 case "quests": return Enumerable.Range(0, 150).Select(id => new { id, name = SafeName(() => Database.GetQuestName(id)) }).ToArray();
-                case "supports": return Enumerable.Range(0, Player_V23.COUNT_SUPPORT).Select(id => new { id, name = SafeName(() => Database.GetSupportTalkName(id)) }).ToArray();
+                case "supports": return Enumerable.Range(0, Player_V23.COUNT_SUPPORT).Select(id => new
+                {
+                    id, name = SafeName(() => Database.GetSupportTalkName(id)),
+                    ranks = SupportPairRanks.AvailableRanks(id), maximumRank = SupportPairRanks.MaxRank(id)
+                }).ToArray();
                 case "support-ranks": return SupportRankPresets.Values.Select(entry => new { rank = entry.Name, points = entry.Points }).ToArray();
                 default: throw new ArgumentException("Unknown catalog: " + type);
             }

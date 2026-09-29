@@ -82,6 +82,19 @@ namespace FethEditor.Core
             file[offset + 1] = (byte)(points >> 8);
         }
 
+        public void ReachMaxSupportRank(int index)
+        {
+            int target = SupportPairRanks.MaxRankPoints(index);
+            SetSupportPoints(index, Math.Max(GetSupportPoints(index), target));
+        }
+
+        public void ReachMaxSupportRanks()
+        {
+            for (int index = 0; index < Player_V23.COUNT_SUPPORT; index++)
+                if (SupportPairRanks.MaxRank(index) != "None")
+                    ReachMaxSupportRank(index);
+        }
+
         public void SetSkillRank(int recordIndex, int skillIndex, int rank)
         {
             CheckIndex(recordIndex, CharacterCount, nameof(recordIndex));
@@ -121,7 +134,8 @@ namespace FethEditor.Core
                 {
                     index,
                     name = GetSupportName(index),
-                    maxPoints = GetSupportPoints(index)
+                    maxPoints = GetSupportPoints(index),
+                    maximumRank = SupportPairRanks.MaxRank(index)
                 }).ToArray();
             var characters = Enumerable.Range(0, CharacterCount)
                 .Select(index => new
