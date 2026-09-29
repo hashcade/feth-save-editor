@@ -429,6 +429,14 @@ public partial class MainWindow : Window
         MarkChanged();
     }
 
+    private void UnlockInheritedClasses_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_save is null || _selectedCharacter < 0) return;
+        _save.Inheritance.UnlockAvailableClasses(_selectedCharacter);
+        ShowClasses();
+        MarkChanged();
+    }
+
     private void ShowClasses()
     {
         ClassRows.Children.Clear();

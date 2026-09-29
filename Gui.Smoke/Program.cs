@@ -35,6 +35,65 @@ window.Show();
 if (args.Length > 0)
     window.LoadSave(args[0]);
 Dispatcher.UIThread.RunJobs();
+if (Database.BinaryDatabase is null)
+    Database.Init(enmLanguage.en_u);
+int[] dancers = Enumerable.Range(0, NgPlusJournal.CharacterCount)
+    .Where(record => ClassEligibility.IsAvailable(record, 43)).ToArray();
+int[] expectedDancers = Enumerable.Range(2, 24).Append(27).Concat(Enumerable.Range(38, 4)).ToArray();
+if (!dancers.SequenceEqual(expectedDancers)
+    || ClassEligibility.IsAvailable(34, 43)
+    || !ClassEligibility.IsAvailable(0, 1)
+    || ClassEligibility.IsAvailable(0, 0)
+    || !ClassEligibility.IsAvailable(2, 0)
+    || !ClassEligibility.IsAvailable(0, 42)
+    || !ClassEligibility.IsAvailable(1, 42)
+    || ClassEligibility.IsAvailable(0, 23)
+    || ClassEligibility.IsAvailable(1, 13)
+    || ClassEligibility.IsAvailable(3, 40)
+    || !ClassEligibility.IsAvailable(2, 40)
+    || !ClassEligibility.IsAvailable(43, 59)
+    || ClassEligibility.IsAvailable(44, 59)
+    || !ClassEligibility.IsAvailable(38, 84)
+    || !ClassEligibility.IsAvailable(41, 85)
+    || ClassEligibility.RecordForUnit(1040) != 38
+    || ClassEligibility.RecordForUnit(1046) != 44
+    || Enumerable.Range(0, 100).Count(id => ClassEligibility.IsAvailable(0, id)) != 37
+    || Enumerable.Range(0, 100).Count(id => ClassEligibility.IsAvailable(1, id)) != 36)
+    throw new InvalidOperationException("Playable class or White Heron Cup eligibility is incorrect.");
+foreach (int record in Enumerable.Range(0, NgPlusJournal.CharacterCount)
+    .Where(ClassEligibility.IsPlayableRecord))
+    foreach (int classId in Enumerable.Range(0, NgPlusJournal.ClassCount))
+        _ = ClassEligibility.IsAvailable(record, classId);
+if (args.Length > 0)
+{
+    var save = SaveBuffer.Open(args[0]);
+    int slot = Array.FindIndex(save.Data.Characters, character =>
+        ClassEligibility.RecordForUnit(character.data.Id) is 0 or 1);
+    if (slot >= 0)
+    {
+        var before = save.Data.Characters[slot].data;
+        int record = ClassEligibility.RecordForUnit(before.Id);
+        save.MaxClassExperience(slot);
+        var after = save.Data.Characters[slot].data;
+        for (int classId = 0; classId < Database.MAX_CLASS; classId++)
+        {
+            int expected = ClassEligibility.IsAvailable(record, classId)
+                ? Database.GetMaxClassExp(classId) : before.ClassExp[classId];
+            if (after.ClassExp[classId] != expected || after.ClassLevel[classId] != before.ClassLevel[classId])
+                throw new InvalidOperationException($"Max class experience changed an unavailable class or mastery flag: {classId}.");
+        }
+        if (after.CurrentClassExp != after.ClassExp[after.Class])
+            throw new InvalidOperationException("Current class experience was not synchronized.");
+    }
+    var history = save.Inheritance;
+    bool[] masteredBefore = Enumerable.Range(0, NgPlusJournal.ClassCount)
+        .Select(classId => history.IsClassMastered(34, classId)).ToArray();
+    history.UnlockAvailableClasses(34);
+    for (int classId = 0; classId < NgPlusJournal.ClassCount; classId++)
+        if (history.IsClassMastered(34, classId) !=
+            (ClassEligibility.IsAvailable(34, classId) || masteredBefore[classId]))
+            throw new InvalidOperationException($"NG+ bulk unlock changed an unavailable class: {classId}.");
+}
 if (args.Length > 0 && !window.FindControl<MenuItem>("SaveMenuItem")!.IsEnabled)
     throw new InvalidOperationException("A loaded save cannot be written before editing.");
 if (args.Length > 0 && window.FindControl<TextBlock>("PlayerCardTitle")?.Text != "Player")
@@ -98,6 +157,15 @@ if (Math.Abs(supportListCard.Bounds.Width - battalionListCard.Bounds.Width) > 1 
     Math.Abs(supportListCard.Bounds.Height - supportEditorCard.Bounds.Height) > 1)
     throw new InvalidOperationException("Support cards do not match the battalion layout.");
 tabs.SelectedIndex = 7;
+Dispatcher.UIThread.RunJobs();
+var inheritedClassesTab = window.FindControl<TabItem>("InheritedClassesTab")!;
+var inheritedClassUnlock = window.FindControl<Button>("UnlockInheritedClassesButton")!;
+var inheritedTabs = window.FindControl<TabControl>("InheritanceTabs")!;
+inheritedTabs.SelectedItem = inheritedClassesTab;
+Dispatcher.UIThread.RunJobs();
+if (!inheritedClassUnlock.IsVisible)
+    throw new InvalidOperationException("NG+ class bulk unlock is not available on the class tab.");
+inheritedTabs.SelectedIndex = 0;
 Dispatcher.UIThread.RunJobs();
 var inheritanceListCard = window.FindControl<Control>("InheritanceCharacterListCard")!;
 var inheritanceEditorCard = window.FindControl<Control>("InheritanceCharacterEditorCard")!;

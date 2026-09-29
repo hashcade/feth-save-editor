@@ -180,6 +180,9 @@ namespace FethEditor.Cli
                         save.Inheritance.SetClassMastered(Value<int>(item, "recordIndex"), Value<int>(item, "classId"),
                             Value<bool>(item, "mastered"));
                         break;
+                    case "unlockNgPlusClasses":
+                        save.Inheritance.UnlockAvailableClasses(Value<int>(item, "recordIndex"));
+                        break;
                     case "maxClassExp":
                         save.MaxClassExperience(Value<int>(item, "slot"));
                         break;

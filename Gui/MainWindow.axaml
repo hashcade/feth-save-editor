@@ -514,7 +514,7 @@
                     <UniformGrid Name="SkillRows" Columns="2" />
                   </StackPanel>
                 </TabItem>
-                <TabItem Header="Class Mastery">
+                <TabItem Name="InheritedClassesTab" Header="Class Mastery">
                   <Grid Margin="0,8,0,0" RowDefinitions="Auto,*" RowSpacing="12">
                     <TextBox Classes="Small" Name="ClassSearch" PlaceholderText="Search..."
                              TextChanged="ClassSearch_TextChanged" />
@@ -528,6 +528,10 @@
                       HorizontalAlignment="Right" VerticalAlignment="Top"
                       IsVisible="{Binding IsSelected, ElementName=InheritedSkillsTab}"
                       Click="MaxInheritedSkills_Click" />
+              <Button Name="UnlockInheritedClassesButton" Classes="Small" Content="Unlock All"
+                      HorizontalAlignment="Right" VerticalAlignment="Top"
+                      IsVisible="{Binding IsSelected, ElementName=InheritedClassesTab}"
+                      Click="UnlockInheritedClasses_Click" />
             </Grid>
           </suki:GlassCard>
         </Grid>

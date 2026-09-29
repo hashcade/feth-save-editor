@@ -242,8 +242,13 @@ namespace FethEditor.Core
 
         public void MaxClassExperience(int slot)
         {
+            int unitId = Data.Characters[slot].data.Id;
+            int record = ClassEligibility.RecordForUnit(unitId);
+            if (record < 0)
+                throw new InvalidOperationException($"No playable character rules are known for unit {unitId}.");
             for (int i = 0; i < Database.MAX_CLASS; i++)
-                Set($"Characters[{slot}].data.ClassExp[{i}]", Database.GetMaxClassExp(i));
+                if (ClassEligibility.IsAvailable(record, i))
+                    Set($"Characters[{slot}].data.ClassExp[{i}]", Database.GetMaxClassExp(i));
         }
 
         public void UnlockAll(int slot, string kind)

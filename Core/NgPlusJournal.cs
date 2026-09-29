@@ -98,6 +98,16 @@ namespace FethEditor.Core
             file[offset] = mastered ? (byte)(file[offset] | mask) : (byte)(file[offset] & ~mask);
         }
 
+        public void UnlockAvailableClasses(int recordIndex)
+        {
+            CheckIndex(recordIndex, CharacterCount, nameof(recordIndex));
+            if (!ClassEligibility.IsPlayableRecord(recordIndex))
+                throw new ArgumentException($"Record {recordIndex} is not a playable character.", nameof(recordIndex));
+            for (int classId = 0; classId < ClassCount; classId++)
+                if (ClassEligibility.IsAvailable(recordIndex, classId))
+                    SetClassMastered(recordIndex, classId, true);
+        }
+
         private (int offset, byte mask) ClassBit(int recordIndex, int classId)
         {
             CheckIndex(recordIndex, CharacterCount, nameof(recordIndex));
