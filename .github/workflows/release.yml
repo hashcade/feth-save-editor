@@ -66,12 +66,13 @@ jobs:
       - name: Publish CLI
         run: dotnet publish Cli/Cli.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -o dist/cli/${{ matrix.rid }}
 
+      - name: Package platform download
+        run: python tools/package_release.py ${{ matrix.rid }}
+
       - uses: actions/upload-artifact@v7
         with:
           name: feth-release-${{ matrix.rid }}
-          path: |
-            dist/gui/${{ matrix.rid }}/
-            dist/cli/${{ matrix.rid }}/
+          path: dist/feth-save-editor-v*-${{ matrix.rid }}.zip
           if-no-files-found: error
 
   publish:
@@ -92,22 +93,16 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           pattern: feth-release-*
-          path: packages
+          path: dist
+          merge-multiple: true
 
-      - name: Assemble platform archives
+      - name: Verify platform archives
         shell: bash
         run: |
           set -euo pipefail
           version="$(<VERSION)"
-          mkdir -p dist
           for rid in win-x64 osx-arm64 osx-x64 linux-x64; do
-            package="packages/feth-release-$rid"
-            test -d "$package/gui/$rid"
-            test -d "$package/cli/$rid"
-            mkdir -p "staging/$rid/Gui" "staging/$rid/Cli"
-            cp -R "$package/gui/$rid/." "staging/$rid/Gui/"
-            cp -R "$package/cli/$rid/." "staging/$rid/Cli/"
-            (cd "staging/$rid" && zip -qr "../../dist/feth-save-editor-v$version-$rid.zip" Gui Cli)
+            test -f "dist/feth-save-editor-v$version-$rid.zip"
           done
           (cd dist && sha256sum ./*.zip > SHA256SUMS && sha256sum -c SHA256SUMS)
 
