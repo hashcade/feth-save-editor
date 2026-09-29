@@ -18,6 +18,13 @@
     <Style Selector="ListBoxItem">
       <Setter Property="Padding" Value="10,7" />
     </Style>
+    <Style Selector="ListBox">
+      <Setter Property="ItemsPanel">
+        <ItemsPanelTemplate>
+          <VirtualizingStackPanel CacheLength="1" />
+        </ItemsPanelTemplate>
+      </Setter>
+    </Style>
     <Style Selector="TabControl#EditorTabs /template/ ItemsPresenter#PART_ItemsPresenter">
       <Setter Property="IsVisible" Value="False" />
     </Style>
