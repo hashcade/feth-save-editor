@@ -64,6 +64,11 @@ if (!dancers.SequenceEqual(expectedDancers)
     || ClassEligibility.IsAvailable(0, 0)
     || !ClassEligibility.IsAvailable(2, 0)
     || ClassEligibility.IsAvailable(0, 23)
+    || ClassEligibility.IsAvailable(1, 23)
+    || ClassEligibility.IsAvailable(0, 54)
+    || !ClassEligibility.IsAvailable(1, 54)
+    || !ClassEligibility.IsAvailable(2, 54)
+    || ClassEligibility.IsAvailable(43, 54)
     || ClassEligibility.IsAvailable(1, 13)
     || !ClassEligibility.IsAvailable(38, 84)
     || !ClassEligibility.IsAvailable(41, 85)
@@ -116,6 +121,8 @@ foreach (int record in new[] { 0, 1, 2, 3, 4, 43 })
     var journal = new NgPlusJournal(new byte[0x2000], 0);
     journal.SetClassMastered(record, 60, true); // An existing non-playable flag must survive the bulk edit.
     journal.UnlockAvailableClasses(record);
+    if (record == 1 && (!journal.IsClassMastered(record, 54) || journal.IsClassMastered(record, 23)))
+        throw new InvalidOperationException("Female Byleth must unlock the intermediate Pegasus Knight, not its advanced variant.");
     for (int classId = 0; classId < NgPlusJournal.ClassCount; classId++)
         if (journal.IsClassMastered(record, classId) !=
             (classId == 60 || ClassEligibility.IsAvailable(record, classId)))
@@ -138,6 +145,9 @@ if (args.Length > 0)
         var before = save.Data.Characters[slot].data;
         save.MaxClassExperience(slot);
         var after = save.Data.Characters[slot].data;
+        if (record == 1 && (after.ClassExp[54] != Database.GetMaxClassExp(54)
+            || after.ClassExp[23] != before.ClassExp[23]))
+            throw new InvalidOperationException("Female Byleth class experience targeted the wrong Pegasus Knight.");
         for (int classId = 0; classId < Database.MAX_CLASS; classId++)
         {
             int expected = ClassEligibility.IsAvailable(record, classId)

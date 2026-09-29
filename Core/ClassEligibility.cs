@@ -22,6 +22,9 @@ namespace FethEditor.Core
             if (!IsPlayableRecord(record) || classId < 0 || classId >= Database.MAX_CLASS)
                 return false;
 
+            // The playable intermediate Pegasus Knight is 54; 23 is a separate advanced variant.
+            if (classId == 23)
+                return false;
             if (classId is 0 or 1)
                 return classId == StartingClass(record);
             if (classId == 6)
@@ -42,7 +45,7 @@ namespace FethEditor.Core
             bool female = IsFemale(record);
             if (classId is 13 or 15 or 18 or 27 or 29 or 38)
                 return !female;
-            if (classId is 23 or 31 or 39 or 86 or 87)
+            if (classId is 31 or 39 or 54 or 86 or 87)
                 return female;
             return classId is >= 2 and <= 39 or 84 or 85;
         }
