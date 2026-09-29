@@ -153,14 +153,14 @@ namespace SaveEditor.Structs
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 385)]
         public byte[] field_17D8;
         
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 115)]
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 110)] //10 * 11 DLC character skill ranks
         public byte[] field_1959;
-             
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 455)] //1.0.0: 35 * 12 Byte, 1.1.0: 35 * 13 Byte
-        public byte[] field_19CC;
-     
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 125)]
-        public byte[] field_1B93;
+
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 455)] //35 * 13 class mastery flags
+        public byte[] field_19C7;
+
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 130)] //10 * 13 additional character class mastery flags
+        public byte[] field_1B8E;
 
         public uint field_1C10;
 

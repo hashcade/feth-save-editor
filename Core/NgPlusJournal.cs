@@ -15,11 +15,10 @@ namespace FethEditor.Core
         private const int ProfessorOffset = 0x17CE;
         private const int SupportOffset = 0x1576;
         private const int SkillOffset = 0x17D8;
-        private const int ClassOffset = 0x19CC;
+        // The 45 x 11 skill ranks end at 0x19C7. Class flags begin immediately
+        // afterward, including five bytes currently grouped with field_1959.
+        private const int ClassOffset = SkillOffset + CharacterCount * SkillCount;
         private const int ClassBytesPerCharacter = 13;
-        private const int BaseCharacterCount = 35;
-        private const int AdditionalClassOffset = 0x1B93;
-        private const int AdditionalClassBits = 100;
 
         private readonly byte[] file;
         private readonly int player;
@@ -28,8 +27,7 @@ namespace FethEditor.Core
         {
             this.file = file ?? throw new ArgumentNullException(nameof(file));
             player = playerOffset;
-            if (player < 0 || player + AdditionalClassOffset +
-                (CharacterCount - BaseCharacterCount) * AdditionalClassBits / 8 > file.Length)
+            if (player < 0 || player + ClassOffset + CharacterCount * ClassBytesPerCharacter > file.Length)
                 throw new InvalidDataException("The NG+ journal extends beyond the save file.");
         }
 
@@ -112,12 +110,8 @@ namespace FethEditor.Core
         {
             CheckIndex(recordIndex, CharacterCount, nameof(recordIndex));
             CheckIndex(classId, ClassCount, nameof(classId));
-            if (recordIndex < BaseCharacterCount)
-                return (player + ClassOffset + recordIndex * ClassBytesPerCharacter + classId / 8,
-                    (byte)(1 << (classId % 8)));
-
-            int bit = (recordIndex - BaseCharacterCount) * AdditionalClassBits + classId;
-            return (player + AdditionalClassOffset + bit / 8, (byte)(1 << (bit % 8)));
+            return (player + ClassOffset + recordIndex * ClassBytesPerCharacter + classId / 8,
+                (byte)(1 << (classId % 8)));
         }
 
         public object Snapshot()

@@ -45,10 +45,9 @@ def main() -> None:
         struct.pack_into("<H", raw, player + 0x1576, 1001)
         raw[player + 0x17CE] = 9
         raw[player + 0x17D8] = 11
-        raw[player + 0x19CC + 42 // 8] |= 1 << (42 % 8)
-        # Records 35-44 use a packed 100-bit class set, unlike the first 35.
-        extra_class_bit = (38 - 35) * 100 + 42
-        raw[player + 0x1B93 + extra_class_bit // 8] |= 1 << (extra_class_bit % 8)
+        class_start = player + 0x17D8 + 45 * 11
+        raw[class_start + 42 // 8] |= 1 << (42 % 8)
+        raw[class_start + 38 * 13 + 42 // 8] |= 1 << (42 % 8)
         struct.pack_into("<I", raw, 0, checksum(raw))
         source.write_bytes(raw)
 
@@ -152,14 +151,14 @@ def main() -> None:
         assert ng_edited[player + 0x17CE] == 8
         assert struct.unpack_from("<H", ng_edited, player + 0x1576)[0] == 1200
         assert ng_edited[player + 0x17D8] == 10
-        assert not ng_edited[player + 0x19CC + 42 // 8] & (1 << (42 % 8))
-        assert ng_edited[player + 0x19CC + 34 * 13 + 99 // 8] & (1 << (99 % 8))
-        assert not ng_edited[player + 0x1B93 + extra_class_bit // 8] & (1 << (extra_class_bit % 8))
-        assert ng_edited[player + 0x1B93 + 124] & 0x80
+        assert not ng_edited[class_start + 42 // 8] & (1 << (42 % 8))
+        assert ng_edited[class_start + 34 * 13 + 99 // 8] & (1 << (99 % 8))
+        assert not ng_edited[class_start + 38 * 13 + 42 // 8] & (1 << (42 % 8))
+        assert ng_edited[class_start + 44 * 13 + 99 // 8] & 0x08
         changed_offsets = {0, 1, 2, 3, player + 0x17CE, player + 0x1576,
                            player + 0x1577, player + 0x17D8,
-                           player + 0x19CC + 42 // 8, player + 0x19CC + 34 * 13 + 99 // 8,
-                           player + 0x1B93 + extra_class_bit // 8, player + 0x1B93 + 124}
+                           class_start + 42 // 8, class_start + 34 * 13 + 99 // 8,
+                           class_start + 38 * 13 + 42 // 8, class_start + 44 * 13 + 99 // 8}
         assert all(before == after for index, (before, after) in enumerate(zip(raw, ng_edited))
                    if index not in changed_offsets)
         assert struct.unpack_from("<I", ng_edited, 0)[0] == checksum(ng_edited)
