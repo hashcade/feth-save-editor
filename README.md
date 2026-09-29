@@ -8,7 +8,7 @@ Edit Fire Emblem: Three Houses saves, including inherited New Game+ progress.
 - NG+: inherited professor rank, character skills and class mastery, and supports.
 - System save: unlock flags alongside the selected slot.
 
-![Roster editor](docs/roster-en.png)
+![Roster editor](docs/roster.png)
 
 ## Get started
 
