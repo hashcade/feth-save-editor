@@ -4,12 +4,19 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag whose notes should be regenerated
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 jobs:
   package:
+    if: github.event_name == 'push'
     strategy:
       fail-fast: false
       matrix:
@@ -68,12 +75,19 @@ jobs:
           if-no-files-found: error
 
   publish:
+    if: github.event_name == 'push'
     needs: package
     runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
 
       - uses: actions/download-artifact@v8
         with:
@@ -97,10 +111,15 @@ jobs:
           done
           (cd dist && sha256sum ./*.zip > SHA256SUMS && sha256sum -c SHA256SUMS)
 
-      - name: Publish GitHub release
+      - name: Generate changelog and create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx --yes changelogithub@15.0.5 --to "$GITHUB_REF_NAME"
+
+      - name: Upload release files
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create "$GITHUB_REF_NAME" dist/*.zip dist/SHA256SUMS --verify-tag --title "$GITHUB_REF_NAME" --generate-notes
+        run: gh release upload "$GITHUB_REF_NAME" dist/*.zip dist/SHA256SUMS --clobber
 
       - name: Verify release downloads
         env:
@@ -111,3 +130,24 @@ jobs:
           mkdir -p release-download
           gh release download "$GITHUB_REF_NAME" --dir release-download
           (cd release-download && sha256sum -c SHA256SUMS)
+
+  refresh-notes:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: refs/tags/${{ inputs.tag }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+
+      - name: Regenerate changelog for existing release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: npx --yes changelogithub@15.0.5 --to "$RELEASE_TAG"
