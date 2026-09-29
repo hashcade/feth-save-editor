@@ -17,6 +17,10 @@ using SaveEditor.Structs;
 using SukiUI;
 
 int[] professorThresholds = [0, 100, 1500, 3600, 6400, 10900, 16300, 24000, 32800, 44500];
+string[] embeddedDatabaseFiles = ["fixed_persondata.bin.gz", "fixed_classdata.bin.gz", "fixed_data.bin.gz", "msgdata.bin.gz"];
+string[] embeddedResources = typeof(Database).Assembly.GetManifestResourceNames();
+if (embeddedDatabaseFiles.Any(file => !embeddedResources.Contains(file)))
+    throw new InvalidOperationException("Game database files must be embedded in the core assembly.");
 for (int rank = 0; rank < professorThresholds.Length; rank++)
 {
     if (Database.TeacherLevelupRank[rank] != professorThresholds[rank]
