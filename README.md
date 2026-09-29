@@ -12,7 +12,7 @@ Edit Fire Emblem: Three Houses saves, including inherited New Game+ progress.
 
 ## Get started
 
-Download the GUI from the latest [build](https://github.com/jinghaihan/feth-save-editor/actions/workflows/build.yml), open a `slotXX` or `auto` save, make your edits, then save a copy to another folder. Keep your original save until you have checked the edited copy in-game. The editor targets Fire Emblem: Three Houses v1.2.0.
+Download the GUI from the [latest release](https://github.com/jinghaihan/feth-save-editor/releases/latest), open a `slotXX` or `auto` save, make your edits, then save a copy to another folder. Keep your original save until you have checked the edited copy in-game. The editor targets Fire Emblem: Three Houses v1.2.0.
 
 To run from source with the .NET 10 SDK:
 

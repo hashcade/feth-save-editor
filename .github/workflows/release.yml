@@ -6,25 +6,37 @@ on:
       - 'v*'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  windows:
-    runs-on: windows-2025
+  package:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2025
+            rid: win-x64
+            cli: FethEditor.Cli.exe
+          - os: macos-15
+            rid: osx-arm64
+            cli: FethEditor.Cli
+          - os: macos-15
+            rid: osx-x64
+            cli: FethEditor.Cli
+          - os: ubuntu-24.04
+            rid: linux-x64
+            cli: FethEditor.Cli
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
 
-      - uses: microsoft/setup-msbuild@v3
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
 
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: lts/*
 
       - name: Verify tag version
         shell: pwsh
@@ -32,50 +44,70 @@ jobs:
           $version = (Get-Content VERSION -Raw).Trim()
           if ($env:GITHUB_REF_NAME -ne "v$version") { throw "Tag does not match VERSION" }
 
-      - name: Build .NET Framework projects
-        run: msbuild FireEmblemThreeHouse.sln /t:Rebuild /p:Configuration=Release /p:Platform="Any CPU" /v:minimal
+      - name: Build and test
+        run: dotnet build FethEditor.slnx -c Release --nologo
 
-      - name: Package and verify downloads
-        run: python tools/package.py
+      - name: Verify CLI save editing
+        run: python tools/test_cli.py --cli Cli/bin/Release/net10.0/${{ matrix.cli }}
+
+      - name: Verify GUI rendering
+        run: dotnet run --project Gui.Smoke/Gui.Smoke.csproj -c Release --no-build
+
+      - name: Publish GUI
+        run: dotnet publish Gui/FethEditor.Gui.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o dist/gui/${{ matrix.rid }}
+
+      - name: Publish CLI
+        run: dotnet publish Cli/Cli.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -o dist/cli/${{ matrix.rid }}
 
       - uses: actions/upload-artifact@v7
         with:
-          name: fe3h-editor-release
-          path: dist/*
+          name: feth-release-${{ matrix.rid }}
+          path: |
+            dist/gui/${{ matrix.rid }}/
+            dist/cli/${{ matrix.rid }}/
           if-no-files-found: error
 
-      - name: Generate release notes
-        shell: pwsh
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          npx --yes changelogithub@15.0.5 --prerelease
-          if ($LASTEXITCODE -ne 0) { throw "Failed to generate release notes" }
+  publish:
+    needs: package
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
 
-      - name: Upload release files
-        shell: pwsh
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: feth-release-*
+          path: packages
+
+      - name: Assemble platform archives
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(<VERSION)"
+          mkdir -p dist
+          for rid in win-x64 osx-arm64 osx-x64 linux-x64; do
+            package="packages/feth-release-$rid"
+            test -d "$package/gui/$rid"
+            test -d "$package/cli/$rid"
+            mkdir -p "staging/$rid/Gui" "staging/$rid/Cli"
+            cp -R "$package/gui/$rid/." "staging/$rid/Gui/"
+            cp -R "$package/cli/$rid/." "staging/$rid/Cli/"
+            (cd "staging/$rid" && zip -qr "../../dist/feth-save-editor-v$version-$rid.zip" Gui Cli)
+          done
+          (cd dist && sha256sum ./*.zip > SHA256SUMS && sha256sum -c SHA256SUMS)
+
+      - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          $version = (Get-Content VERSION -Raw).Trim()
-          gh release upload $env:GITHUB_REF_NAME `
-            dist/FETH_SaveEditor.exe `
-            "dist/fe3h-editor-v$version.zip" `
-            dist/SHA256SUMS `
-            --clobber
-          if ($LASTEXITCODE -ne 0) { throw "Failed to upload release files" }
+        run: gh release create "$GITHUB_REF_NAME" dist/*.zip dist/SHA256SUMS --verify-tag --title "$GITHUB_REF_NAME" --generate-notes
 
-      - name: Verify downloadable files
-        shell: pwsh
+      - name: Verify release downloads
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
         run: |
-          $version = (Get-Content VERSION -Raw).Trim()
-          New-Item -ItemType Directory -Path release-download | Out-Null
-          gh release download $env:GITHUB_REF_NAME --dir release-download
-          if ($LASTEXITCODE -ne 0) { throw "Failed to download release" }
-          foreach ($name in @("FETH_SaveEditor.exe", "fe3h-editor-v$version.zip")) {
-            $expected = (Get-FileHash "dist/$name" -Algorithm SHA256).Hash
-            $actual = (Get-FileHash "release-download/$name" -Algorithm SHA256).Hash
-            if ($expected -ne $actual) { throw "Download checksum mismatch: $name" }
-          }
+          set -euo pipefail
+          mkdir -p release-download
+          gh release download "$GITHUB_REF_NAME" --dir release-download
+          (cd release-download && sha256sum -c SHA256SUMS)
