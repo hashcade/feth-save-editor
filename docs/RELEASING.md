@@ -4,11 +4,8 @@
 
 Every push to `main`, pull request, or manual run of the [build workflow](../.github/workflows/build.yml) builds and tests the GUI and CLI on Windows, macOS, and Linux. It then packages and tests a ZIP for each platform, with one shared, self-contained .NET runtime for both programs. The `feth-gui-*` and `feth-cli-*` build artifacts are retained for 14 days.
 
-To publish after reviewing a successful build on all platforms:
+To publish from a clean, synchronized `main` branch, run `python3 tools/release.py` and choose patch, minor, or major. You can also pass the type directly, for example `python3 tools/release.py patch`. The script builds and tests locally, updates `VERSION`, creates a `chore: release vX.Y.Z` commit, pushes `main`, then creates and pushes an annotated tag. Use `--check` to preview without publishing.
 
-1. Update `VERSION` in a Conventional Commit and push `main`.
-2. Wait for the build workflow to pass for that commit.
-3. Run `python3 tools/release.py --current --check` to check readiness.
-4. Run `python3 tools/release.py --current` to create and push an annotated version tag.
+For the already committed `0.2.1` version only, `python3 tools/release.py --current` tags the prepared commit after its build workflow succeeds. Do not use `--current` for subsequent releases.
 
-The [release workflow](../.github/workflows/release.yml) builds and tests the tagged source on all four targets, publishes the platform ZIPs, then downloads and checks their SHA-256 hashes. The release script creates and pushes the version tag; the workflow creates the GitHub release. The script requires GitHub CLI authentication.
+The [release workflow](../.github/workflows/release.yml) builds and tests the tagged source on all four targets, publishes the platform ZIPs, then downloads and checks their SHA-256 hashes. The workflow creates the GitHub release. The `--current` migration path requires GitHub CLI authentication.
