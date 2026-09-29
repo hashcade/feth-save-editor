@@ -25,7 +25,7 @@ namespace FethEditor.Cli
             {
                 if (args.Length == 0 || args[0] == "help" || args[0] == "--help")
                 {
-                    Console.WriteLine("FethEditor.Cli inspect|get|apply|catalog|export-character|import-character --input <slot00> [options]");
+                    Console.WriteLine("FethEditor.Cli inspect|get|apply|inspect-system|apply-system|catalog|export-character|import-character --input <save> [options]");
                     return 0;
                 }
 
@@ -38,11 +38,22 @@ namespace FethEditor.Cli
 
                 if (command == "catalog")
                 {
-                    Print(Catalog(Required(options, "type")));
+                    string type = Required(options, "type");
+                    Print(options.TryGetValue("id", out string id)
+                        ? CatalogDetail(type, int.Parse(id, CultureInfo.InvariantCulture))
+                        : Catalog(type));
                     return 0;
                 }
 
                 string input = Required(options, "input");
+                if (command == "inspect-system" || command == "apply-system")
+                {
+                    SystemBuffer system = SystemBuffer.Open(input);
+                    if (command == "inspect-system") Print(InspectSystem(system, input,
+                        options.TryGetValue("section", out string systemSection) ? systemSection : "all"));
+                    else ApplySystem(system, input, options);
+                    return 0;
+                }
                 SaveBuffer save = SaveBuffer.Open(input);
 
                 switch (command)
@@ -118,11 +129,14 @@ namespace FethEditor.Cli
 
         private static void Apply(SaveBuffer save, string input, Dictionary<string, string> options)
         {
-            var patch = Json.DeserializeObject(File.ReadAllText(Required(options, "patch"))) as Dictionary<string, object>;
-            if (patch == null) throw new InvalidDataException("Patch must be a JSON object.");
+            var patch = ReadPatch(options);
             ApplyOperations(save, patch);
             Finish(save, input, options);
         }
+
+        private static Dictionary<string, object> ReadPatch(Dictionary<string, string> options) =>
+            Json.DeserializeObject(File.ReadAllText(Required(options, "patch"))) as Dictionary<string, object>
+            ?? throw new InvalidDataException("Patch must be a JSON object.");
 
         private static void ApplyOperations(SaveBuffer save, Dictionary<string, object> patch)
         {
@@ -159,6 +173,14 @@ namespace FethEditor.Cli
                     case "characterItemDurability":
                         save.RestoreCharacterItemDurability(Value<int>(item, "slot"));
                         break;
+                    case "setCharacterItem":
+                        int itemId = Value<int>(item, "id");
+                        int durability = item.TryGetValue("durability", out object explicitDurability)
+                            ? Convert.ToInt32(explicitDurability, CultureInfo.InvariantCulture)
+                            : Database.GetItemDurability(itemId);
+                        save.SetCharacterItem(Value<int>(item, "slot"), Value<int>(item, "itemSlot"),
+                            checked((short)itemId), checked((byte)durability));
+                        break;
                     case "maxSkillExp":
                         save.MaxSkillExperience(Value<int>(item, "slot"));
                         break;
@@ -166,11 +188,26 @@ namespace FethEditor.Cli
                         save.SetSkillRank(Value<int>(item, "slot"), Value<int>(item, "skill"),
                             Value<int>(item, "rank"), Value<int>(item, "experience"));
                         break;
+                    case "setProfessorRank":
+                        int professorRank = Value<int>(item, "rank");
+                        if (professorRank < 0 || professorRank >= Database.TeacherLevelupRank.Length)
+                            throw new ArgumentOutOfRangeException("rank");
+                        save.Set("Activities.InstructExp", Database.TeacherLevelupRank[professorRank]);
+                        break;
+                    case "setSupportRank":
+                        int supportIndex = Value<int>(item, "index");
+                        save.Set($"Player.CharacterSupportValues[{supportIndex}]",
+                            SupportRankPresets.PointsFor(Value<string>(item, "rank")));
+                        break;
                     case "setNgPlusProfessorRank":
                         save.Inheritance.SetProfessorRank(Value<int>(item, "rank"));
                         break;
                     case "setNgPlusSupport":
                         save.Inheritance.SetSupportPoints(Value<int>(item, "index"), Value<int>(item, "points"));
+                        break;
+                    case "setNgPlusSupportRank":
+                        save.Inheritance.SetSupportPoints(Value<int>(item, "index"),
+                            SupportRankPresets.PointsFor(Value<string>(item, "rank")));
                         break;
                     case "setNgPlusSkillRank":
                         save.Inheritance.SetSkillRank(Value<int>(item, "recordIndex"), Value<int>(item, "skill"),
@@ -218,6 +255,87 @@ namespace FethEditor.Cli
                 return (T)value;
             }
             return (T)Convert.ChangeType(value, typeof(T), CultureInfo.InvariantCulture);
+        }
+
+        private static object InspectSystem(SystemBuffer system, string input, string section)
+        {
+            var result = new Dictionary<string, object>
+            {
+                ["format"] = "FE3H system save",
+                ["sha256"] = SaveBuffer.Digest(File.ReadAllBytes(input)),
+                ["sourceVersion"] = system.SourceVersion,
+                ["checksumValid"] = !system.HasInvalidChecksum
+            };
+            if (section == "all" || section == "slots")
+                result["slots"] = system.Data.Infos.Select((slot, index) => new
+                {
+                    index, slot.Flags, playerName = slot.GetPlayerName(), slot.Playtime,
+                    slot.Chapter1, slot.Chapter2, slot.Day, slot.PlaceId
+                }).ToArray();
+            if (section == "all" || section == "flags")
+                result["flags"] = Enumerable.Range(0, SystemSaveData_V7.COUNT_FLAGS)
+                    .Select(index => new { index, enabled = system.GetFlag(index),
+                        name = index is >= 8 and < 108 ? SafeName(() => Database.GetString(12823 + index - 8)) : null })
+                    .ToArray();
+            if (result.Count == 4) throw new ArgumentException("Unknown system section: " + section);
+            return result;
+        }
+
+        private static void ApplySystem(SystemBuffer system, string input, Dictionary<string, string> options)
+        {
+            var patch = ReadPatch(options);
+            byte[] original = File.ReadAllBytes(input);
+            if (patch.TryGetValue("expectedSha256", out object expected)
+                && !string.Equals(Convert.ToString(expected), SaveBuffer.Digest(original), StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException("Input SHA-256 differs from patch expectation.");
+            if (!patch.TryGetValue("operations", out object operations) || !(operations is object[] list))
+                throw new InvalidDataException("Patch needs an operations array.");
+
+            bool[] before = Enumerable.Range(0, SystemSaveData_V7.COUNT_FLAGS).Select(system.GetFlag).ToArray();
+            foreach (object operation in list)
+            {
+                if (operation is not Dictionary<string, object> item)
+                    throw new InvalidDataException("Every operation must be an object.");
+                if (Value<string>(item, "op") != "setSystemFlag")
+                    throw new ArgumentException("Unknown system patch operation: " + Value<string>(item, "op"));
+                system.SetFlag(Value<int>(item, "index"), Value<bool>(item, "value"));
+            }
+            int[] changedFlags = Enumerable.Range(0, before.Length)
+                .Where(index => before[index] != system.GetFlag(index)).ToArray();
+            byte[] result = system.FinishedBytes();
+            if (options.ContainsKey("dry-run"))
+            {
+                Print(new { dryRun = true, inputSha256 = SaveBuffer.Digest(original),
+                    resultSha256 = SaveBuffer.Digest(result), sourceVersion = system.SourceVersion,
+                    outputVersion = SystemSave.CURRENT_VERSION, changedFlags });
+                return;
+            }
+            if (changedFlags.Length == 0)
+                throw new InvalidOperationException("Patch changed no system flags; output was not written.");
+            string destination = Destination(input, options);
+            string backup = VerifiedFileWriter.Write(destination, result, path =>
+            {
+                var verified = SystemBuffer.Open(path);
+                return verified.SourceVersion == SystemSave.CURRENT_VERSION && !verified.HasInvalidChecksum
+                    && SaveBuffer.Digest(File.ReadAllBytes(path)) == SaveBuffer.Digest(result);
+            });
+            Print(new { inputSha256 = SaveBuffer.Digest(original), resultSha256 = SaveBuffer.Digest(result),
+                changedFlags, output = destination, backup, outputVersion = SystemSave.CURRENT_VERSION });
+        }
+
+        private static string Destination(string input, Dictionary<string, string> options)
+        {
+            bool inPlace = options.ContainsKey("in-place");
+            if (inPlace && options.ContainsKey("output"))
+                throw new ArgumentException("Use either --in-place or --output, not both.");
+            if (!inPlace && !options.ContainsKey("output"))
+                throw new ArgumentException("Provide --output or --in-place.");
+            string destination = Path.GetFullPath(inPlace ? input : Required(options, "output"));
+            if (!inPlace && Path.GetFullPath(input).Equals(destination, StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Use --in-place to modify the input file.");
+            if (!inPlace && File.Exists(destination))
+                throw new IOException("Output already exists: " + destination);
+            return destination;
         }
 
         private static void Finish(SaveBuffer save, string input, Dictionary<string, string> options)
@@ -308,6 +426,7 @@ namespace FethEditor.Cli
                     character.data.CombatArts, character.data.Abilities,
                     character.data.EquippedAbilities, character.data.EquippedCombatArts,
                     character.data.Flags, character.data.ClassUnlockFlags, character.data.ClassFlags,
+                    character.data.ItemCount,
                     items = character.data.Items.Select((item, index) => ItemInfo(item, index)).ToArray()
                 }).ToArray();
             if (section == "all" || section == "inventory")
@@ -339,7 +458,8 @@ namespace FethEditor.Cli
                 };
             if (section == "all" || section == "supports")
                 result["supports"] = data.Player.CharacterSupportValues.Select((value, id) => new
-                { id, name = SafeName(() => Database.GetSupportTalkName(id)), value }).ToArray();
+                { id, name = SafeName(() => Database.GetSupportTalkName(id)), value,
+                    rank = SupportRankPresets.NameFor(value) }).ToArray();
             if (result.Count == 3) throw new ArgumentException("Unknown section: " + section);
             return result;
         }
@@ -368,11 +488,28 @@ namespace FethEditor.Cli
                 }).ToArray();
                 case "classes": return Database.ClassList.Select(entry => new { id = entry.Key, name = entry.Value }).ToArray();
                 case "battalions": return Database.BattalionList.Select(entry => new { id = entry.Key, name = entry.Value }).ToArray();
+                case "battalion-skills": return Database.BattalionSkillList.Select(entry => new { id = entry.Key, name = entry.Value }).ToArray();
                 case "abilities": return Database.AbilityList.Select(entry => new { id = entry.Key, name = entry.Value }).ToArray();
                 case "arts": return Database.CombatArtList.Select(entry => new { id = entry.Key, name = entry.Value }).ToArray();
                 case "quests": return Enumerable.Range(0, 150).Select(id => new { id, name = SafeName(() => Database.GetQuestName(id)) }).ToArray();
                 case "supports": return Enumerable.Range(0, Player_V23.COUNT_SUPPORT).Select(id => new { id, name = SafeName(() => Database.GetSupportTalkName(id)) }).ToArray();
+                case "support-ranks": return SupportRankPresets.Values.Select(entry => new { rank = entry.Name, points = entry.Points }).ToArray();
                 default: throw new ArgumentException("Unknown catalog: " + type);
+            }
+        }
+
+        private static object CatalogDetail(string type, int id)
+        {
+            var database = Database.BinaryDatabase;
+            switch (type.ToLowerInvariant())
+            {
+                case "characters" when id >= 0 && id < database.CharacterEntries.Count:
+                    return new { id, name = Database.GetUnitName(id), details = database.CharacterEntries[id].GenerateDebugOut() };
+                case "classes" when id >= 0 && id < database.ClassEntries.Count:
+                    return new { id, name = Database.GetClassName(id), details = database.ClassEntries[id].GenerateDebugOut() };
+                case "items" when database.ItemEntries.TryGetValue(id, out var item):
+                    return new { id, name = Database.GetItemName(id), details = item.GenerateDebugOut() };
+                default: throw new ArgumentException($"No database detail for {type} ID {id}.");
             }
         }
 

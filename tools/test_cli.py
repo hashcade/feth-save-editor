@@ -39,6 +39,8 @@ def main() -> None:
         struct.pack_into("<II", raw, 4, 23, SAVE_SIZE)
         for slot in range(400):
             struct.pack_into("<h", raw, 12 + slot * 4, -1)
+        for item_slot in range(6):
+            struct.pack_into("<h", raw, 12 + 0x644 + item_slot * 4, -1)
         sentinel = 12 + 0x644 + 0x2A
         raw[sentinel] = 0xA5
         player = 12 + 0x231D9
@@ -67,6 +69,85 @@ def main() -> None:
         assert run(cli, "get", "--input", str(source), "--path", "Items[0].Id")["value"] == -1
         catalog = run(cli, "catalog", "--type", "classes")
         assert len(catalog) == 101  # 100 classes plus the GUI's "none" sentinel.
+        assert run(cli, "catalog", "--type", "classes", "--id", "0")["details"]
+        assert run(cli, "catalog", "--type", "items", "--id", "22")["details"]
+        assert run(cli, "catalog", "--type", "battalion-skills")
+        assert run(cli, "catalog", "--type", "support-ranks")[-1] == {"rank": "S", "points": 1001}
+
+        rank_patch = directory / "rank.json"
+        rank_patch.write_text(json.dumps({"operations": [
+            {"op": "setProfessorRank", "rank": 9},
+            {"op": "setSupportRank", "index": 1, "rank": "A+"},
+            {"op": "setNgPlusSupportRank", "index": 2, "rank": "S"},
+        ]}), encoding="utf-8")
+        rank_target = directory / "rank-slot00"
+        run(cli, "apply", "--input", str(source), "--patch", str(rank_patch),
+            "--output", str(rank_target))
+        assert run(cli, "get", "--input", str(rank_target),
+                   "--path", "Activities.InstructExp")["value"] == 44500
+        assert run(cli, "inspect", "--input", str(rank_target),
+                   "--section", "supports")["supports"][1]["rank"] == "A+"
+        assert run(cli, "inspect", "--input", str(rank_target),
+                   "--section", "inheritance")["inheritance"]["supports"][2]["maxPoints"] == 1001
+
+        item_patch = directory / "character-item.json"
+        item_patch.write_text(json.dumps({"operations": [
+            {"op": "setCharacterItem", "slot": 0, "itemSlot": 0, "id": 22},
+        ]}), encoding="utf-8")
+        item_target = directory / "character-item-slot00"
+        run(cli, "apply", "--input", str(source), "--patch", str(item_patch),
+            "--output", str(item_target))
+        item_bytes = item_target.read_bytes()
+        assert struct.unpack_from("<h", item_bytes, 12 + 0x644)[0] == 22
+        assert item_bytes[12 + 0x644 + 0x87] == 1
+        assert item_bytes[12 + 0x644 + 2] > 0
+        assert run(cli, "inspect", "--input", str(item_target),
+                   "--section", "characters")["characters"][0]["ItemCount"] == 1
+        invalid_item = directory / "invalid-character-item.json"
+        invalid_item.write_text(json.dumps({"operations": [
+            {"op": "setCharacterItem", "slot": 0, "itemSlot": 2, "id": 22},
+        ]}), encoding="utf-8")
+        run(cli, "apply", "--input", str(source), "--patch", str(invalid_item),
+            "--output", str(directory / "invalid-character-item"), success=False)
+        invalid_stat = directory / "invalid-stat.json"
+        invalid_stat.write_text(json.dumps({"operations": [
+            {"op": "set", "path": "Characters[0].data.Movement", "value": 250},
+        ]}), encoding="utf-8")
+        stat_error = run(cli, "apply", "--input", str(source), "--patch", str(invalid_stat),
+                         "--output", str(directory / "invalid-stat"), success=False)
+        assert "maximum" in stat_error["error"]
+
+        system_raw = bytearray(0x1204)
+        struct.pack_into("<II", system_raw, 4, 7, len(system_raw))
+        struct.pack_into("<I", system_raw, 0, checksum(system_raw))
+        system_source = directory / "system"
+        system_source.write_bytes(system_raw)
+        system_info = run(cli, "inspect-system", "--input", str(system_source),
+                          "--section", "flags")
+        assert system_info["checksumValid"] is True
+        assert len(system_info["flags"]) == 2464
+        assert system_info["flags"][8]["enabled"] is False
+        system_patch = directory / "system-patch.json"
+        system_patch.write_text(json.dumps({
+            "expectedSha256": system_info["sha256"],
+            "operations": [{"op": "setSystemFlag", "index": 8, "value": True}],
+        }), encoding="utf-8")
+        system_target = directory / "edited-system"
+        system_dry = run(cli, "apply-system", "--input", str(system_source),
+                         "--patch", str(system_patch), "--dry-run")
+        assert system_dry["changedFlags"] == [8]
+        assert not system_target.exists()
+        run(cli, "apply-system", "--input", str(system_source), "--patch", str(system_patch),
+            "--output", str(system_target))
+        assert system_source.read_bytes() == system_raw
+        assert run(cli, "inspect-system", "--input", str(system_target),
+                   "--section", "flags")["flags"][8]["enabled"] is True
+        assert struct.unpack_from("<I", system_target.read_bytes(), 0)[0] == checksum(system_target.read_bytes())
+        inplace_system = directory / "inplace-system"
+        inplace_system.write_bytes(system_raw)
+        written = run(cli, "apply-system", "--input", str(inplace_system),
+                      "--patch", str(system_patch), "--in-place")
+        assert Path(written["backup"]).read_bytes() == system_raw
 
         patch_file.write_text(json.dumps({
             "expectedSha256": summary["sha256"],
@@ -219,7 +300,7 @@ def main() -> None:
         error = run(cli, "inspect", "--input", str(suspend), success=False)
         assert "Suspend" in error["error"]
 
-        print("CLI inspection, NG+ editing, backups, character import, byte preservation, and rejection checks passed.")
+        print("CLI slot/system inspection and editing, NG+ history, character items, backups, and rejection checks passed.")
 
 
 if __name__ == "__main__":

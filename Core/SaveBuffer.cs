@@ -482,6 +482,26 @@ namespace FethEditor.Core
             }
             if (Regex.IsMatch(path, @"^activities\.queststatelist\[\d+\]$", RegexOptions.IgnoreCase) && (value < 0 || value > 6))
                 throw new ArgumentOutOfRangeException(nameof(value), "Quest state must be 0 through 6.");
+            Match characterStat = Regex.Match(path,
+                @"^characters\[(\d+)\]\.data\.(hp|strength|magic|dexterity|speed|luck|defense|resistance|movement|charm)$",
+                RegexOptions.IgnoreCase);
+            if (characterStat.Success)
+            {
+                int slot = int.Parse(characterStat.Groups[1].Value);
+                var character = Data.Characters[slot].data;
+                string stat = characterStat.Groups[2].Value.ToLowerInvariant();
+                int statIndex = Array.IndexOf(new[]
+                {
+                    "strength", "magic", "dexterity", "speed", "luck", "defense",
+                    "resistance", "movement", "charm"
+                }, stat);
+                int maximum = stat == "hp"
+                    ? Database.GetMaxHP(character.Id, character.Class)
+                    : Database.GetMaxStat(character.Id, character.Class, statIndex);
+                if (value < 0 || value > maximum)
+                    throw new ArgumentOutOfRangeException(nameof(value),
+                        $"{characterStat.Groups[2].Value} exceeds this character's maximum of {maximum}.");
+            }
         }
 
         private sealed class Location

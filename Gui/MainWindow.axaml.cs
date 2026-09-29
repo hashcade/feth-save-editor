@@ -21,17 +21,8 @@ public partial class MainWindow : Window
     private static readonly string[] SkillRanks =
         ["E", "E+", "D", "D+", "C", "C+", "B", "B+", "A", "A+", "S", "S+"];
 
-    private static readonly Choice[] SupportRanks =
-    [
-        new(0, "None"),
-        new(101, "C"),
-        new(201, "C+"),
-        new(301, "B"),
-        new(451, "B+"),
-        new(601, "A"),
-        new(801, "A+"),
-        new(1001, "S")
-    ];
+    private static readonly Choice[] SupportRanks = SupportRankPresets.Values
+        .Select(preset => new Choice(preset.Points, preset.Name)).ToArray();
 
     private static readonly (string Label, string Path)[] GameFields =
     [
