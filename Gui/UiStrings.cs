@@ -111,7 +111,7 @@ internal static class UiStrings
             if (control.TemplatedParent is not null) continue;
             switch (control)
             {
-                case TextBlock text when control.Name is not ("Status" or "SystemStatus"
+                case TextBlock text when control.Name is not ("Status"
                     or "StorageCount" or "CurrentCharacterTitle" or "CurrentClassInfo"
                     or "EquippedBattalionValue" or "StorageSlotLabel")
                     && control.GetVisualParent() is not ContentPresenter { TemplatedParent: TabStripItem }:

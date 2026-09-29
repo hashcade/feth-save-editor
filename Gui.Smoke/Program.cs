@@ -200,6 +200,18 @@ if (args.Length > 0 && window.FindControl<TextBlock>("PlayerCardTitle")?.Text !=
     throw new InvalidOperationException("Player card title was mistranslated by the game database.");
 if (!Avalonia.Input.DragDrop.GetAllowDrop(window))
     throw new InvalidOperationException("Dropping a slot save on the editor is disabled.");
+if (args.Length == 0)
+{
+    foreach (string name in new[] { "GameRows", "ActivityRows", "StatueRows", "StatisticsRows" })
+        if (window.FindControl<StackPanel>(name)!.Children.Count == 0)
+            throw new InvalidOperationException($"{name} is empty before a save is opened.");
+    if (window.FindControl<ListBox>("DatabaseClasses")!.ItemCount == 0)
+        throw new InvalidOperationException("The database page is empty before a save is opened.");
+    if (window.FindControl<TextBox>("PlayerNameInput")!.IsEnabled)
+        throw new InvalidOperationException("Empty overview inputs must not be editable.");
+}
+else if (!window.FindControl<TextBox>("PlayerNameInput")!.IsEnabled)
+    throw new InvalidOperationException("Loading a save did not enable overview inputs.");
 
 var tabs = window.FindControl<TabControl>("EditorTabs")
     ?? throw new InvalidOperationException("Editor tabs are missing.");
@@ -209,11 +221,12 @@ var obsoleteSeparator = tabs.GetVisualDescendants().OfType<Border>()
     .FirstOrDefault(border => border.Name == "PART_BorderSeparator");
 if (obsoleteSeparator?.IsVisible == true)
     throw new InvalidOperationException("The old tab separator is still visible.");
-if (tabs.ItemCount != 9)
-    throw new InvalidOperationException("Editor should show nine functional sections without a rank-only tab.");
+if (tabs.ItemCount != 10)
+    throw new InvalidOperationException("Editor should show ten sections including the system panel.");
 var englishTabs = tabs.Items.OfType<TabItem>().Select(tab => tab.Header?.ToString()).ToArray();
 if (englishTabs[2] != "Roster" || englishTabs[5] != "Support"
-    || englishTabs[7] != "NG+ Roster" || englishTabs[8] != "NG+ Support")
+    || englishTabs[7] != "NG+ Roster" || englishTabs[8] != "NG+ Support"
+    || englishTabs[9] != "System")
     throw new InvalidOperationException("English navigation labels are inconsistent.");
 navigation.SelectedIndex = 3;
 Dispatcher.UIThread.RunJobs();
@@ -312,43 +325,111 @@ if (args.Length > 0)
 
 if (args.Length > 1)
 {
-    var systemWindow = new SystemWindow();
-    if (systemWindow.Icon is null)
-        throw new InvalidOperationException("The system editor has no application icon.");
-    systemWindow.Show();
-    systemWindow.LoadSystem(args[1]);
+    tabs.SelectedIndex = 9;
     Dispatcher.UIThread.RunJobs();
-    if (!Avalonia.Input.DragDrop.GetAllowDrop(systemWindow) ||
-        !systemWindow.FindControl<MenuItem>("WriteSystemMenu")!.IsEnabled)
-        throw new InvalidOperationException("System save drag/drop or writing is disabled.");
-    if (systemWindow.FindControl<ListBox>("SystemSlots")!.ItemCount != 37 ||
-        systemWindow.FindControl<ListBox>("SystemFlags")!.ItemCount != 2464)
-        throw new InvalidOperationException("System save lists were not loaded.");
-    var systemFrame = systemWindow.CaptureRenderedFrame()
-        ?? throw new InvalidOperationException("System editor did not render.");
+    if (!window.FindControl<MenuItem>("SaveMenuItem")!.IsEnabled)
+        throw new InvalidOperationException("The sibling system save was not loaded automatically.");
+    if (window.FindControl<ListBox>("SystemSlots")!.ItemCount != 37 ||
+        window.FindControl<ListBox>("SystemFlags")!.ItemCount != 2464)
+        throw new InvalidOperationException("System save lists were not loaded in the panel.");
+    var systemSearch = window.FindControl<TextBox>("SystemFlagSearch")!;
+    systemSearch.Text = "MOVIE";
+    Dispatcher.UIThread.RunJobs();
+    if (window.FindControl<ListBox>("SystemFlags")!.ItemCount != 100)
+        throw new InvalidOperationException($"System flag search returned {window.FindControl<ListBox>("SystemFlags")!.ItemCount} rows instead of 100.");
+    systemSearch.Text = string.Empty;
+    var systemListCard = window.FindControl<Control>("SystemSlotsCard")!;
+    var systemFlagsCard = window.FindControl<Control>("SystemFlagsCard")!;
+    if (systemListCard.Bounds.Width >= systemFlagsCard.Bounds.Width ||
+        Math.Abs(systemListCard.Bounds.Height - systemFlagsCard.Bounds.Height) > 1)
+        throw new InvalidOperationException("System cards are not aligned with a narrower list column.");
+    var systemFrame = window.CaptureRenderedFrame()
+        ?? throw new InvalidOperationException("System panel did not render.");
     string systemScreenshot = Path.Combine(Path.GetTempPath(), "feth-editor-system.png");
     systemFrame.Save(systemScreenshot, PngBitmapEncoderOptions.Default);
     Console.WriteLine(systemScreenshot);
-    systemWindow.SetLanguage(enmLanguage.zh_hans);
-    Database.Init(enmLanguage.zh_hans);
-    systemWindow.LoadSystem(args[1]);
+    string cleanFolder = Path.Combine(Path.GetTempPath(), $"feth-editor-clean-{Guid.NewGuid():N}");
+    Directory.CreateDirectory(cleanFolder);
+    try
+    {
+        window.SaveCopyToDirectory(cleanFolder);
+        if (!File.Exists(Path.Combine(cleanFolder, Path.GetFileName(args[0])))
+            || File.Exists(Path.Combine(cleanFolder, "system")))
+            throw new InvalidOperationException("An unchanged system save should not be written.");
+    }
+    finally
+    {
+        Directory.Delete(cleanFolder, true);
+    }
+    var languageMenu = window.FindControl<MenuItem>("LanguageMenu")!;
+    ((MenuItem)languageMenu.Items[11]!).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
     Dispatcher.UIThread.RunJobs();
-    if (systemWindow.Title != "系统存档编辑器"
-        || systemWindow.FindControl<TextBlock>("SystemStatus")!.Text != "系统存档已加载。修改只保存在内存中，另存副本后才会写入。")
-        throw new InvalidOperationException("System save editor was not localized.");
+    Dispatcher.UIThread.RunJobs();
+    if (tabs.Items.OfType<TabItem>().ElementAt(9).Header?.ToString() != "系统存档"
+        || window.FindControl<Button>("WriteSystemButton") is not null
+        || window.FindControl<ListBox>("SystemFlags")!.ItemCount != 2464)
+        throw new InvalidOperationException("System panel was not localized.");
     string chineseSystemScreenshot = Path.Combine(Path.GetTempPath(), "feth-editor-zh-system.png");
-    (systemWindow.CaptureRenderedFrame() ?? throw new InvalidOperationException("Chinese system editor did not render."))
+    (window.CaptureRenderedFrame() ?? throw new InvalidOperationException("Chinese system panel did not render."))
         .Save(chineseSystemScreenshot, PngBitmapEncoderOptions.Default);
     Console.WriteLine(chineseSystemScreenshot);
-    var flagList = systemWindow.FindControl<ListBox>("SystemFlags")!;
+    var flagList = window.FindControl<ListBox>("SystemFlags")!;
     var row = (SystemFlagRow)flagList.Items[0]!;
     var firstCheck = flagList.GetVisualDescendants().OfType<CheckBox>().First();
+    bool originalEnabled = row.Enabled;
+    firstCheck.IsChecked = !originalEnabled;
+    firstCheck.IsChecked = originalEnabled;
+    string revertedFolder = Path.Combine(Path.GetTempPath(), $"feth-editor-reverted-{Guid.NewGuid():N}");
+    Directory.CreateDirectory(revertedFolder);
+    try
+    {
+        window.SaveCopyToDirectory(revertedFolder);
+        if (File.Exists(Path.Combine(revertedFolder, "system")))
+            throw new InvalidOperationException("A reverted system flag should not be written.");
+    }
+    finally
+    {
+        Directory.Delete(revertedFolder, true);
+    }
     firstCheck.IsChecked = !firstCheck.IsChecked;
     Dispatcher.UIThread.RunJobs();
     if (row.Enabled != firstCheck.IsChecked)
         throw new InvalidOperationException("System flag checkbox did not update its model.");
-    if (!systemWindow.FindControl<MenuItem>("WriteSystemMenu")!.IsEnabled)
+    if (!window.FindControl<MenuItem>("SaveMenuItem")!.IsEnabled)
         throw new InvalidOperationException("System flag edit did not enable saving.");
+    string outputFolder = Path.Combine(Path.GetTempPath(), $"feth-editor-bundle-{Guid.NewGuid():N}");
+    byte[] originalSlot = File.ReadAllBytes(args[0]);
+    byte[] originalSystem = File.ReadAllBytes(args[1]);
+    Directory.CreateDirectory(outputFolder);
+    try
+    {
+        window.SaveCopyToDirectory(outputFolder);
+        string copiedSlot = Path.Combine(outputFolder, Path.GetFileName(args[0]));
+        string copiedSystem = Path.Combine(outputFolder, "system");
+        if (!File.Exists(copiedSlot) || !File.Exists(copiedSystem)
+            || SaveBuffer.Open(copiedSlot).HasInvalidChecksum
+            || SystemBuffer.Open(copiedSystem).GetFlag(0) != row.Enabled
+            || !File.ReadAllBytes(args[0]).SequenceEqual(originalSlot)
+            || !File.ReadAllBytes(args[1]).SequenceEqual(originalSystem))
+            throw new InvalidOperationException("Unified save copy did not preserve the slot, system, and originals.");
+    }
+    finally
+    {
+        Directory.Delete(outputFolder, true);
+    }
+    string savedAgainFolder = Path.Combine(Path.GetTempPath(), $"feth-editor-again-{Guid.NewGuid():N}");
+    Directory.CreateDirectory(savedAgainFolder);
+    try
+    {
+        window.SaveCopyToDirectory(savedAgainFolder);
+        if (File.Exists(Path.Combine(savedAgainFolder, "system")))
+            throw new InvalidOperationException("A system save already written once should not be written again without edits.");
+    }
+    finally
+    {
+        Directory.Delete(savedAgainFolder, true);
+    }
+    ((MenuItem)languageMenu.Items[1]!).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
 
     var system = SystemBuffer.Open(args[1]);
     bool oldValue = system.GetFlag(0);
@@ -474,6 +555,11 @@ if (args.Length > 0)
             : Database.GetString(1814, 1);
         if (tabs.Items.OfType<TabItem>().ElementAt(1).Header?.ToString() != expectedStorage)
             throw new InvalidOperationException($"Navigation label did not follow {supportedLanguages[index]}.");
+        string expectedFile = supportedLanguages[index] == enmLanguage.zh_hans ? "文件" : "File";
+        string expectedLanguage = supportedLanguages[index] == enmLanguage.zh_hans ? "语言" : "Language";
+        if (window.FindControl<MenuItem>("FileMenu")!.Header?.ToString() != expectedFile
+            || language.Header?.ToString() != expectedLanguage)
+            throw new InvalidOperationException($"Top menus did not follow {supportedLanguages[index]}.");
         string expectedThemeLocale = supportedLanguages[index] switch
         {
             enmLanguage.zh_hans => "zh-CN",
@@ -619,6 +705,8 @@ if (args.Length > 0)
         Dispatcher.UIThread.RunJobs();
         var chineseLabels = window.GetVisualDescendants().OfType<TextBlock>()
             .Where(text => text.IsVisible && text.Text?.Any(ch => ch is >= '\u3400' and <= '\u9fff') == true)
+            .Where(text => page != 9 || !text.GetVisualAncestors().OfType<ListBox>()
+                .Any(list => list.Name == "SystemSlots"))
             .Select(text => text.Text).Distinct().ToArray();
         if (chineseLabels.Length > 0)
             throw new InvalidOperationException($"Chinese labels on English page {page}: {string.Join(" | ", chineseLabels)}");

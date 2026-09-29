@@ -79,7 +79,6 @@ public partial class MainWindow : Window
     private int _selectedCharacter = -1;
     private int _selectedSupport = -1;
     private bool _loading;
-    private bool _databaseReady;
     private enmLanguage _databaseLanguage = UiPreferences.Load();
     private readonly DispatcherTimer _statusTimer = new() { Interval = TimeSpan.FromSeconds(6) };
 
@@ -88,9 +87,10 @@ public partial class MainWindow : Window
         InitializeComponent();
         DragDrop.AddDragOverHandler(this, SaveDragOver);
         DragDrop.AddDropHandler(this, SaveDropped);
-        UpdateLanguageMenu();
+        Database.Init(_databaseLanguage);
         CurrentProfessorRank.ItemsSource = SkillRanks.Take(Database.TeacherLevelupRank.Length).ToArray();
         NgPlusProfessorRank.ItemsSource = SkillRanks.Take(10).ToArray();
+        SetOverviewInputsEnabled(false);
         _statusTimer.Tick += (_, _) =>
         {
             _statusTimer.Stop();
@@ -107,7 +107,10 @@ public partial class MainWindow : Window
         };
         EditorTabs.SelectionChanged += (_, _) => UiStrings.Apply(this, _databaseLanguage);
         UiStrings.Apply(this, _databaseLanguage);
+        RefreshTopMenu();
         RefreshEmptyLabels();
+        RefreshCurrentSummary();
+        RefreshDatabaseViewer();
     }
 
     private void UpdateLanguageMenu()
@@ -125,15 +128,21 @@ public partial class MainWindow : Window
             }).ToArray();
     }
 
+    private void RefreshTopMenu()
+    {
+        FileMenu.Header = UiStrings.Translate("File", _databaseLanguage);
+        LanguageMenu.Header = UiStrings.Translate("Language", _databaseLanguage);
+        UpdateLanguageMenu();
+    }
+
     private void ChangeLanguage(enmLanguage next)
     {
         if (next == _databaseLanguage) return;
         try
         {
-            if (_databaseReady) Database.Init(next);
+            Database.Init(next);
             _databaseLanguage = next;
             UiPreferences.Save(next);
-            UpdateLanguageMenu();
             _itemChoices = null;
             _characterIds = null;
             _abilityChoices = null;
@@ -154,14 +163,21 @@ public partial class MainWindow : Window
                 RefreshSupports();
                 RefreshDatabaseViewer();
             }
+            else
+            {
+                RefreshCurrentSummary();
+                RefreshDatabaseViewer();
+            }
             UiStrings.Apply(this, _databaseLanguage);
+            RefreshTopMenu();
+            RefreshSystemPanel();
             if (_save is null) RefreshEmptyLabels();
             Status.Text = string.Empty;
         }
         catch (Exception error)
         {
-            if (_databaseReady) Database.Init(_databaseLanguage);
-            UpdateLanguageMenu();
+            Database.Init(_databaseLanguage);
+            RefreshTopMenu();
             Status.Text = UiStrings.Format("Could not change database language: {0}", _databaseLanguage, error.Message);
         }
     }
@@ -171,6 +187,16 @@ public partial class MainWindow : Window
         StorageCount.Text = UiStrings.Translate("Item List", _databaseLanguage);
         CurrentCharacterTitle.Text = UiStrings.Translate("Select a character", _databaseLanguage);
         CurrentClassInfo.Text = UiStrings.Translate("Current class", _databaseLanguage);
+    }
+
+    private void SetOverviewInputsEnabled(bool enabled)
+    {
+        foreach (Control input in new Control[]
+        {
+            PlayerNameInput, PlaytimeInput, MoneyInput, RenownInput, InstructExpInput,
+            CurrentProfessorRank, NgPlusProfessorRank
+        })
+            input.IsEnabled = enabled;
     }
 
     private void Exit_Click(object? sender, RoutedEventArgs e) => Close();
@@ -192,18 +218,6 @@ public partial class MainWindow : Window
         {
             Status.Text = UiStrings.Format("Could not open save: {0}", _databaseLanguage, error.Message);
         }
-    }
-
-    private void OpenSystemEditor_Click(object? sender, RoutedEventArgs e)
-    {
-        if (!_databaseReady)
-        {
-            Database.Init(_databaseLanguage);
-            _databaseReady = true;
-        }
-        var editor = new SystemWindow();
-        editor.SetLanguage(_databaseLanguage);
-        editor.Show(this);
     }
 
     private async void OpenSave_Click(object? sender, RoutedEventArgs e)
@@ -228,13 +242,11 @@ public partial class MainWindow : Window
 
     public void LoadSave(string path)
     {
-        if (!_databaseReady)
-        {
-            Database.Init(_databaseLanguage);
-            _databaseReady = true;
-        }
-
         SaveBuffer opened = SaveBuffer.Open(path);
+        string sibling = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(path))!, "system");
+        if (_systemDirty && !string.Equals(_systemPath, sibling, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException(UiStrings.Translate(
+                "Save the edited system copy before loading another system save.", _databaseLanguage));
         _loading = true;
         try
         {
@@ -248,6 +260,7 @@ public partial class MainWindow : Window
             CurrentSupportSearch.Text = string.Empty;
             DatabaseCharacterSearch.Text = DatabaseClassSearch.Text = DatabaseItemSearch.Text = string.Empty;
             SaveMenuItem.IsEnabled = true;
+            SetOverviewInputsEnabled(true);
             _selectedCharacter = -1;
             _selectedSupport = -1;
         }
@@ -266,39 +279,77 @@ public partial class MainWindow : Window
         RefreshSupports();
         RefreshNgPlusProfessorRank();
         RefreshDatabaseViewer();
+        Status.Text = string.Empty;
+        LoadSiblingSystem(path);
         UiStrings.Apply(this, _databaseLanguage);
-        Status.Text = opened.HasInvalidChecksum
-            ? UiStrings.Translate("Warning: save checksum does not match. Keep the original; writing will repair the checksum.", _databaseLanguage)
-            : string.Empty;
+        if (opened.HasInvalidChecksum)
+            Status.Text = UiStrings.Translate("Warning: save checksum does not match. Keep the original; writing will repair the checksum.", _databaseLanguage);
+    }
+
+    private void LoadSiblingSystem(string slotPath)
+    {
+        string sibling = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(slotPath))!, "system");
+        if (string.Equals(_systemPath, sibling, StringComparison.OrdinalIgnoreCase)) return;
+        if (!File.Exists(sibling))
+        {
+            ClearSystem();
+            return;
+        }
+        try
+        {
+            LoadSystem(sibling);
+        }
+        catch (Exception error)
+        {
+            ClearSystem();
+            Status.Text = UiStrings.Format("Could not load system save: {0}", _databaseLanguage, error.Message);
+        }
     }
 
     private async void SaveCopy_Click(object? sender, RoutedEventArgs e)
     {
-        if (_save is null || _sourcePath is null) return;
         try
         {
-            var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
-                Title = UiStrings.Translate("Write save", _databaseLanguage),
-                SuggestedFileName = Path.GetFileName(_sourcePath)
+                Title = UiStrings.Translate("Choose a folder for the edited save copies", _databaseLanguage),
+                AllowMultiple = false
             });
-            if (file is null) return;
-            if (!file.Path.IsFile) throw new NotSupportedException("Only local files are supported.");
-            string destination = Path.GetFullPath(file.Path.LocalPath);
-            byte[] output = _save.FinishedBytes();
-            string? backup = VerifiedFileWriter.Write(destination, output, path =>
-            {
-                var verified = SaveBuffer.Open(path);
-                return !verified.HasInvalidChecksum && verified.Sha256 == SaveBuffer.Digest(output);
-            });
-            Status.Text = backup is null
-                ? UiStrings.Format("Saved and verified: {0}", _databaseLanguage, destination)
-                : UiStrings.Format("Saved and verified: {0} (backup: {1})", _databaseLanguage, destination, backup);
+            if (folders.Count == 0) return;
+            if (!folders[0].Path.IsFile)
+                throw new NotSupportedException("Only local folders are supported.");
+            SaveCopyToDirectory(folders[0].Path.LocalPath);
         }
         catch (Exception error)
         {
             Status.Text = UiStrings.Format("Could not save copy: {0}", _databaseLanguage, error.Message);
         }
+    }
+
+    public void SaveCopyToDirectory(string directory)
+    {
+        if (_save is null || _sourcePath is null)
+            throw new InvalidOperationException("Open a slot save before writing a copy.");
+        string folder = Path.GetFullPath(directory);
+        if (!Directory.Exists(folder)) throw new DirectoryNotFoundException(folder);
+        if (string.Equals(folder, Path.GetDirectoryName(Path.GetFullPath(_sourcePath)),
+            StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException(UiStrings.Translate(
+                "Choose a different folder to keep the original saves.", _databaseLanguage));
+
+        string destination = Path.Combine(folder, Path.GetFileName(_sourcePath));
+        byte[] output = _save.FinishedBytes();
+        string? slotBackup = VerifiedFileWriter.Write(destination, output, path =>
+        {
+            var verified = SaveBuffer.Open(path);
+            return !verified.HasInvalidChecksum && verified.Sha256 == SaveBuffer.Digest(output);
+        });
+        string? systemBackup = WriteSystemCopy(folder);
+        string[] backups = new[] { slotBackup, systemBackup }.OfType<string>().ToArray();
+        Status.Text = backups.Length == 0
+            ? UiStrings.Format("Saved and verified: {0}", _databaseLanguage, folder)
+            : UiStrings.Format("Saved and verified: {0} (backup: {1})", _databaseLanguage,
+                folder, string.Join(", ", backups));
     }
 
     private void PlayerField_LostFocus(object? sender, RoutedEventArgs e)
@@ -536,13 +587,15 @@ public partial class MainWindow : Window
 
     private void RefreshCurrentSummary()
     {
-        if (_save is null) return;
-        var data = _save.Data;
-        PlaytimeInput.Text = data.Player.Playtime.ToString(CultureInfo.InvariantCulture);
-        MoneyInput.Text = data.Player.Money.ToString(CultureInfo.InvariantCulture);
-        ShowProfessorInputs(data.Activities.InstructExp);
-        RenownInput.Text = data.Activities.Reputation.ToString(CultureInfo.InvariantCulture);
-        PlayerNameInput.Text = SaveEditor.Util.DecodeString(data.PlayerName);
+        if (_save is not null)
+        {
+            var data = _save.Data;
+            PlaytimeInput.Text = data.Player.Playtime.ToString(CultureInfo.InvariantCulture);
+            MoneyInput.Text = data.Player.Money.ToString(CultureInfo.InvariantCulture);
+            ShowProfessorInputs(data.Activities.InstructExp);
+            RenownInput.Text = data.Activities.Reputation.ToString(CultureInfo.InvariantCulture);
+            PlayerNameInput.Text = SaveEditor.Util.DecodeString(data.PlayerName);
+        }
         PopulateNumericRows(GameRows, GameFields);
         PopulateNumericRows(ActivityRows, ActivityFields);
         PopulateNumericRows(StatueRows, StatueFields);
@@ -553,7 +606,6 @@ public partial class MainWindow : Window
         StackPanel container, IEnumerable<(string Label, string Path)> fields)
     {
         container.Children.Clear();
-        if (_save is null) return;
         foreach (var (label, path) in fields)
         {
             var row = new Grid
@@ -566,7 +618,7 @@ public partial class MainWindow : Window
                 Text = LocalizedFieldLabel(path, label),
                 VerticalAlignment = VerticalAlignment.Center
             });
-            if (path is "Player.Difficulty" or "Player.Gamestyle")
+            if (_save is not null && path is ("Player.Difficulty" or "Player.Gamestyle"))
             {
                 var choice = CreateGameChoice(path);
                 Grid.SetColumn(choice, 1);
@@ -576,7 +628,8 @@ public partial class MainWindow : Window
             }
             var input = new TextBox
             {
-                Text = Convert.ToString(_save.Get(path), CultureInfo.InvariantCulture)
+                Text = _save is null ? string.Empty : Convert.ToString(_save.Get(path), CultureInfo.InvariantCulture),
+                IsEnabled = _save is not null
             };
             Grid.SetColumn(input, 1);
             input.Classes.Add("Small");

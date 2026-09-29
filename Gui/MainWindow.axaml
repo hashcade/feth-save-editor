@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:suki="https://github.com/kikipoulet/SukiUI"
+        xmlns:local="using:FethEditor.Gui"
         x:Class="FethEditor.Gui.MainWindow"
         Title="FETH Editor" Icon="/Assets/sothis-portrait.png" Width="1120" Height="780" MinWidth="860" MinHeight="600"
         FontSize="13" DragDrop.AllowDrop="True">
@@ -28,11 +29,10 @@
   <DockPanel>
     <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*">
         <Menu VerticalAlignment="Center">
-          <MenuItem Header="File">
+          <MenuItem Name="FileMenu" Header="File">
             <MenuItem Header="Open Save..." Click="OpenSave_Click" />
             <MenuItem Name="SaveMenuItem" Header="Save Copy..."
                       IsEnabled="False" Click="SaveCopy_Click" />
-            <MenuItem Header="System Save Editor..." Click="OpenSystemEditor_Click" />
             <Separator />
             <MenuItem Header="Exit" Click="Exit_Click" />
           </MenuItem>
@@ -50,6 +50,7 @@
             <TabStripItem Content="{Binding Header, ElementName=DatabaseTab}" />
             <TabStripItem Content="{Binding Header, ElementName=InheritanceCharactersTab}" />
             <TabStripItem Content="{Binding Header, ElementName=InheritanceSupportTab}" />
+            <TabStripItem Content="{Binding Header, ElementName=SystemTab}" />
           </TabStrip>
         </ScrollViewer>
     </Grid>
@@ -559,6 +560,31 @@
                        TextChanged="SupportPoints_TextChanged" />
               <Button Classes="Small" Name="SetInheritedSupportButton" Content="Set" Click="ApplySupport_Click" />
             </StackPanel>
+          </suki:GlassCard>
+        </Grid>
+      </TabItem>
+
+      <TabItem Name="SystemTab" Header="System">
+        <Grid Margin="8" ColumnDefinitions="320,*" ColumnSpacing="10">
+          <suki:GlassCard Name="SystemSlotsCard" Classes="section">
+            <Grid RowDefinitions="Auto,*" RowSpacing="8">
+              <TextBlock Text="Save Slots" FontWeight="SemiBold" />
+              <ListBox Classes="Small" Name="SystemSlots" Grid.Row="1" />
+            </Grid>
+          </suki:GlassCard>
+          <suki:GlassCard Name="SystemFlagsCard" Classes="section" Grid.Column="1">
+            <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
+              <TextBlock Text="System Flags" FontWeight="SemiBold" />
+              <TextBox Classes="Small" Name="SystemFlagSearch" Grid.Row="1" PlaceholderText="Search..."
+                       TextChanged="SystemFlagSearch_TextChanged" />
+              <ListBox Classes="Small" Name="SystemFlags" Grid.Row="2">
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="local:SystemFlagRow">
+                    <CheckBox Content="{Binding Label}" IsChecked="{Binding Enabled, Mode=TwoWay}" />
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </Grid>
           </suki:GlassCard>
         </Grid>
       </TabItem>
