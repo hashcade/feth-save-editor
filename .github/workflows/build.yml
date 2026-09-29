@@ -19,7 +19,7 @@ jobs:
             rid: win-x64
           - os: macos-15
             rid: osx-arm64
-          - os: macos-15
+          - os: macos-15-intel
             rid: osx-x64
           - os: ubuntu-24.04
             rid: linux-x64
@@ -58,7 +58,7 @@ jobs:
           - os: macos-15
             rid: osx-arm64
             executable: FethEditor.Cli
-          - os: macos-15
+          - os: macos-15-intel
             rid: osx-x64
             executable: FethEditor.Cli
           - os: ubuntu-24.04
@@ -102,7 +102,7 @@ jobs:
             rid: win-x64
           - os: macos-15
             rid: osx-arm64
-          - os: macos-15
+          - os: macos-15-intel
             rid: osx-x64
           - os: ubuntu-24.04
             rid: linux-x64

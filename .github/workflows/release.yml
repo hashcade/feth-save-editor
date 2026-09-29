@@ -27,7 +27,7 @@ jobs:
           - os: macos-15
             rid: osx-arm64
             cli: FethEditor.Cli
-          - os: macos-15
+          - os: macos-15-intel
             rid: osx-x64
             cli: FethEditor.Cli
           - os: ubuntu-24.04
