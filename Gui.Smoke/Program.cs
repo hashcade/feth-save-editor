@@ -32,6 +32,8 @@ AppBuilder.Configure<App>()
     .SetupWithoutStarting();
 
 var window = new MainWindow();
+if (window.Icon is null)
+    throw new InvalidOperationException("The main window has no application icon.");
 window.Show();
 if (args.Length > 0)
     window.LoadSave(args[0]);
@@ -279,6 +281,8 @@ if (args.Length > 0)
 if (args.Length > 1)
 {
     var systemWindow = new SystemWindow();
+    if (systemWindow.Icon is null)
+        throw new InvalidOperationException("The system editor has no application icon.");
     systemWindow.Show();
     systemWindow.LoadSystem(args[1]);
     Dispatcher.UIThread.RunJobs();

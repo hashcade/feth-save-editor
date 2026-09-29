@@ -2,7 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:suki="https://github.com/kikipoulet/SukiUI"
         x:Class="FethEditor.Gui.MainWindow"
-        Title="FETH Editor" Width="1120" Height="780" MinWidth="860" MinHeight="600"
+        Title="FETH Editor" Icon="/Assets/sothis-portrait.png" Width="1120" Height="780" MinWidth="860" MinHeight="600"
         FontSize="13" DragDrop.AllowDrop="True">
   <Window.Styles>
     <Style Selector="suki|GlassCard.section">
