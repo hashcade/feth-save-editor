@@ -19,6 +19,7 @@ public partial class App : Application
         {
             var window = new MainWindow();
             desktop.MainWindow = window;
+            Dispatcher.UIThread.Post(MacDockIcon.Apply);
             string[] arguments = Environment.GetCommandLineArgs();
             if (arguments.Length > 1 && System.IO.File.Exists(arguments[1]))
                 Dispatcher.UIThread.Post(() => window.LoadSave(arguments[1]));
