@@ -491,6 +491,9 @@ if (args.Length > 0)
         || misc.Items[0]!.ToString()!.StartsWith("000 ·", StringComparison.Ordinal)
         || window.FindControl<TextBlock>("StorageSlotLabel")!.Text != "Slot 0")
         throw new InvalidOperationException("Storage displays technical indices in the list or hides the slot detail.");
+    if (window.FindControl<ComboBox>("StorageItemCombo")!.SelectedItem!.ToString()!
+        .StartsWith("1126 -", StringComparison.Ordinal))
+        throw new InvalidOperationException("Item editor still displays the debug item ID.");
     window.FindControl<TextBox>("MiscAmount")!.Text = "42";
     window.FindControl<Button>("SetMisc")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
     if (!misc.Items[0]!.ToString()!.EndsWith(" · 42", StringComparison.Ordinal))
@@ -544,6 +547,10 @@ if (args.Length > 0)
         || window.FindControl<ComboBox>("CurrentCharacterId")!.SelectedItem!.ToString()!
             .StartsWith("0001 -", StringComparison.Ordinal))
         throw new InvalidOperationException("Character header still displays unrelated slot and unit IDs.");
+    var equippedAbility = ((Grid)window.FindControl<StackPanel>("EquippedAbilityRows")!.Children[0])
+        .Children.OfType<ComboBox>().Single();
+    if (equippedAbility.SelectedItem!.ToString()!.StartsWith("[", StringComparison.Ordinal))
+        throw new InvalidOperationException("Equipped ability choices still display debug IDs.");
     var battalionLabel = window.FindControl<StackPanel>("CharacterStatRows")!.Children
         .OfType<TextBlock>().LastOrDefault();
     if (battalionLabel?.Text?.StartsWith("Equipped Battalion:", StringComparison.Ordinal) != true)

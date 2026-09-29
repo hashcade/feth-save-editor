@@ -35,7 +35,8 @@ public partial class MainWindow
             .Select(pair => new Choice(pair.Key,
                 pair.Key < 0 ? pair.Value : Database.GetUnitName(pair.Key))).ToArray();
         _abilityChoices ??= Database.AbilityList.Where(pair => pair.Key >= 0 && pair.Key < 255)
-            .OrderBy(pair => pair.Key).Select(pair => new Choice(pair.Key, pair.Value))
+            .OrderBy(pair => pair.Key).Select(pair => new Choice(pair.Key,
+                Database.GetAbilityName(pair.Key, false)))
             .Append(new Choice(255, Database.STR_NONE)).ToArray();
         _artChoices ??= Database.CombatArtList.OrderBy(pair => pair.Key)
             .Select(pair => new Choice(pair.Key, pair.Value)).ToArray();

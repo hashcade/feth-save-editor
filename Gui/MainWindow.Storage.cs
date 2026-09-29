@@ -22,7 +22,8 @@ public partial class MainWindow
     {
         if (_save is null) return;
         _itemChoices ??= Database.ItemList.OrderBy(pair => pair.Key)
-            .Select(pair => new Choice(pair.Key, pair.Value)).ToArray();
+            .Select(pair => new Choice(pair.Key,
+                pair.Key < 0 ? pair.Value : Database.GetItemName(pair.Key))).ToArray();
         StorageItemCombo.ItemsSource = _itemChoices;
 
         var data = _save.Data;
