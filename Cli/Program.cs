@@ -157,7 +157,7 @@ namespace FethEditor.Cli
                         save.SetInventoryDurability(Value<string>(item, "mode"));
                         break;
                     case "characterItemDurability":
-                        save.SetCharacterItemDurability(Value<int>(item, "slot"));
+                        save.RestoreCharacterItemDurability(Value<int>(item, "slot"));
                         break;
                     case "maxSkillExp":
                         save.MaxSkillExperience(Value<int>(item, "slot"));

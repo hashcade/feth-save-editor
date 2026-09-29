@@ -24,6 +24,7 @@ public partial class MainWindow
     ];
 
     private Choice[]? _characterIds;
+    private int _selectedCharacterItem = -1;
     private Choice[]? _abilityChoices;
     private Choice[]? _artChoices;
     private int _currentCharacter = -1;
@@ -170,14 +171,83 @@ public partial class MainWindow
 
     private void PopulateCharacterItems(CharacterData_V23 character)
     {
+        CharacterItemPopup.IsOpen = false;
+        _selectedCharacterItem = -1;
         CharacterItemRows.Children.Clear();
-        CharacterItemRows.Children.Add(new TextBlock { Text = $"{character.ItemCount} / {Database.MAX_CHARA_ITEMS}" });
-        for (int index = 0; index < character.Items.Length; index++)
-            CharacterItemRows.Children.Add(new TextBlock
+        for (int index = 0; index < Database.MAX_CHARA_ITEMS; index++)
+        {
+            var item = character.Items[index];
+            var button = new Button
             {
-                Text = $"[{index}] {character.Items[index].EquippedName}",
-                TextWrapping = Avalonia.Media.TextWrapping.Wrap
-            });
+                Content = $"{index + 1} · {(item.Id == -1 ? Database.STR_NONE : item.EquippedName)}",
+                Tag = index,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.Left,
+                IsEnabled = index <= character.ItemCount
+            };
+            button.Classes.Add("Small");
+            button.Click += CharacterItemRow_Click;
+            CharacterItemRows.Children.Add(button);
+        }
+    }
+
+    private void CharacterItemRow_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: int index } button) return;
+        _selectedCharacterItem = index;
+        ShowCharacterItem();
+        CharacterItemPopup.PlacementTarget = button;
+        CharacterItemPopup.IsOpen = true;
+    }
+
+    private void ShowCharacterItem()
+    {
+        if (_save is null || _currentCharacter < 0 || _selectedCharacterItem < 0) return;
+        var character = _save.Data.Characters[_currentCharacter].data;
+        int index = _selectedCharacterItem;
+        var item = character.Items[index];
+        bool previousLoading = _loading;
+        _loading = true;
+        try
+        {
+            CharacterItemChoice.ItemsSource = _itemChoices?.Where(choice => choice.Id >= 0).ToArray();
+            CharacterItemChoice.SelectedItem = _itemChoices?.FirstOrDefault(choice => choice.Id == item.Id);
+            CharacterItemDurability.Text = item.Id == -1 ? "0" : item.Durability.ToString(CultureInfo.InvariantCulture);
+            bool editable = index <= character.ItemCount;
+            CharacterItemChoice.IsEnabled = editable;
+            CharacterItemDurability.IsEnabled = editable;
+            SaveCharacterItemButton.IsEnabled = editable;
+        }
+        finally
+        {
+            _loading = previousLoading;
+        }
+    }
+
+    private void CharacterItemChoice_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_loading || CharacterItemChoice.SelectedItem is not Choice choice) return;
+        CharacterItemDurability.Text = Database.GetItemDurability(choice.Id).ToString(CultureInfo.InvariantCulture);
+    }
+
+    private void SaveCharacterItem_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_save is null || _currentCharacter < 0 || _selectedCharacterItem < 0) return;
+        try
+        {
+            if (CharacterItemChoice.SelectedItem is not Choice choice)
+                throw new InvalidOperationException("Choose an item before applying changes.");
+            int itemSlot = _selectedCharacterItem;
+            _save.SetCharacterItem(_currentCharacter, itemSlot, checked((short)choice.Id),
+                ParseAmount(CharacterItemDurability, "Durability"));
+            PopulateCharacterItems(_save.Data.Characters[_currentCharacter].data);
+            CharacterItemPopup.IsOpen = false;
+            MarkChanged();
+        }
+        catch (Exception error)
+        {
+            Status.Text = error.Message;
+        }
     }
 
     private void PopulateEquippedChoices(CharacterData_V23 character)
@@ -285,7 +355,7 @@ public partial class MainWindow
         if (_save is null || _currentCharacter < 0) return;
         try
         {
-            _save.SetCharacterItemDurability(_currentCharacter);
+            _save.RestoreCharacterItemDurability(_currentCharacter);
             ShowCurrentCharacter();
             MarkChanged();
         }

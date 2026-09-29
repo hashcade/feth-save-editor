@@ -202,14 +202,51 @@ namespace FethEditor.Core
             }
         }
 
-        public void SetCharacterItemDurability(int slot)
+        public void RestoreCharacterItemDurability(int slot)
         {
             int count = checked((int)(long)Get($"Characters[{slot}].data.ItemCount"));
             if (count > Database.MAX_CHARA_ITEMS)
                 throw new InvalidDataException("Character item count is invalid.");
+            var items = new List<(int Index, byte Durability)>();
             for (int i = 0; i < count; i++)
-                if ((long)Get($"Characters[{slot}].data.Items[{i}].Id") != -1)
-                    Set($"Characters[{slot}].data.Items[{i}].Durability", 100);
+            {
+                int id = checked((int)(long)Get($"Characters[{slot}].data.Items[{i}].Id"));
+                if (id == -1) continue;
+                if (!Database.ItemList.ContainsKey(id))
+                    throw new InvalidDataException($"Unknown character item ID {id}.");
+                items.Add((i, checked((byte)Database.GetItemDurability(id))));
+            }
+            foreach (var item in items)
+                Set($"Characters[{slot}].data.Items[{item.Index}].Durability", item.Durability);
+        }
+
+        public void SetCharacterItem(int slot, int itemSlot, short id, byte durability)
+        {
+            if (slot < 0 || slot >= SaveData_V23.CHARACTER_COUNT)
+                throw new ArgumentOutOfRangeException(nameof(slot));
+            if (itemSlot < 0 || itemSlot >= Database.MAX_CHARA_ITEMS)
+                throw new ArgumentOutOfRangeException(nameof(itemSlot));
+            if (id == -1 || !Database.ItemList.ContainsKey(id))
+                throw new ArgumentException("Choose an item from the catalog.", nameof(id));
+
+            string prefix = $"Characters[{slot}].data";
+            int count = checked((int)(long)Get($"{prefix}.ItemCount"));
+            if (count > Database.MAX_CHARA_ITEMS)
+                throw new InvalidDataException("Character item count is invalid.");
+            for (int index = 0; index < Database.MAX_CHARA_ITEMS; index++)
+            {
+                bool occupied = (long)Get($"{prefix}.Items[{index}].Id") != -1;
+                if (occupied != (index < count))
+                    throw new InvalidDataException("Character item slots do not match their item count.");
+            }
+            if (itemSlot > count)
+                throw new InvalidOperationException("Add items to the first empty slot.");
+
+            string item = $"{prefix}.Items[{itemSlot}]";
+            Set($"{item}.Id", id);
+            Set($"{item}.Durability", durability);
+            if (itemSlot == count)
+                WriteNumber(Resolve($"{prefix}.ItemCount"), count + 1);
         }
 
         public void MaxSkillExperience(int slot)

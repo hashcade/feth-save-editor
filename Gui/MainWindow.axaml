@@ -240,9 +240,21 @@
                       <Border Classes="section">
                         <StackPanel Spacing="12">
                           <TextBlock Text="Item List" FontWeight="SemiBold" />
-                          <StackPanel Name="CharacterItemRows" Spacing="4" />
-                          <Button Classes="Small" Content="Set Item Durability to 100"
+                          <Button Classes="Small" Name="RestoreCharacterItemDurabilityButton" Content="Restore Item Durability"
                                   Click="SetCharacterItemsDurability_Click" />
+                          <StackPanel Name="CharacterItemRows" Spacing="4" />
+                          <Popup Name="CharacterItemPopup" Placement="Right" IsLightDismissEnabled="True">
+                            <suki:GlassCard Classes="section" Width="300">
+                              <StackPanel Spacing="8">
+                                <ComboBox Classes="Small" Name="CharacterItemChoice" HorizontalAlignment="Stretch"
+                                          SelectionChanged="CharacterItemChoice_SelectionChanged" />
+                                <TextBlock Text="Durability" />
+                                <TextBox Classes="Small" Name="CharacterItemDurability" />
+                                <Button Classes="Small" Name="SaveCharacterItemButton" Content="Apply Changes"
+                                        HorizontalAlignment="Stretch" Click="SaveCharacterItem_Click" />
+                              </StackPanel>
+                            </suki:GlassCard>
+                          </Popup>
                         </StackPanel>
                       </Border>
                     </StackPanel>

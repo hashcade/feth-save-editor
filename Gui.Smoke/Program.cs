@@ -193,6 +193,40 @@ if (args.Length > 0)
         if (history.IsClassMastered(34, classId) !=
             (ClassEligibility.IsAvailable(34, classId) || masteredBefore[classId]))
             throw new InvalidOperationException($"NG+ bulk unlock changed an unavailable class: {classId}.");
+
+    var itemSave = SaveBuffer.Open(args[0]);
+    var initialItems = itemSave.Data.Characters[0].data;
+    int initialCount = initialItems.ItemCount;
+    if (initialCount is < 1 or >= Database.MAX_CHARA_ITEMS)
+        throw new InvalidOperationException("The fixture needs both occupied and empty character item slots.");
+    itemSave.RestoreCharacterItemDurability(0);
+    for (int index = 0; index < initialCount; index++)
+    {
+        var restored = itemSave.Data.Characters[0].data.Items[index];
+        if (restored.Durability != Database.GetItemDurability(restored.Id) || restored.Durability == 100)
+            throw new InvalidOperationException("Character items were not restored to their normal durability limits.");
+    }
+    long equippedBefore = (long)itemSave.Get("Characters[0].data.EquippedItem[0]");
+    byte amountBefore = initialItems.Items[0].Amount;
+    itemSave.SetCharacterItem(0, 0, 22, 29);
+    if (itemSave.Data.Characters[0].data.Items[0].Id != 22
+        || itemSave.Data.Characters[0].data.Items[0].Durability != 29
+        || itemSave.Data.Characters[0].data.ItemCount != initialCount
+        || itemSave.Data.Characters[0].data.Items[0].Amount != amountBefore)
+        throw new InvalidOperationException("Replacing a character item changed the wrong fields.");
+    try
+    {
+        itemSave.SetCharacterItem(0, initialCount + 1, 22, 30);
+        throw new InvalidOperationException("Adding an item after a gap was allowed.");
+    }
+    catch (InvalidOperationException error) when (error.Message == "Add items to the first empty slot.") { }
+    itemSave.SetCharacterItem(0, initialCount, 22, 30);
+    if (itemSave.Data.Characters[0].data.Items[initialCount].Id != 22
+        || itemSave.Data.Characters[0].data.ItemCount != initialCount + 1
+        || (long)itemSave.Get("Characters[0].data.EquippedItem[0]") != equippedBefore)
+        throw new InvalidOperationException("Adding a character item did not update its count safely.");
+    if (!File.ReadAllBytes(args[0]).SequenceEqual(SaveBuffer.Open(args[0]).FinishedBytes()))
+        throw new InvalidOperationException("Character item smoke test modified the original save.");
 }
 if (args.Length > 0 && !window.FindControl<MenuItem>("SaveMenuItem")!.IsEnabled)
     throw new InvalidOperationException("A loaded save cannot be written before editing.");
@@ -648,6 +682,19 @@ if (args.Length > 0)
     var characterMainScroll = window.FindControl<ScrollViewer>("CharacterMainScroll")!;
     characterMainScroll.Offset = new Vector(0, characterMainScroll.Extent.Height);
     Dispatcher.UIThread.RunJobs();
+    var characterItemRows = window.FindControl<StackPanel>("CharacterItemRows")!;
+    if (characterItemRows.Children.Count != Database.MAX_CHARA_ITEMS)
+        throw new InvalidOperationException("Character item slots are missing.");
+    var characterItemPopup = window.FindControl<Popup>("CharacterItemPopup")!;
+    ((Button)characterItemRows.Children[0]).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    Dispatcher.UIThread.RunJobs();
+    if (!characterItemPopup.IsOpen)
+        throw new InvalidOperationException("Character item popover did not open.");
+    string itemPopoverScreenshot = Path.Combine(Path.GetTempPath(), "feth-editor-zh-character-item-popover.png");
+    (window.CaptureRenderedFrame() ?? throw new InvalidOperationException("Character item popover did not render."))
+        .Save(itemPopoverScreenshot, PngBitmapEncoderOptions.Default);
+    Console.WriteLine(itemPopoverScreenshot);
+    characterItemPopup.IsOpen = false;
     string characterItemsScreenshot = Path.Combine(Path.GetTempPath(), "feth-editor-zh-character-items.png");
     (window.CaptureRenderedFrame() ?? throw new InvalidOperationException("Character items did not render."))
         .Save(characterItemsScreenshot, PngBitmapEncoderOptions.Default);
@@ -863,6 +910,34 @@ if (args.Length > 0)
         .OfType<TextBlock>().LastOrDefault();
     if (battalionLabel?.Text?.StartsWith("Equipped Battalion:", StringComparison.Ordinal) != true)
         throw new InvalidOperationException("Character equipped battalion is not shown.");
+    var characterItems = window.FindControl<StackPanel>("CharacterItemRows")!;
+    var characterItemChoice = window.FindControl<ComboBox>("CharacterItemChoice")!;
+    var characterItemDurability = window.FindControl<TextBox>("CharacterItemDurability")!;
+    int guiItemCount = SaveBuffer.Open(args[0]).Data.Characters[0].data.ItemCount;
+    if (characterItems.Children.Count != Database.MAX_CHARA_ITEMS)
+        throw new InvalidOperationException("The character item editor does not show all six slots.");
+    ((Button)characterItems.Children[0]).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    characterItemChoice.SelectedIndex = characterItemChoice.Items
+        .Cast<object>().Select((choice, index) => (choice, index))
+        .First(entry => entry.choice.ToString() == Database.GetItemName(22)).index;
+    characterItemDurability.Text = "29";
+    window.FindControl<Button>("SaveCharacterItemButton")!
+        .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    if (!((Button)characterItems.Children[0]).Content!.ToString()!.Contains(Database.GetItemName(22), StringComparison.Ordinal))
+        throw new InvalidOperationException("Editing a character item did not update the item list.");
+    window.FindControl<Button>("RestoreCharacterItemDurabilityButton")!
+        .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    ((Button)characterItems.Children[0]).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    if (characterItemDurability.Text != Database.GetItemDurability(22).ToString())
+        throw new InvalidOperationException("Character item durability was not restored to its normal limit.");
+    ((Button)characterItems.Children[guiItemCount]).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    characterItemChoice.SelectedIndex = characterItemChoice.Items
+        .Cast<object>().Select((choice, index) => (choice, index))
+        .First(entry => entry.choice.ToString() == Database.GetItemName(22)).index;
+    window.FindControl<Button>("SaveCharacterItemButton")!
+        .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    if (!((Button)characterItems.Children[guiItemCount]).Content!.ToString()!.Contains(Database.GetItemName(22), StringComparison.Ordinal))
+        throw new InvalidOperationException("Adding a character item did not update the visible count.");
     characterTabs.SelectedIndex = 3;
     var classExp = window.FindControl<TextBox>("SelectedClassExp")!;
     classExp.Text = "12";
