@@ -342,7 +342,7 @@
                                 Content="Unlock All" HorizontalAlignment="Right"
                                 Click="UnlockAllAbilities_Click" />
                       </Grid>
-                      <StackPanel Name="CurrentAbilityFlags" Spacing="4" />
+                      <UniformGrid Name="CurrentAbilityFlags" Columns="3" />
                     </StackPanel>
                   </Border>
                 </ScrollViewer>

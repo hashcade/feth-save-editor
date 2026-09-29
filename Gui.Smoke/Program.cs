@@ -253,6 +253,16 @@ for (int index = 0; index < characterTabs.ItemCount; index++)
 {
     characterTabs.SelectedIndex = index;
     Dispatcher.UIThread.RunJobs();
+    if (index == 5)
+    {
+        var abilities = window.FindControl<UniformGrid>("CurrentAbilityFlags")!;
+        if (abilities.Columns != 3 || abilities.Children.Count < 4
+            || abilities.Children[0].Bounds.X >= abilities.Children[1].Bounds.X
+            || abilities.Children[1].Bounds.X >= abilities.Children[2].Bounds.X
+            || Math.Abs(abilities.Children[0].Bounds.X - abilities.Children[3].Bounds.X) > 1
+            || abilities.Children[3].Bounds.Y <= abilities.Children[0].Bounds.Y)
+            throw new InvalidOperationException("Ability flags did not render in three columns.");
+    }
     var frame = window.CaptureRenderedFrame()
         ?? throw new InvalidOperationException($"Character tab {index} did not render.");
     string screenshot = Path.Combine(Path.GetTempPath(), $"feth-editor-character-{index}.png");
@@ -577,7 +587,7 @@ if (args.Length > 0)
     if (firstFlag.Content?.ToString() != "Is Available"
         || ((CheckBox)window.FindControl<StackPanel>("CurrentClassUnlockFlags")!.Children[0]).Content?.ToString()
             != Database.GetUnitClassName(0)
-        || ((CheckBox)window.FindControl<StackPanel>("CurrentAbilityFlags")!.Children[0]).Content?.ToString()
+        || ((CheckBox)window.FindControl<UniformGrid>("CurrentAbilityFlags")!.Children[0]).Content?.ToString()
             != Database.GetAbilityName(0, false)
         || ((CheckBox)window.FindControl<StackPanel>("CurrentArtFlags")!.Children[0]).Content?.ToString()
             != Database.GetCombatArtName(0))

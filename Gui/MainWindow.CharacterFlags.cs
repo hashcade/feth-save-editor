@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using SaveEditor;
 using SaveEditor.Structs;
 
@@ -33,7 +34,7 @@ public partial class MainWindow
     private static bool Bit(byte[] bytes, int index) =>
         (bytes[index / 8] & (1 << (index % 8))) != 0;
 
-    private void PopulateFlagRows(StackPanel container, string path, int count,
+    private void PopulateFlagRows(Panel container, string path, int count,
         Func<int, bool> isChecked, Func<int, string> name)
     {
         container.Children.Clear();
@@ -44,7 +45,8 @@ public partial class MainWindow
             var check = new CheckBox
             {
                 Content = name(index),
-                IsChecked = isChecked(index)
+                IsChecked = isChecked(index),
+                Margin = container is UniformGrid ? new Avalonia.Thickness(0, 0, 8, 4) : default
             };
             check.IsCheckedChanged += (_, _) =>
             {
