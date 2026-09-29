@@ -46,7 +46,9 @@ public partial class MainWindow
         {
             var characters = _save.Data.Characters;
             SetSearchRows(CurrentCharacterList, CurrentCharacterSearch, characters
-                .Select((character, index) => $"[{index:D3}] {character}").ToArray(), selectedIndex);
+                .Select((character, index) => $"[{index:D3}] {Database.GetUnitName(character.data.Id)}"
+                    + $" · Lv.{character.data.Level}")
+                .ToArray(), selectedIndex);
             _currentCharacter = SelectedSourceIndex(CurrentCharacterList);
         }
         finally
@@ -91,7 +93,7 @@ public partial class MainWindow
         CharacterStatRows.Children.Clear();
         CharacterStatRows.Children.Add(new TextBlock
         {
-            Text = $"Class: {Database.GetClassName(character.Class)}"
+            Text = $"{UiStrings.Translate("Class:", _databaseLanguage)} {Database.GetClassName(character.Class)}"
         });
         foreach (var (label, field) in CharacterStats)
         {
@@ -104,7 +106,8 @@ public partial class MainWindow
             };
             row.Children.Add(new TextBlock
             {
-                Text = label, VerticalAlignment = VerticalAlignment.Center
+                Text = UiStrings.Translate(label, _databaseLanguage),
+                VerticalAlignment = VerticalAlignment.Center
             });
             var input = new TextBox
             {
@@ -312,7 +315,7 @@ public partial class MainWindow
         {
             var target = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
-                Title = "Export character",
+                Title = UiStrings.Translate("Export character", _databaseLanguage),
                 SuggestedFileName = $"character-{_currentCharacter:D3}.character"
             });
             if (target is null) return;
@@ -320,7 +323,7 @@ public partial class MainWindow
             string path = target.Path.LocalPath;
             if (File.Exists(path)) throw new IOException("The destination already exists.");
             File.WriteAllBytes(path, _save.ExportCharacter(_currentCharacter));
-            Status.Text = "Character exported: " + path;
+            Status.Text = UiStrings.Format("Character exported: {0}", _databaseLanguage, path);
         }
         catch (Exception error)
         {
@@ -335,7 +338,7 @@ public partial class MainWindow
         {
             var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
-                Title = "Import character",
+                Title = UiStrings.Translate("Import character", _databaseLanguage),
                 AllowMultiple = false
             });
             if (files.Count == 0) return;

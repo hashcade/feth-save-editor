@@ -30,7 +30,8 @@ public partial class MainWindow
         _loading = true;
         try
         {
-            StorageCount.Text = $"Item List {data.ItemCount} / {data.Items.Length}";
+            StorageCount.Text = $"{UiStrings.Translate("Item List", _databaseLanguage)} "
+                + $"{data.ItemCount} / {data.Items.Length}";
             SetSearchRows(StorageList, StorageSearch,
                 data.Items.Select((item, index) => $"[{index:D3}] {item}").ToArray(), itemIndex);
             SetSearchRows(MiscList, MiscSearch, Enumerable.Range(0, Player_V23.COUNT_MISC_ITEMS)

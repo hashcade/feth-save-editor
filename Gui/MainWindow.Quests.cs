@@ -11,8 +11,9 @@ public partial class MainWindow
     private void RefreshQuests(int selectedIndex = 0)
     {
         if (_save is null) return;
-        QuestState.ItemsSource ??= Enum.GetValues<enmQuestState>()
-            .Select(state => new Choice((int)state, $"{(int)state} · {state.GetDescription()}"))
+        QuestState.ItemsSource = Enum.GetValues<enmQuestState>()
+            .Select(state => new Choice((int)state,
+                $"{(int)state} · {UiStrings.Translate(state.GetDescription(), _databaseLanguage)}"))
             .ToArray();
         var quests = _save.Data.Activities.QuestStateList;
         bool previousLoading = _loading;

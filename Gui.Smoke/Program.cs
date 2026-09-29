@@ -52,6 +52,10 @@ if (obsoleteSeparator?.IsVisible == true)
     throw new InvalidOperationException("The old tab separator is still visible.");
 if (tabs.ItemCount != 9)
     throw new InvalidOperationException("Editor should show nine functional sections without a rank-only tab.");
+var englishTabs = tabs.Items.OfType<TabItem>().Select(tab => tab.Header?.ToString()).ToArray();
+if (englishTabs[2] != "Roster" || englishTabs[5] != "Support"
+    || englishTabs[7] != "NG+ Roster" || englishTabs[8] != "NG+ Support")
+    throw new InvalidOperationException("English navigation labels are inconsistent.");
 navigation.SelectedIndex = 3;
 Dispatcher.UIThread.RunJobs();
 if (tabs.SelectedIndex != 3)
@@ -155,6 +159,17 @@ if (args.Length > 1)
     string systemScreenshot = Path.Combine(Path.GetTempPath(), "feth-editor-system.png");
     systemFrame.Save(systemScreenshot, PngBitmapEncoderOptions.Default);
     Console.WriteLine(systemScreenshot);
+    systemWindow.SetLanguage(enmLanguage.zh_hans);
+    Database.Init(enmLanguage.zh_hans);
+    systemWindow.LoadSystem(args[1]);
+    Dispatcher.UIThread.RunJobs();
+    if (systemWindow.Title != "系统存档编辑器"
+        || systemWindow.FindControl<TextBlock>("SystemStatus")!.Text != "系统存档已加载。修改只保存在内存中，另存副本后才会写入。")
+        throw new InvalidOperationException("System save editor was not localized.");
+    string chineseSystemScreenshot = Path.Combine(Path.GetTempPath(), "feth-editor-zh-system.png");
+    (systemWindow.CaptureRenderedFrame() ?? throw new InvalidOperationException("Chinese system editor did not render."))
+        .Save(chineseSystemScreenshot, PngBitmapEncoderOptions.Default);
+    Console.WriteLine(chineseSystemScreenshot);
     var flagList = systemWindow.FindControl<ListBox>("SystemFlags")!;
     var row = (SystemFlagRow)flagList.Items[0]!;
     var firstCheck = flagList.GetVisualDescendants().OfType<CheckBox>().First();
@@ -271,10 +286,11 @@ if (args.Length > 0)
     for (int index = 0; index < supportedLanguages.Length; index++)
     {
         menuItems[index].RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
-        var expectedStorage = supportedLanguages[index] == enmLanguage.zh_hans
-            ? "物品" : Database.GetString(1814, 1);
+        var expectedStorage = supportedLanguages[index] == enmLanguage.zh_hans ? "物品"
+            : supportedLanguages[index] is enmLanguage.en_u or enmLanguage.en_e ? "Items"
+            : Database.GetString(1814, 1);
         if (tabs.Items.OfType<TabItem>().ElementAt(1).Header?.ToString() != expectedStorage)
-            throw new InvalidOperationException($"Game text did not follow {supportedLanguages[index]}.");
+            throw new InvalidOperationException($"Navigation label did not follow {supportedLanguages[index]}.");
     }
     ((MenuItem)language.Items[11]!).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
     Dispatcher.UIThread.RunJobs();
@@ -282,9 +298,9 @@ if (args.Length > 0)
         || tabs.Items.OfType<TabItem>().ElementAt(1).Header?.ToString() != "物品"
         || tabs.Items.OfType<TabItem>().ElementAt(3).Header?.ToString() != "骑士团"
         || tabs.Items.OfType<TabItem>().ElementAt(4).Header?.ToString() != "任务"
-        || tabs.Items.OfType<TabItem>().ElementAt(5).Header?.ToString() != "支援对话")
+        || tabs.Items.OfType<TabItem>().ElementAt(5).Header?.ToString() != "支援")
         throw new InvalidOperationException("Chinese interface was not applied.");
-    if (tabs.Items.OfType<TabItem>().ElementAt(7).Header?.ToString() != "继承角色"
+    if (tabs.Items.OfType<TabItem>().ElementAt(7).Header?.ToString() != "继承名册"
         || ((MenuItem)language.Items[11]!).Header?.ToString() != "✓ 简体中文")
         throw new InvalidOperationException("Inheritance labels or language names were not localized.");
     if (window.FindControl<TextBox>("StorageSearch")!.PlaceholderText != "搜索…"
@@ -308,6 +324,17 @@ if (args.Length > 0)
         .Where(text => text.IsVisible).Select(text => text.Text).ToArray();
     if (!visibleText.Contains("玩家") || !visibleText.Contains("游戏设定"))
         throw new InvalidOperationException("Overview section headings are not localized.");
+    tabs.SelectedIndex = 2;
+    Dispatcher.UIThread.RunJobs();
+    var characterStatRows = window.FindControl<StackPanel>("CharacterStatRows")!;
+    if (!characterStatRows.Children.OfType<Grid>().SelectMany(row => row.Children.OfType<TextBlock>())
+        .Any(label => label.Text == "力量"))
+        throw new InvalidOperationException("Dynamic character stat labels were not localized.");
+    if (tabs.Items.OfType<TabItem>().ElementAt(2).Header?.ToString() != "名册"
+        || tabs.Items.OfType<TabItem>().ElementAt(7).Header?.ToString() != "继承名册"
+        || tabs.Items.OfType<TabItem>().ElementAt(8).Header?.ToString() != "继承支援")
+        throw new InvalidOperationException("NG+ navigation labels changed unexpectedly.");
+    tabs.SelectedIndex = 0;
     characterTabs.SelectedIndex = 0;
     for (int index = 0; index < tabs.ItemCount; index++)
     {
@@ -523,7 +550,7 @@ if (args.Length > 0)
     level.Text = "4";
     ((Grid)stats.Children[3]).Children.OfType<TextBox>().Single().Focus();
     Dispatcher.UIThread.RunJobs();
-    if (!character.Items[0]!.ToString()!.Contains("Lv:4", StringComparison.Ordinal))
+    if (!character.Items[0]!.ToString()!.Contains("Lv.4", StringComparison.Ordinal))
         throw new InvalidOperationException("Character level edit did not update the list.");
     characterTabs.SelectedIndex = 2;
     var flags = window.FindControl<StackPanel>("CurrentCharacterFlags")!;

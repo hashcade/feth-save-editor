@@ -16,8 +16,11 @@ public partial class MainWindow
         _loading = true;
         try
         {
-            CurrentClassInfo.Text = $"Current: {Database.GetClassName(character.Class)} · "
-                + $"EXP {character.CurrentClassExp} · mastery {character.CurrentClassLevel}";
+            CurrentClassInfo.Text = $"{UiStrings.Translate("Current class:", _databaseLanguage)} "
+                + $"{Database.GetClassName(character.Class)} · "
+                + $"{UiStrings.Translate("Experience", _databaseLanguage)} "
+                + $"{character.CurrentClassExp} · "
+                + $"{UiStrings.Translate("Mastery:", _databaseLanguage)} {character.CurrentClassLevel}";
             CurrentClassExpList.ItemsSource = Enumerable.Range(0, Database.MAX_CLASS)
                 .Select(index => $"{index:D3} · {Database.GetClassName(index)} · "
                     + $"{character.ClassExp[index]} / {character.ClassLevel[index]}")

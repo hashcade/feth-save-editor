@@ -15,13 +15,31 @@ public partial class SystemWindow : Window
 {
     private SystemBuffer? _system;
     private string? _sourcePath;
+    private enmLanguage _language = UiPreferences.Load();
 
     public SystemWindow()
     {
         InitializeComponent();
+        SetLanguage(_language);
         DragDrop.AddDragOverHandler(this, SystemDragOver);
         DragDrop.AddDropHandler(this, SystemDropped);
     }
+
+    public void SetLanguage(enmLanguage language)
+    {
+        _language = language;
+        UiStrings.Apply(this, language);
+        Title = UiStrings.Translate("System Save Editor", language);
+        SystemStatus.Text = _system is null
+            ? UiStrings.Translate("Load a system save to begin.", language)
+            : LoadedStatus(_system);
+    }
+
+    private string LoadedStatus(SystemBuffer opened) => opened.HasInvalidChecksum
+        ? UiStrings.Translate("Warning: system save checksum does not match. Keep the original; writing will repair the checksum.", _language)
+        : opened.SourceVersion == 5
+            ? UiStrings.Translate("Version-5 system save loaded. Writing will upgrade it to version 7; keep a backup for older games.", _language)
+            : UiStrings.Translate("System save loaded. Edits remain in memory until written.", _language);
 
     private void SystemDragOver(object? sender, DragEventArgs e) =>
         e.DragEffects = e.DataTransfer.Contains(DataFormat.File)
@@ -38,7 +56,7 @@ public partial class SystemWindow : Window
         }
         catch (Exception error)
         {
-            SystemStatus.Text = "Could not load system save: " + error.Message;
+            SystemStatus.Text = UiStrings.Format("Could not load system save: {0}", _language, error.Message);
         }
     }
 
@@ -59,11 +77,7 @@ public partial class SystemWindow : Window
             .ToArray();
         SystemSlots.SelectedIndex = 0;
         WriteSystemMenu.IsEnabled = true;
-        SystemStatus.Text = opened.HasInvalidChecksum
-            ? "Warning: system save checksum does not match. Keep the original; writing will repair the checksum."
-            : opened.SourceVersion == 5
-                ? "Version-5 system save loaded. Writing will upgrade it to version 7; keep a backup for older games."
-                : "System save loaded. Edits remain in memory until written.";
+        SystemStatus.Text = LoadedStatus(opened);
     }
 
     private void OnFlagChanged(int index, bool enabled)
@@ -71,7 +85,7 @@ public partial class SystemWindow : Window
         if (_system is null) return;
         _system.SetFlag(index, enabled);
         WriteSystemMenu.IsEnabled = true;
-        SystemStatus.Text = $"Flag {index} changed. Write an edited copy to keep it.";
+        SystemStatus.Text = UiStrings.Format("Flag {0} changed. Write an edited copy to keep it.", _language, index);
     }
 
     private async void OpenSystem_Click(object? sender, RoutedEventArgs e)
@@ -80,7 +94,7 @@ public partial class SystemWindow : Window
         {
             var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
-                Title = "Open a Fire Emblem system save",
+                Title = UiStrings.Translate("Open a Fire Emblem system save", _language),
                 AllowMultiple = false
             });
             if (files.Count == 0) return;
@@ -89,7 +103,7 @@ public partial class SystemWindow : Window
         }
         catch (Exception error)
         {
-            SystemStatus.Text = "Could not load system save: " + error.Message;
+            SystemStatus.Text = UiStrings.Format("Could not load system save: {0}", _language, error.Message);
         }
     }
 
@@ -100,7 +114,7 @@ public partial class SystemWindow : Window
         {
             var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
-                Title = "Write system save",
+                Title = UiStrings.Translate("Write system save", _language),
                 SuggestedFileName = Path.GetFileName(_sourcePath)
             });
             if (file is null) return;
@@ -112,12 +126,12 @@ public partial class SystemWindow : Window
                 return verified.SourceVersion == 7 && !verified.HasInvalidChecksum;
             });
             SystemStatus.Text = backup is null
-                ? "Saved and verified: " + destination
-                : "Saved and verified: " + destination + " (backup: " + backup + ")";
+                ? UiStrings.Format("Saved and verified: {0}", _language, destination)
+                : UiStrings.Format("Saved and verified: {0} (backup: {1})", _language, destination, backup);
         }
         catch (Exception error)
         {
-            SystemStatus.Text = "Could not save copy: " + error.Message;
+            SystemStatus.Text = UiStrings.Format("Could not save copy: {0}", _language, error.Message);
         }
     }
 

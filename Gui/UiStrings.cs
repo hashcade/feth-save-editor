@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
@@ -32,18 +33,24 @@ internal static class UiStrings
         ["Monthly Statistics"] = (3937, 1),
         ["Activity Points"] = (1163, 1),
         ["Goddess Statue"] = (461, 1),
-        ["Storage"] = (1814, 1),
-        ["Characters"] = (1807, 1),
-        ["Battalion"] = (385, 1),
-        ["Quest"] = (1811, 1),
-        ["Support Talks"] = (1060, 1),
         ["Stats"] = (893, 1),
         ["Skills"] = (569, 1),
-        ["Class Exp"] = (540, 1),
         ["Abilities"] = (260, 1),
         ["Combat Arts"] = (264, 1),
         ["Experience"] = (2324, 1),
         ["Level"] = (2326, 1)
+    };
+
+    // Keep the editor's English navigation consistent, while retaining the
+    // game's own menu terms for languages without a dedicated UI resource.
+    private static readonly Dictionary<string, int> NavigationGameStrings = new(StringComparer.Ordinal)
+    {
+        ["Items"] = 1814,
+        ["Roster"] = 1807,
+        ["Characters"] = 1807,
+        ["Battalions"] = 385,
+        ["Quests"] = 1811,
+        ["Support"] = 1060
     };
 
     private static readonly Dictionary<enmLanguage, Dictionary<string, string>> Locales = new();
@@ -62,10 +69,20 @@ internal static class UiStrings
             Locales[language] = locale = LoadLocale(language);
         if (locale.TryGetValue(value, out string? translated))
             return translated;
+        if (Database.BinaryDatabase is not null && language is not (enmLanguage.en_u or enmLanguage.en_e))
+        {
+            if (value is "NG+ Roster") return "NG+ " + Translate("Roster", language);
+            if (value is "NG+ Support") return "NG+ " + Translate("Support", language);
+            if (NavigationGameStrings.TryGetValue(value, out int id))
+                return Database.GetString(id, 1);
+        }
         if (Database.BinaryDatabase is not null && GameStrings.TryGetValue(value, out var text))
             return Database.GetString(text.Id, text.Table) + (value.EndsWith(':') ? ":" : "");
         return value;
     }
+
+    public static string Format(string value, enmLanguage language, params object[] arguments) =>
+        string.Format(CultureInfo.CurrentCulture, Translate(value, language), arguments);
 
     public static string LanguageName(enmLanguage option, enmLanguage current)
     {
@@ -81,7 +98,9 @@ internal static class UiStrings
             if (control.TemplatedParent is not null) continue;
             switch (control)
             {
-                case TextBlock text when control.Name is not "Status"
+                case TextBlock text when control.Name is not ("Status" or "SystemStatus"
+                    or "StorageCount" or "CurrentCharacterTitle" or "CurrentClassInfo"
+                    or "EquippedBattalionValue")
                     && control.GetVisualParent() is not ContentPresenter { TemplatedParent: TabStripItem }:
                     Replace(control, text.Text, value => text.Text = value, language);
                     break;

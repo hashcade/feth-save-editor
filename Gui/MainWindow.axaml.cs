@@ -101,11 +101,13 @@ public partial class MainWindow : Window
             if (change.Property != TextBlock.TextProperty) return;
             _statusTimer.Stop();
             StatusNotice.IsVisible = !string.IsNullOrWhiteSpace(Status.Text);
-            if (StatusNotice.IsVisible && !Status.Text!.StartsWith("Warning:", StringComparison.Ordinal))
+            if (StatusNotice.IsVisible && !Status.Text!.StartsWith("Warning:", StringComparison.Ordinal)
+                && !Status.Text.StartsWith("警告：", StringComparison.Ordinal))
                 _statusTimer.Start();
         };
         EditorTabs.SelectionChanged += (_, _) => UiStrings.Apply(this, _databaseLanguage);
         UiStrings.Apply(this, _databaseLanguage);
+        RefreshEmptyLabels();
     }
 
     private void UpdateLanguageMenu()
@@ -153,14 +155,22 @@ public partial class MainWindow : Window
                 RefreshDatabaseViewer();
             }
             UiStrings.Apply(this, _databaseLanguage);
+            if (_save is null) RefreshEmptyLabels();
             Status.Text = string.Empty;
         }
         catch (Exception error)
         {
             if (_databaseReady) Database.Init(_databaseLanguage);
             UpdateLanguageMenu();
-            Status.Text = "Could not change database language: " + error.Message;
+            Status.Text = UiStrings.Format("Could not change database language: {0}", _databaseLanguage, error.Message);
         }
+    }
+
+    private void RefreshEmptyLabels()
+    {
+        StorageCount.Text = UiStrings.Translate("Item List", _databaseLanguage);
+        CurrentCharacterTitle.Text = UiStrings.Translate("Select a character", _databaseLanguage);
+        CurrentClassInfo.Text = UiStrings.Translate("Current class", _databaseLanguage);
     }
 
     private void Exit_Click(object? sender, RoutedEventArgs e) => Close();
@@ -180,7 +190,7 @@ public partial class MainWindow : Window
         }
         catch (Exception error)
         {
-            Status.Text = "Could not open save: " + error.Message;
+            Status.Text = UiStrings.Format("Could not open save: {0}", _databaseLanguage, error.Message);
         }
     }
 
@@ -192,7 +202,7 @@ public partial class MainWindow : Window
             _databaseReady = true;
         }
         var editor = new SystemWindow();
-        UiStrings.Apply(editor, _databaseLanguage);
+        editor.SetLanguage(_databaseLanguage);
         editor.Show(this);
     }
 
@@ -202,7 +212,7 @@ public partial class MainWindow : Window
         {
             var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
-                Title = "Open a Fire Emblem: Three Houses save",
+                Title = UiStrings.Translate("Open a Fire Emblem: Three Houses save", _databaseLanguage),
                 AllowMultiple = false
             });
             if (files.Count == 0) return;
@@ -212,7 +222,7 @@ public partial class MainWindow : Window
         catch (Exception error)
         {
             _loading = false;
-            Status.Text = "Could not open save: " + error.Message;
+            Status.Text = UiStrings.Format("Could not open save: {0}", _databaseLanguage, error.Message);
         }
     }
 
@@ -258,7 +268,7 @@ public partial class MainWindow : Window
         RefreshDatabaseViewer();
         UiStrings.Apply(this, _databaseLanguage);
         Status.Text = opened.HasInvalidChecksum
-            ? "Warning: save checksum does not match. Keep the original; writing will repair the checksum."
+            ? UiStrings.Translate("Warning: save checksum does not match. Keep the original; writing will repair the checksum.", _databaseLanguage)
             : string.Empty;
     }
 
@@ -269,7 +279,7 @@ public partial class MainWindow : Window
         {
             var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
-                Title = "Write save",
+                Title = UiStrings.Translate("Write save", _databaseLanguage),
                 SuggestedFileName = Path.GetFileName(_sourcePath)
             });
             if (file is null) return;
@@ -282,12 +292,12 @@ public partial class MainWindow : Window
                 return !verified.HasInvalidChecksum && verified.Sha256 == SaveBuffer.Digest(output);
             });
             Status.Text = backup is null
-                ? "Saved and verified: " + destination
-                : "Saved and verified: " + destination + " (backup: " + backup + ")";
+                ? UiStrings.Format("Saved and verified: {0}", _databaseLanguage, destination)
+                : UiStrings.Format("Saved and verified: {0} (backup: {1})", _databaseLanguage, destination, backup);
         }
         catch (Exception error)
         {
-            Status.Text = "Could not save copy: " + error.Message;
+            Status.Text = UiStrings.Format("Could not save copy: {0}", _databaseLanguage, error.Message);
         }
     }
 

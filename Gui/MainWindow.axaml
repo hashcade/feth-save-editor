@@ -28,13 +28,13 @@
   <DockPanel>
     <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*">
         <Menu VerticalAlignment="Center">
-          <MenuItem Header="_File">
-            <MenuItem Header="_Load Save..." Click="OpenSave_Click" />
-            <MenuItem Name="SaveMenuItem" Header="_Write Save..."
+          <MenuItem Header="File">
+            <MenuItem Header="Open Save..." Click="OpenSave_Click" />
+            <MenuItem Name="SaveMenuItem" Header="Save Copy..."
                       IsEnabled="False" Click="SaveCopy_Click" />
-            <MenuItem Header="_System Save Editor..." Click="OpenSystemEditor_Click" />
+            <MenuItem Header="System Save Editor..." Click="OpenSystemEditor_Click" />
             <Separator />
-            <MenuItem Header="E_xit" Click="Exit_Click" />
+            <MenuItem Header="Exit" Click="Exit_Click" />
           </MenuItem>
           <MenuItem Name="LanguageMenu" Header="Language" />
         </Menu>
@@ -122,7 +122,7 @@
         </ScrollViewer>
       </TabItem>
 
-      <TabItem Name="StorageTab" Header="Storage">
+      <TabItem Name="StorageTab" Header="Items">
         <Grid Margin="8" ColumnDefinitions="250,220,*,*" ColumnSpacing="10">
           <suki:GlassCard Name="StorageListCard" Classes="section" Grid.Column="0">
             <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
@@ -142,7 +142,7 @@
                 <TextBox Classes="Small" Name="StorageDurability" />
                 <TextBlock Text="Amount" />
                 <TextBox Classes="Small" Name="StorageAmount" />
-                <Button Classes="Small" Content="Save Changes" Click="SaveStorageItem_Click" />
+                <Button Classes="Small" Content="Apply Changes" Click="SaveStorageItem_Click" />
               </StackPanel>
             </suki:GlassCard>
             <suki:GlassCard Name="StorageToolsCard" Classes="section" Grid.Row="1">
@@ -187,7 +187,7 @@
         </Grid>
       </TabItem>
 
-      <TabItem Name="CharactersTab" Header="Characters">
+      <TabItem Name="CharactersTab" Header="Roster">
         <Grid Margin="8" ColumnDefinitions="264,*" ColumnSpacing="8">
           <suki:GlassCard Name="CharacterListCard" Classes="section" Grid.Column="0">
             <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
@@ -292,7 +292,7 @@
                   </Grid>
                 </ScrollViewer>
               </TabItem>
-              <TabItem Header="Class Exp">
+              <TabItem Header="Class Experience">
                 <Grid Margin="8" ColumnDefinitions="*,200" ColumnSpacing="8">
                   <Border Classes="section">
                     <Grid RowDefinitions="Auto,*" RowSpacing="12">
@@ -365,7 +365,7 @@
         </Grid>
       </TabItem>
 
-      <TabItem Name="BattalionTab" Header="Battalion">
+      <TabItem Name="BattalionTab" Header="Battalions">
         <Grid Margin="8" ColumnDefinitions="320,*" ColumnSpacing="10">
           <suki:GlassCard Name="BattalionListCard" Classes="section" Grid.Column="0">
             <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
@@ -389,14 +389,14 @@
               <TextBox Classes="Small" Name="BattalionStamina" />
               <TextBlock Text="Skill" />
               <ComboBox Classes="Small" Name="BattalionSkill" />
-              <Button Classes="Small" Name="SaveBattalionButton" Content="Save Changes" Click="SaveBattalion_Click" />
+              <Button Classes="Small" Name="SaveBattalionButton" Content="Apply Changes" Click="SaveBattalion_Click" />
               <Button Classes="Small" Content="Sort Battalion" Click="SortBattalion_Click" />
             </StackPanel>
           </suki:GlassCard>
         </Grid>
       </TabItem>
 
-      <TabItem Name="QuestTab" Header="Quest">
+      <TabItem Name="QuestTab" Header="Quests">
         <Grid Margin="8" ColumnDefinitions="320,*" ColumnSpacing="10">
           <suki:GlassCard Name="QuestListCard" Classes="section" Grid.Column="0">
             <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
@@ -417,11 +417,11 @@
         </Grid>
       </TabItem>
 
-      <TabItem Name="SupportTab" Header="Support Talks">
+      <TabItem Name="SupportTab" Header="Support">
         <Grid Margin="8" ColumnDefinitions="320,*" ColumnSpacing="10">
           <suki:GlassCard Name="SupportListCard" Classes="section" Grid.Column="0">
             <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
-              <TextBlock Text="Talk List" FontWeight="SemiBold" />
+              <TextBlock Text="Support List" FontWeight="SemiBold" />
               <TextBox Classes="Small" Name="CurrentSupportSearch" Grid.Row="1" PlaceholderText="Search..."
                        TextChanged="SearchableList_TextChanged" />
               <ListBox Classes="Small" Name="CurrentSupportList" Grid.Row="2"
@@ -430,7 +430,7 @@
           </suki:GlassCard>
           <suki:GlassCard Name="SupportEditorCard" Classes="section" Grid.Column="1">
             <StackPanel Width="340" HorizontalAlignment="Left" Spacing="8">
-              <TextBlock Text="Talk Editor" FontWeight="SemiBold" />
+              <TextBlock Text="Support Editor" FontWeight="SemiBold" />
               <TextBlock Text="Rank" />
               <ComboBox Classes="Small" Name="CurrentSupportRank" Margin="-5,0"
                         SelectionChanged="SupportRank_SelectionChanged" />
@@ -489,7 +489,7 @@
         </suki:GlassCard>
       </TabItem>
 
-      <TabItem Name="InheritanceCharactersTab" Header="NG+ Characters">
+      <TabItem Name="InheritanceCharactersTab" Header="NG+ Roster">
         <Grid Margin="8" ColumnDefinitions="264,*" ColumnSpacing="10">
           <suki:GlassCard Name="InheritanceCharacterListCard" Classes="section" Grid.Column="0">
             <Grid RowDefinitions="Auto,*" RowSpacing="12">
@@ -530,11 +530,11 @@
         </Grid>
       </TabItem>
 
-      <TabItem Name="InheritanceSupportTab" Header="NG+ Support Talks">
+      <TabItem Name="InheritanceSupportTab" Header="NG+ Support">
         <Grid Margin="8" ColumnDefinitions="320,*" ColumnSpacing="10">
           <suki:GlassCard Name="InheritanceSupportListCard" Classes="section" Grid.Column="0">
             <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
-              <TextBlock Text="Talk List" FontWeight="SemiBold" />
+              <TextBlock Text="Support List" FontWeight="SemiBold" />
               <TextBox Classes="Small" Name="SupportSearch" Grid.Row="1" PlaceholderText="Search..."
                        TextChanged="SupportSearch_TextChanged" />
               <ListBox Classes="Small" Name="SupportList" Grid.Row="2"

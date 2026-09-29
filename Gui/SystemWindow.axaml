@@ -11,12 +11,12 @@
   </Window.Styles>
   <DockPanel>
     <Menu DockPanel.Dock="Top" Height="24">
-      <MenuItem Header="_File">
-        <MenuItem Header="_Load System Save..." Click="OpenSystem_Click" />
-        <MenuItem Name="WriteSystemMenu" Header="_Write Save..."
+      <MenuItem Header="File">
+        <MenuItem Header="Open System Save..." Click="OpenSystem_Click" />
+        <MenuItem Name="WriteSystemMenu" Header="Save Copy..."
                   IsEnabled="False" Click="WriteSystem_Click" />
         <Separator />
-        <MenuItem Header="E_xit" Click="Exit_Click" />
+        <MenuItem Header="Exit" Click="Exit_Click" />
       </MenuItem>
     </Menu>
     <Border DockPanel.Dock="Bottom" Padding="6,3">
