@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Package self-contained GUI and CLI builds for a GitHub release."""
+"""Package GUI and CLI builds with one shared, self-contained .NET runtime."""
 
 import argparse
+import filecmp
 import os
 import plistlib
 import shutil
@@ -13,16 +14,37 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 APP_NAME = "FETH Save Editor.app"
+WINDOWS_GUI_NAME = "FETH Save Editor.exe"
 
 
-def make_macos_app(gui: Path, destination: Path, version: str) -> None:
+def merge_publishes(gui: Path, cli: Path, destination: Path, rid: str) -> None:
+    """Co-locate both apphosts and retain just one copy of identical runtime files."""
+    for published in (gui, cli):
+        for source in published.rglob("*"):
+            if not source.is_file():
+                continue
+            relative = source.relative_to(published)
+            if relative.suffix.lower() == ".pdb" or relative.parts[0] == "Database":
+                continue  # Symbols are not needed; Core embeds the game database.
+            target = destination / relative
+            if target.exists():
+                if not filecmp.cmp(source, target, shallow=False):
+                    raise ValueError(f"Conflicting GUI/CLI publish file: {relative}")
+                continue
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, target)
+
+    if rid != "win-x64":
+        for path in destination.rglob("*"):
+            if path.is_file() and (path.name in ("FethEditor.Gui", "FethEditor.Cli")
+                                   or path.suffix == ".dylib" or ".so" in path.name):
+                os.chmod(path, path.stat().st_mode | 0o111)
+
+
+def make_macos_app(destination: Path, version: str) -> None:
     contents = destination / "Contents"
     executable_dir = contents / "MacOS"
     resources = contents / "Resources"
-    executable_dir.mkdir(parents=True)
-    gui_binary = executable_dir / "FethEditor.Gui"
-    shutil.copy2(gui / "FethEditor.Gui", gui_binary)
-    os.chmod(gui_binary, gui_binary.stat().st_mode | 0o111)
     resources.mkdir()
 
     iconset = contents / "Sothis.iconset"
@@ -70,8 +92,7 @@ def make_macos_app(gui: Path, destination: Path, version: str) -> None:
             output,
         )
     subprocess.run(
-        ["codesign", "--force", "--deep", "--sign", "-", "--timestamp=none",
-         str(destination)],
+        ["codesign", "--force", "--deep", "--sign", "-", "--timestamp=none", str(destination)],
         check=True,
     )
     subprocess.run(
@@ -100,24 +121,40 @@ def main() -> None:
     with tempfile.TemporaryDirectory(prefix="feth-release-") as temporary:
         staging = Path(temporary)
         if args.rid.startswith("osx-"):
-            make_macos_app(gui, staging / APP_NAME, version)
+            app = staging / APP_NAME
+            merge_publishes(gui, cli, app / "Contents/MacOS", args.rid)
+            make_macos_app(app, version)
             gui_binary = staging / APP_NAME / "Contents/MacOS/FethEditor.Gui"
+            (staging / "Cli").mkdir()
+            cli_binary = staging / "Cli/FethEditor.Cli"
+            cli_binary.write_text(
+                '#!/bin/sh\n'
+                'app_dir=$(CDPATH= cd "$(dirname "$0")/.." && pwd) || exit 1\n'
+                'exec "$app_dir/FETH Save Editor.app/Contents/MacOS/FethEditor.Cli" "$@"\n',
+                encoding="utf-8",
+            )
+            os.chmod(cli_binary, 0o755)
         else:
-            (staging / "Gui").mkdir()
-            gui_binary = staging / "Gui" / f"FethEditor.Gui{suffix}"
-            shutil.copy2(gui / gui_binary.name, gui_binary)
-        (staging / "Cli").mkdir()
-        cli_binary = staging / "Cli" / f"FethEditor.Cli{suffix}"
-        shutil.copy2(cli / cli_binary.name, cli_binary)
-        if args.rid == "linux-x64":
-            os.chmod(gui_binary, gui_binary.stat().st_mode | 0o111)
-        if args.rid != "win-x64":
-            os.chmod(cli_binary, cli_binary.stat().st_mode | 0o111)
+            merge_publishes(gui, cli, staging, args.rid)
+            if args.rid == "win-x64":
+                gui_binary = staging / WINDOWS_GUI_NAME
+                (staging / "FethEditor.Gui.exe").rename(gui_binary)
+            else:
+                gui_binary = staging / "FethEditor.Gui"
+            cli_binary = staging / f"FethEditor.Cli{suffix}"
 
         output.parent.mkdir(parents=True, exist_ok=True)
-        with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as archive:
-            for path in sorted(staging.rglob("*")):
-                archive.write(path, path.relative_to(staging))
+        if args.rid.startswith("osx-"):
+            # Finder's Archive Utility restores the signatures on managed DLLs
+            # from the AppleDouble entries written by ditto.
+            subprocess.run(
+                ["ditto", "-c", "-k", "--sequesterRsrc", str(staging), str(output)],
+                check=True,
+            )
+        else:
+            with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as archive:
+                for path in sorted(staging.rglob("*")):
+                    archive.write(path, path.relative_to(staging))
         with zipfile.ZipFile(output) as archive:
             expected = [
                 gui_binary.relative_to(staging).as_posix(),

@@ -37,8 +37,8 @@ jobs:
       - name: Render GUI smoke test
         run: dotnet run --project Gui.Smoke/Gui.Smoke.csproj -c Release
 
-      - name: Publish standalone GUI
-        run: dotnet publish Gui/FethEditor.Gui.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o dist/gui/${{ matrix.rid }}
+      - name: Publish self-contained GUI
+        run: dotnet publish Gui/FethEditor.Gui.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=false -o dist/gui/${{ matrix.rid }}
 
       - uses: actions/upload-artifact@v7
         with:
@@ -82,8 +82,8 @@ jobs:
       - name: Verify save editing
         run: python tools/test_cli.py --cli Cli/bin/Release/net10.0/${{ matrix.executable }}
 
-      - name: Publish standalone CLI
-        run: dotnet publish Cli/Cli.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -o dist/${{ matrix.rid }}
+      - name: Publish self-contained CLI
+        run: dotnet publish Cli/Cli.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=false -o dist/${{ matrix.rid }}
 
       - uses: actions/upload-artifact@v7
         with:
@@ -91,3 +91,41 @@ jobs:
           path: dist/${{ matrix.rid }}/
           if-no-files-found: error
           retention-days: 14
+
+  package:
+    needs: [gui, cli]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2025
+            rid: win-x64
+          - os: macos-15
+            rid: osx-arm64
+          - os: macos-15
+            rid: osx-x64
+          - os: ubuntu-24.04
+            rid: linux-x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: feth-gui-${{ matrix.rid }}
+          path: dist/gui/${{ matrix.rid }}
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: feth-cli-${{ matrix.rid }}
+          path: dist/cli/${{ matrix.rid }}
+
+      - name: Package shared runtime
+        run: python tools/package_release.py ${{ matrix.rid }}
+
+      - name: Test extracted release ZIP
+        run: python tools/test_release_package.py ${{ matrix.rid }}
