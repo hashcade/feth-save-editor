@@ -55,16 +55,16 @@ jobs:
         run: dotnet build FethEditor.slnx -c Release --nologo
 
       - name: Verify CLI save editing
-        run: python tools/test_cli.py --cli Cli/bin/Release/net10.0/${{ matrix.cli }}
+        run: python tools/test_cli.py --cli cli/bin/Release/net10.0/${{ matrix.cli }}
 
       - name: Verify GUI rendering
-        run: dotnet run --project Gui.Smoke/Gui.Smoke.csproj -c Release --no-build
+        run: dotnet run --project test/Gui.Smoke.csproj -c Release --no-build
 
       - name: Publish GUI
-        run: dotnet publish Gui/FethEditor.Gui.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=false -o dist/gui/${{ matrix.rid }}
+        run: dotnet publish gui/FethEditor.Gui.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=false -o dist/gui/${{ matrix.rid }}
 
       - name: Publish CLI
-        run: dotnet publish Cli/Cli.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=false -o dist/cli/${{ matrix.rid }}
+        run: dotnet publish cli/Cli.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=false -o dist/cli/${{ matrix.rid }}
 
       - name: Package platform download
         run: python tools/package_release.py ${{ matrix.rid }}

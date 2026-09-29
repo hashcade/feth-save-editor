@@ -16,8 +16,8 @@ FILES = {
     "FETH_SaveEditor.exe": ROOT / "SaveEditor/bin/Release/FETH_SaveEditor.exe",
     "FETH_SaveEditor.exe.config": ROOT / "SaveEditor/bin/Release/FETH_SaveEditor.exe.config",
     "FETH_Cli.exe": ROOT / "FethCli/bin/Release/net472/FETH_Cli.exe",
-    "DataUnpacker.exe": ROOT / "DataUnpacker/bin/Release/DataUnpacker.exe",
-    "DataUnpacker.exe.config": ROOT / "DataUnpacker/bin/Release/DataUnpacker.exe.config",
+    "DataUnpacker.exe": ROOT / "data-unpacker/bin/Release/DataUnpacker.exe",
+    "DataUnpacker.exe.config": ROOT / "data-unpacker/bin/Release/DataUnpacker.exe.config",
     "README.md": ROOT / "README.md",
     "CLI.md": ROOT / "CLI.md",
 }

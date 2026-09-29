@@ -26,7 +26,7 @@ Download the GUI from the [latest release](https://github.com/jinghaihan/feth-sa
 To run from source with the .NET 10 SDK:
 
 ```sh
-dotnet run --project Gui/FethEditor.Gui.csproj -c Release
+dotnet run --project gui/FethEditor.Gui.csproj -c Release
 ```
 
 For scripted edits, see the [CLI guide](CLI.md).

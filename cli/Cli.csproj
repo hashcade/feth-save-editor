@@ -10,6 +10,6 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="JsonCompat.cs" />
-    <ProjectReference Include="../Core/Core.csproj" />
+    <ProjectReference Include="../core/Core.csproj" />
   </ItemGroup>
 </Project>

@@ -49,7 +49,7 @@ def make_macos_app(destination: Path, version: str) -> None:
 
     iconset = contents / "Sothis.iconset"
     iconset.mkdir()
-    portrait = ROOT / "Gui/Assets/sothis-portrait.png"
+    portrait = ROOT / "gui/Assets/sothis-portrait.png"
     for name, pixels in (
         ("icon_16x16", 16),
         ("icon_16x16@2x", 32),
