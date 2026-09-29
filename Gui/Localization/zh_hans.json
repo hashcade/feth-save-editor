@@ -1,6 +1,9 @@
 {
   "File": "文件",
   "Language": "语言",
+  "Help": "帮助",
+  "About": "关于",
+  "Version": "版本",
   "Open save": "打开存档",
   "Save copy": "另存副本",
   "Open Save...": "打开存档…",

@@ -44,6 +44,9 @@
             <MenuItem Header="Exit" Click="Exit_Click" />
           </MenuItem>
           <MenuItem Name="LanguageMenu" Header="Language" />
+          <MenuItem Header="Help">
+            <MenuItem Header="About" Click="About_Click" />
+          </MenuItem>
         </Menu>
         <ScrollViewer Grid.Column="1" HorizontalAlignment="Right" HorizontalScrollBarVisibility="Auto"
                       VerticalScrollBarVisibility="Disabled">

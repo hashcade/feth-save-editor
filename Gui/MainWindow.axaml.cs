@@ -131,6 +131,9 @@ public partial class MainWindow : Window
         UpdateLanguageMenu();
     }
 
+    private async void About_Click(object? sender, RoutedEventArgs e) =>
+        await new AboutWindow(_databaseLanguage).ShowDialog(this);
+
     private void ChangeLanguage(enmLanguage next)
     {
         if (next == _databaseLanguage) return;

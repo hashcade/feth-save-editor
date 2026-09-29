@@ -32,6 +32,25 @@ AppBuilder.Configure<App>()
     .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false })
     .SetupWithoutStarting();
 
+string expectedVersion = File.ReadAllText("VERSION").Trim();
+if (new AboutWindow(enmLanguage.en_u).Title != "About"
+    || new AboutWindow(enmLanguage.zh_hans).Title != "关于"
+    || AboutWindow.GetVersion() != expectedVersion)
+    throw new InvalidOperationException("About window title or version is incorrect.");
+
+if (args.Length == 2 && args[0] == "--about-screenshot")
+{
+    var about = new AboutWindow(enmLanguage.en_u);
+    about.Show();
+    Dispatcher.UIThread.RunJobs();
+    var frame = about.CaptureRenderedFrame()
+        ?? throw new InvalidOperationException("About window did not render.");
+    frame.Save(args[1], PngBitmapEncoderOptions.Default);
+    about.Close();
+    Console.WriteLine(args[1]);
+    return;
+}
+
 if (args.Length == 2 && args[0] == "--readme-roster")
 {
     Database.Init(enmLanguage.en_u);
