@@ -6,7 +6,6 @@ using System.Runtime.CompilerServices;
 using System.Text.Json;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
-using Avalonia.Controls.Primitives;
 using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
 using SaveEditor;
@@ -114,10 +113,12 @@ internal static class UiStrings
                 case TextBlock text when control.Name is not ("Status"
                     or "StorageCount" or "CurrentCharacterTitle" or "CurrentClassInfo"
                     or "EquippedBattalionValue" or "StorageSlotLabel")
-                    && control.GetVisualParent() is not ContentPresenter { TemplatedParent: TabStripItem }:
+                    && (control.GetVisualParent() is not ContentPresenter presenter
+                        || ReferenceEquals(presenter.Content, control)):
                     Replace(control, text.Text, value => text.Text = value, language);
                     break;
-                case MenuItem menu when menu.Header is string header:
+                case MenuItem menu when control.Name is not ("FileMenu" or "LanguageMenu")
+                    && menu.Header is string header:
                     Replace(control, header, value => menu.Header = value, language);
                     break;
                 case TabItem tab when tab.Header is string header:

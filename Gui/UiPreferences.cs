@@ -13,12 +13,12 @@ internal static class UiPreferences
     public static enmLanguage Load()
     {
         string? forced = Environment.GetEnvironmentVariable("FETH_EDITOR_LANGUAGE");
-        if (TryLanguage(forced, out enmLanguage language)) return language;
+        if (TryLanguage(forced, out enmLanguage language)) return CanonicalLanguage(language);
 
         try
         {
             if (File.Exists(SettingsPath) && TryLanguage(File.ReadAllText(SettingsPath).Trim(), out language))
-                return language;
+                return CanonicalLanguage(language);
         }
         catch (IOException) { }
         catch (UnauthorizedAccessException) { }
@@ -40,4 +40,12 @@ internal static class UiPreferences
 
     private static bool TryLanguage(string? value, out enmLanguage language) =>
         Enum.TryParse(value, true, out language) && Enum.IsDefined(language);
+
+    private static enmLanguage CanonicalLanguage(enmLanguage language) => language switch
+    {
+        enmLanguage.en_e => enmLanguage.en_u,
+        enmLanguage.fr_e => enmLanguage.fr_u,
+        enmLanguage.es_e => enmLanguage.es_u,
+        _ => language
+    };
 }

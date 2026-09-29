@@ -124,12 +124,12 @@ namespace SaveEditor
     public enum enmLanguage
     {
         [Description("Japanese")] jp = 0,
-        [Description("English - USA")] en_u = 1, 
+        [Description("English")] en_u = 1,
         [Description("English - EUR")] en_e = 2, 
         [Description("German")] de = 3,
-        [Description("French - USA")] fr_u = 4,
+        [Description("French")] fr_u = 4,
         [Description("French - EUR")] fr_e = 5,
-        [Description("Spanish - USA")] es_u = 6,
+        [Description("Spanish")] es_u = 6,
         [Description("Spanish - EUR")] es_e = 7,
         [Description("Italian")] it = 8,
         [Description("Korean")] kr = 9,

@@ -6,6 +6,7 @@ using Avalonia.Headless;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -598,15 +599,23 @@ if (args.Length > 0)
         throw new InvalidOperationException("Database viewer lists were not loaded.");
     var language = window.FindControl<MenuItem>("LanguageMenu")!;
     var menuItems = language.Items.OfType<MenuItem>().ToArray();
-    var supportedLanguages = Enum.GetValues<enmLanguage>();
+    enmLanguage[] supportedLanguages =
+    [
+        enmLanguage.jp, enmLanguage.en_u, enmLanguage.de,
+        enmLanguage.fr_u, enmLanguage.es_u, enmLanguage.it,
+        enmLanguage.kr, enmLanguage.zh_hant, enmLanguage.zh_hans
+    ];
     if (menuItems.Length != supportedLanguages.Length)
         throw new InvalidOperationException("A game database language is missing from the menu.");
+    if (menuItems.Any(item => item.Header?.ToString()?.Contains('(') == true
+        || item.Header?.ToString()?.Contains('（') == true))
+        throw new InvalidOperationException("Language menu still shows regional variants.");
     for (int index = 0; index < supportedLanguages.Length; index++)
     {
         menuItems[index].RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
         VerifyDisplayNames();
         var expectedStorage = supportedLanguages[index] == enmLanguage.zh_hans ? "物品"
-            : supportedLanguages[index] is enmLanguage.en_u or enmLanguage.en_e ? "Items"
+            : supportedLanguages[index] == enmLanguage.en_u ? "Items"
             : Database.GetString(1814, 1);
         if (tabs.Items.OfType<TabItem>().ElementAt(1).Header?.ToString() != expectedStorage)
             throw new InvalidOperationException($"Navigation label did not follow {supportedLanguages[index]}.");
@@ -620,15 +629,15 @@ if (args.Length > 0)
             enmLanguage.zh_hans => "zh-CN",
             enmLanguage.jp => "ja-JP",
             enmLanguage.de => "de-DE",
-            enmLanguage.fr_u or enmLanguage.fr_e => "fr-FR",
-            enmLanguage.es_u or enmLanguage.es_e => "es-ES",
+            enmLanguage.fr_u => "fr-FR",
+            enmLanguage.es_u => "es-ES",
             enmLanguage.it => "it-IT",
             _ => "en-US"
         };
         if (SukiTheme.GetInstance().Locale != expectedThemeLocale)
             throw new InvalidOperationException($"SukiUI locale did not follow {supportedLanguages[index]}.");
     }
-    ((MenuItem)language.Items[11]!).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+    ((MenuItem)language.Items[8]!).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
     Dispatcher.UIThread.RunJobs();
     if (tabs.Items.OfType<TabItem>().First().Header?.ToString() != "主页"
         || tabs.Items.OfType<TabItem>().ElementAt(1).Header?.ToString() != "物品"
@@ -637,8 +646,10 @@ if (args.Length > 0)
         || tabs.Items.OfType<TabItem>().ElementAt(5).Header?.ToString() != "支援")
         throw new InvalidOperationException("Chinese interface was not applied.");
     if (tabs.Items.OfType<TabItem>().ElementAt(7).Header?.ToString() != "继承名册"
-        || ((MenuItem)language.Items[11]!).Header?.ToString() != "✓ 简体中文")
+        || ((MenuItem)language.Items[8]!).Header?.ToString() != "✓ 简体中文")
         throw new InvalidOperationException("Inheritance labels or language names were not localized.");
+    if (language.Items.OfType<MenuItem>().Any(item => item.Header?.ToString()?.Contains('（') == true))
+        throw new InvalidOperationException("Chinese language menu still shows regional variants.");
     if (window.FindControl<TextBox>("StorageSearch")!.PlaceholderText != "搜索…"
         || window.FindControl<TextBox>("ClassSearch")!.PlaceholderText != "搜索…")
         throw new InvalidOperationException("Shared search placeholder was not localized.");
@@ -1085,4 +1096,89 @@ if (args.Length > 0)
     if (inheritedSkills.Children.OfType<Grid>()
         .Any(row => row.Children.OfType<ComboBox>().Single().SelectedIndex != 11))
         throw new InvalidOperationException("Unlock All did not maximize every inherited skill rank.");
+}
+
+void VerifyLatinUi(MainWindow target, string languageName)
+{
+    var pages = target.FindControl<TabControl>("EditorTabs")!;
+    if (target.FindControl<MenuItem>("FileMenu")!.Header?.ToString() != "File"
+        || target.FindControl<MenuItem>("LanguageMenu")!.Header?.ToString() != "Language")
+        throw new InvalidOperationException($"Top menus remained Chinese after switching to {languageName}.");
+    for (int page = 0; page < 9; page++)
+    {
+        pages.SelectedIndex = page;
+        var nestedTabs = page switch
+        {
+            2 => target.FindControl<TabControl>("CharacterTabs"),
+            6 => target.FindControl<TabControl>("DatabaseTabs"),
+            7 => target.FindControl<TabControl>("InheritanceTabs"),
+            _ => null
+        };
+        int sections = nestedTabs?.ItemCount ?? 1;
+        for (int section = 0; section < sections; section++)
+        {
+            if (nestedTabs is not null) nestedTabs.SelectedIndex = section;
+            Dispatcher.UIThread.RunJobs();
+            var chinese = target.GetVisualDescendants().OfType<Control>()
+                .Where(control => control.IsVisible)
+                .Select(control => control switch
+                {
+                    TextBlock text => text.Text,
+                    CheckBox check => check.Content as string,
+                    Button button => button.Content as string,
+                    ComboBox combo => combo.SelectedItem?.ToString(),
+                    _ => null
+                })
+                .Where(value => value?.Any(ch => ch is >= '\u4e00' and <= '\u9fff') == true)
+                .Distinct().Take(10).ToArray();
+            if (chinese.Length > 0)
+                throw new InvalidOperationException($"Chinese remained in {languageName} page {page}/{section}: "
+                    + string.Join(" | ", chinese));
+        }
+    }
+    var chineseChoices = target.GetLogicalDescendants().OfType<ComboBox>()
+        .SelectMany(combo => combo.Items.Cast<object?>())
+        .Select(item => item is ComboBoxItem option ? option.Content?.ToString() : item?.ToString())
+        .Where(value => value?.Any(ch => ch is >= '\u4e00' and <= '\u9fff') == true)
+        .Distinct().Take(10).ToArray();
+    if (chineseChoices.Length > 0)
+        throw new InvalidOperationException($"Chinese remained in {languageName} choices: "
+            + string.Join(" | ", chineseChoices));
+}
+
+((MenuItem)window.FindControl<MenuItem>("LanguageMenu")!.Items[1]!)
+    .RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+VerifyLatinUi(window, "English after Chinese");
+Environment.SetEnvironmentVariable("FETH_EDITOR_LANGUAGE", "zh_hans");
+var coldWindow = new MainWindow();
+coldWindow.Show();
+if (args.Length > 0) coldWindow.LoadSave(args[0]);
+((MenuItem)coldWindow.FindControl<MenuItem>("LanguageMenu")!.Items[1]!)
+    .RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+VerifyLatinUi(coldWindow, "English from Chinese startup");
+var coldTabs = coldWindow.FindControl<TabControl>("EditorTabs")!;
+coldTabs.SelectedIndex = 2;
+coldWindow.FindControl<TabControl>("CharacterTabs")!.SelectedIndex = 0;
+Dispatcher.UIThread.RunJobs();
+string switchedScreenshot = Path.Combine(Path.GetTempPath(), "feth-editor-chinese-to-english.png");
+(coldWindow.CaptureRenderedFrame() ?? throw new InvalidOperationException("Language switch did not render."))
+    .Save(switchedScreenshot, PngBitmapEncoderOptions.Default);
+Console.WriteLine(switchedScreenshot);
+foreach (int index in new[] { 3, 4, 2 })
+{
+    ((MenuItem)coldWindow.FindControl<MenuItem>("LanguageMenu")!.Items[index]!)
+        .RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+    VerifyLatinUi(coldWindow, new[] { "German", "French", "Spanish" }[index - 2]);
+}
+foreach (var (legacy, selectedIndex, name) in new[]
+{
+    ("en_e", 1, "English"), ("fr_e", 3, "French"), ("es_e", 4, "Spanish")
+})
+{
+    Environment.SetEnvironmentVariable("FETH_EDITOR_LANGUAGE", legacy);
+    var legacyWindow = new MainWindow();
+    var selected = (MenuItem)legacyWindow.FindControl<MenuItem>("LanguageMenu")!.Items[selectedIndex]!;
+    if (selected.Header?.ToString() != $"✓ {name}")
+        throw new InvalidOperationException($"Saved regional language {legacy} was not normalized to {name}.");
+    legacyWindow.Close();
 }

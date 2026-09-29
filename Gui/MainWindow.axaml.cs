@@ -115,7 +115,12 @@ public partial class MainWindow : Window
 
     private void UpdateLanguageMenu()
     {
-        LanguageMenu.ItemsSource = Enum.GetValues<enmLanguage>()
+        LanguageMenu.ItemsSource = new[]
+            {
+                enmLanguage.jp, enmLanguage.en_u, enmLanguage.de,
+                enmLanguage.fr_u, enmLanguage.es_u, enmLanguage.it,
+                enmLanguage.kr, enmLanguage.zh_hant, enmLanguage.zh_hans
+            }
             .Select(language =>
             {
                 var item = new MenuItem
