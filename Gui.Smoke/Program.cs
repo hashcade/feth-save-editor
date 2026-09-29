@@ -582,9 +582,9 @@ if (args.Length > 0)
 {
     characterTabs.SelectedItem = classFlagsTab;
     Dispatcher.UIThread.RunJobs();
-    var classUnlocks = window.FindControl<StackPanel>("CurrentClassUnlockFlags")!;
-    if (classUnlocks.Children.Count != Database.CLASS_FLAGS_COUNT)
-        throw new InvalidOperationException("Current-run class unlock list is incomplete.");
+    var classUnlocks = window.FindControl<UniformGrid>("CurrentClassUnlockFlags")!;
+    if (classUnlocks.Columns != 3 || classUnlocks.Children.Count != Database.CLASS_FLAGS_COUNT)
+        throw new InvalidOperationException("Current-run class unlock grid is incomplete.");
     var firstUnlock = (CheckBox)classUnlocks.Children[0];
     firstUnlock.IsChecked = firstUnlock.IsChecked != true;
     if (!window.FindControl<MenuItem>("SaveMenuItem")!.IsEnabled)
@@ -991,7 +991,7 @@ if (args.Length > 0)
     var flags = window.FindControl<StackPanel>("CurrentCharacterFlags")!;
     var firstFlag = (CheckBox)flags.Children[0];
     if (firstFlag.Content?.ToString() != "Is Available"
-        || ((CheckBox)window.FindControl<StackPanel>("CurrentClassUnlockFlags")!.Children[0]).Content?.ToString()
+        || ((CheckBox)window.FindControl<UniformGrid>("CurrentClassUnlockFlags")!.Children[0]).Content?.ToString()
             != Database.GetUnitClassName(0)
         || ((CheckBox)window.FindControl<UniformGrid>("CurrentAbilityFlags")!.Children[0]).Content?.ToString()
             != Database.GetAbilityName(0, false)

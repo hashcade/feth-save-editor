@@ -335,7 +335,7 @@
                   <Border Classes="section" Margin="8">
                     <StackPanel Spacing="12">
                       <TextBlock Text="Class Unlock Flags" FontWeight="SemiBold" />
-                      <StackPanel Name="CurrentClassUnlockFlags" Spacing="4" />
+                      <UniformGrid Name="CurrentClassUnlockFlags" Columns="3" />
                     </StackPanel>
                   </Border>
                 </ScrollViewer>
