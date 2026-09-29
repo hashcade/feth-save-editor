@@ -87,6 +87,7 @@
   "Equipped Combat Arts": "已装备战技",
   "Restore Item Durability": "物品耐久回满",
   "Battalion List": "骑士团列表",
+  "Free: {0}/{1} ({2}%)": "剩余 {0}/{1}（{2}%）",
   "Battalion Editor": "骑士团编辑",
   "Equipped Battalion:": "装备骑士团：",
   "Character": "角色",

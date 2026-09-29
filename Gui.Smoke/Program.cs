@@ -296,6 +296,14 @@ var battalionEditorCard = window.FindControl<Control>("BattalionEditorCard")!;
 if (battalionListCard.Bounds.Width >= battalionEditorCard.Bounds.Width ||
     Math.Abs(battalionListCard.Bounds.Height - battalionEditorCard.Bounds.Height) > 1)
     throw new InvalidOperationException("Battalion cards are not aligned with a narrower list column.");
+if (args.Length > 0)
+{
+    var battalions = SaveBuffer.Open(args[0]).Data.Player.Battalions;
+    int free = battalions.Count(battalion => battalion.Type == Database.BATTALION_COUNT);
+    string expected = $"Free: {free}/{battalions.Length} ({100 * free / battalions.Length}%)";
+    if (window.FindControl<TextBlock>("BattalionFreeSlots")?.Text != expected)
+        throw new InvalidOperationException("Battalion free slots or percentage are incorrect.");
+}
 tabs.SelectedIndex = 4;
 Dispatcher.UIThread.RunJobs();
 var questListCard = window.FindControl<Control>("QuestListCard")!;
