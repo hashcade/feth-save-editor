@@ -24,7 +24,6 @@ public partial class MainWindow
     ];
 
     private Choice[]? _characterIds;
-    private int _selectedCharacterItem = -1;
     private Choice[]? _abilityChoices;
     private Choice[]? _artChoices;
     private int _currentCharacter = -1;
@@ -171,82 +170,103 @@ public partial class MainWindow
 
     private void PopulateCharacterItems(CharacterData_V23 character)
     {
-        CharacterItemPopup.IsOpen = false;
-        _selectedCharacterItem = -1;
+        bool previousLoading = _loading;
+        _loading = true;
         CharacterItemRows.Children.Clear();
+        var itemChoices = new[] { new Choice(-1, Database.STR_NONE) }
+            .Concat(_itemChoices?.Where(choice => choice.Id >= 0) ?? []).ToArray();
         for (int index = 0; index < Database.MAX_CHARA_ITEMS; index++)
         {
             var item = character.Items[index];
-            var button = new Button
+            var row = new Grid { ColumnDefinitions = new ColumnDefinitions("18,*,90"), ColumnSpacing = 8 };
+            var number = new TextBlock
             {
-                Content = $"{index + 1} · {(item.Id == -1 ? Database.STR_NONE : item.EquippedName)}",
+                Text = (index + 1).ToString(CultureInfo.InvariantCulture),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            var choice = new ComboBox
+            {
+                ItemsSource = itemChoices,
+                SelectedItem = itemChoices.FirstOrDefault(candidate => candidate.Id == item.Id),
                 Tag = index,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
-                HorizontalContentAlignment = HorizontalAlignment.Left,
                 IsEnabled = index <= character.ItemCount
             };
-            button.Classes.Add("Small");
-            button.Click += CharacterItemRow_Click;
-            CharacterItemRows.Children.Add(button);
+            choice.Classes.Add("Small");
+            var durability = new NumericUpDown
+            {
+                Value = item.Id == -1 ? 0 : item.Durability,
+                Minimum = 0,
+                Maximum = item.Id == -1 ? 0 : Math.Max(item.Durability, Database.GetItemDurability(item.Id)),
+                Increment = 1,
+                Tag = index,
+                IsEnabled = index < character.ItemCount
+            };
+            durability.Classes.Add("Small");
+            Grid.SetColumn(choice, 1);
+            Grid.SetColumn(durability, 2);
+            row.Children.Add(number);
+            row.Children.Add(choice);
+            row.Children.Add(durability);
+            choice.SelectionChanged += CharacterItemChoice_SelectionChanged;
+            durability.ValueChanged += CharacterItemDurability_ValueChanged;
+            CharacterItemRows.Children.Add(row);
         }
-    }
-
-    private void CharacterItemRow_Click(object? sender, RoutedEventArgs e)
-    {
-        if (sender is not Button { Tag: int index } button) return;
-        _selectedCharacterItem = index;
-        ShowCharacterItem();
-        CharacterItemPopup.PlacementTarget = button;
-        CharacterItemPopup.IsOpen = true;
-    }
-
-    private void ShowCharacterItem()
-    {
-        if (_save is null || _currentCharacter < 0 || _selectedCharacterItem < 0) return;
-        var character = _save.Data.Characters[_currentCharacter].data;
-        int index = _selectedCharacterItem;
-        var item = character.Items[index];
-        bool previousLoading = _loading;
-        _loading = true;
-        try
-        {
-            CharacterItemChoice.ItemsSource = _itemChoices?.Where(choice => choice.Id >= 0).ToArray();
-            CharacterItemChoice.SelectedItem = _itemChoices?.FirstOrDefault(choice => choice.Id == item.Id);
-            CharacterItemDurability.Text = item.Id == -1 ? "0" : item.Durability.ToString(CultureInfo.InvariantCulture);
-            bool editable = index <= character.ItemCount;
-            CharacterItemChoice.IsEnabled = editable;
-            CharacterItemDurability.IsEnabled = editable;
-            SaveCharacterItemButton.IsEnabled = editable;
-        }
-        finally
-        {
-            _loading = previousLoading;
-        }
+        _loading = previousLoading;
     }
 
     private void CharacterItemChoice_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        if (_loading || CharacterItemChoice.SelectedItem is not Choice choice) return;
-        CharacterItemDurability.Text = Database.GetItemDurability(choice.Id).ToString(CultureInfo.InvariantCulture);
-    }
-
-    private void SaveCharacterItem_Click(object? sender, RoutedEventArgs e)
-    {
-        if (_save is null || _currentCharacter < 0 || _selectedCharacterItem < 0) return;
+        if (_loading || _save is null || _currentCharacter < 0
+            || sender is not ComboBox { Tag: int index, SelectedItem: Choice choice }) return;
+        var character = _save.Data.Characters[_currentCharacter].data;
+        short oldId = character.Items[index].Id;
         try
         {
-            if (CharacterItemChoice.SelectedItem is not Choice choice)
-                throw new InvalidOperationException("Choose an item before applying changes.");
-            int itemSlot = _selectedCharacterItem;
-            _save.SetCharacterItem(_currentCharacter, itemSlot, checked((short)choice.Id),
-                ParseAmount(CharacterItemDurability, "Durability"));
-            PopulateCharacterItems(_save.Data.Characters[_currentCharacter].data);
-            CharacterItemPopup.IsOpen = false;
+            byte durability = checked((byte)Database.GetItemDurability(choice.Id));
+            _save.SetCharacterItem(_currentCharacter, index, checked((short)choice.Id), durability);
+            if (index == character.ItemCount)
+                PopulateCharacterItems(_save.Data.Characters[_currentCharacter].data);
+            else
+            {
+                var row = (Grid)CharacterItemRows.Children[index];
+                var editor = (NumericUpDown)row.Children[2];
+                bool previousLoading = _loading;
+                _loading = true;
+                editor.Maximum = durability;
+                editor.Value = durability;
+                _loading = previousLoading;
+            }
             MarkChanged();
         }
         catch (Exception error)
         {
             Status.Text = error.Message;
+            bool previousLoading = _loading;
+            _loading = true;
+            ((ComboBox)sender).SelectedItem = _itemChoices?.FirstOrDefault(item => item.Id == oldId);
+            _loading = previousLoading;
+        }
+    }
+
+    private void CharacterItemDurability_ValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
+    {
+        if (_loading || _save is null || _currentCharacter < 0
+            || sender is not NumericUpDown { Tag: int index, Value: { } value }) return;
+        var item = _save.Data.Characters[_currentCharacter].data.Items[index];
+        if (item.Id == -1) return;
+        try
+        {
+            _save.SetCharacterItem(_currentCharacter, index, item.Id, checked((byte)value));
+            MarkChanged();
+        }
+        catch (Exception error)
+        {
+            Status.Text = error.Message;
+            bool previousLoading = _loading;
+            _loading = true;
+            ((NumericUpDown)sender).Value = item.Durability;
+            _loading = previousLoading;
         }
     }
 

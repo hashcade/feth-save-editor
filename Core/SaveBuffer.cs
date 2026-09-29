@@ -228,6 +228,10 @@ namespace FethEditor.Core
                 throw new ArgumentOutOfRangeException(nameof(itemSlot));
             if (id == -1 || !Database.ItemList.ContainsKey(id))
                 throw new ArgumentException("Choose an item from the catalog.", nameof(id));
+            int maximumDurability = Database.GetItemDurability(id);
+            if (durability > maximumDurability)
+                throw new ArgumentOutOfRangeException(nameof(durability),
+                    $"Item durability cannot exceed {maximumDurability}.");
 
             string prefix = $"Characters[{slot}].data";
             int count = checked((int)(long)Get($"{prefix}.ItemCount"));

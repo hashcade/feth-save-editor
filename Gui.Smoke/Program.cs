@@ -216,6 +216,12 @@ if (args.Length > 0)
         throw new InvalidOperationException("Replacing a character item changed the wrong fields.");
     try
     {
+        itemSave.SetCharacterItem(0, 0, 22, checked((byte)(Database.GetItemDurability(22) + 1)));
+        throw new InvalidOperationException("Item durability above the normal maximum was allowed.");
+    }
+    catch (ArgumentOutOfRangeException) { }
+    try
+    {
         itemSave.SetCharacterItem(0, initialCount + 1, 22, 30);
         throw new InvalidOperationException("Adding an item after a gap was allowed.");
     }
@@ -560,6 +566,19 @@ for (int index = 0; index < characterTabs.ItemCount; index++)
 }
 if (args.Length > 0)
 {
+    characterTabs.SelectedIndex = 0;
+    Dispatcher.UIThread.RunJobs();
+    var itemScroll = window.FindControl<ScrollViewer>("CharacterMainScroll")!;
+    itemScroll.Offset = new Vector(0, itemScroll.Extent.Height);
+    Dispatcher.UIThread.RunJobs();
+    string itemScreenshot = Path.Combine(Path.GetTempPath(), "feth-editor-character-items-inline.png");
+    (window.CaptureRenderedFrame() ?? throw new InvalidOperationException("Character item rows did not render."))
+        .Save(itemScreenshot, PngBitmapEncoderOptions.Default);
+    Console.WriteLine(itemScreenshot);
+    itemScroll.Offset = new Vector(0, 0);
+}
+if (args.Length > 0)
+{
     characterTabs.SelectedItem = classFlagsTab;
     Dispatcher.UIThread.RunJobs();
     var classUnlocks = window.FindControl<StackPanel>("CurrentClassUnlockFlags")!;
@@ -685,16 +704,10 @@ if (args.Length > 0)
     var characterItemRows = window.FindControl<StackPanel>("CharacterItemRows")!;
     if (characterItemRows.Children.Count != Database.MAX_CHARA_ITEMS)
         throw new InvalidOperationException("Character item slots are missing.");
-    var characterItemPopup = window.FindControl<Popup>("CharacterItemPopup")!;
-    ((Button)characterItemRows.Children[0]).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-    Dispatcher.UIThread.RunJobs();
-    if (!characterItemPopup.IsOpen)
-        throw new InvalidOperationException("Character item popover did not open.");
-    string itemPopoverScreenshot = Path.Combine(Path.GetTempPath(), "feth-editor-zh-character-item-popover.png");
-    (window.CaptureRenderedFrame() ?? throw new InvalidOperationException("Character item popover did not render."))
-        .Save(itemPopoverScreenshot, PngBitmapEncoderOptions.Default);
-    Console.WriteLine(itemPopoverScreenshot);
-    characterItemPopup.IsOpen = false;
+    var firstItemRow = (Grid)characterItemRows.Children[0];
+    if (firstItemRow.Children.OfType<ComboBox>().Count() != 1
+        || firstItemRow.Children.OfType<NumericUpDown>().Count() != 1)
+        throw new InvalidOperationException("Character item editors are not paired in each row.");
     string characterItemsScreenshot = Path.Combine(Path.GetTempPath(), "feth-editor-zh-character-items.png");
     (window.CaptureRenderedFrame() ?? throw new InvalidOperationException("Character items did not render."))
         .Save(characterItemsScreenshot, PngBitmapEncoderOptions.Default);
@@ -911,32 +924,41 @@ if (args.Length > 0)
     if (battalionLabel?.Text?.StartsWith("Equipped Battalion:", StringComparison.Ordinal) != true)
         throw new InvalidOperationException("Character equipped battalion is not shown.");
     var characterItems = window.FindControl<StackPanel>("CharacterItemRows")!;
-    var characterItemChoice = window.FindControl<ComboBox>("CharacterItemChoice")!;
-    var characterItemDurability = window.FindControl<TextBox>("CharacterItemDurability")!;
     int guiItemCount = SaveBuffer.Open(args[0]).Data.Characters[0].data.ItemCount;
     if (characterItems.Children.Count != Database.MAX_CHARA_ITEMS)
         throw new InvalidOperationException("The character item editor does not show all six slots.");
-    ((Button)characterItems.Children[0]).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    var itemRow = (Grid)characterItems.Children[0];
+    var characterItemChoice = itemRow.Children.OfType<ComboBox>().Single();
+    var characterItemDurability = itemRow.Children.OfType<NumericUpDown>().Single();
     characterItemChoice.SelectedIndex = characterItemChoice.Items
         .Cast<object>().Select((choice, index) => (choice, index))
         .First(entry => entry.choice.ToString() == Database.GetItemName(22)).index;
-    characterItemDurability.Text = "29";
-    window.FindControl<Button>("SaveCharacterItemButton")!
-        .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-    if (!((Button)characterItems.Children[0]).Content!.ToString()!.Contains(Database.GetItemName(22), StringComparison.Ordinal))
-        throw new InvalidOperationException("Editing a character item did not update the item list.");
+    if (characterItemDurability.Value != Database.GetItemDurability(22))
+        throw new InvalidOperationException("Choosing an item did not fill its normal durability maximum.");
+    characterItemDurability.Value = 29;
+    if (characterItemChoice.SelectedItem?.ToString() != Database.GetItemName(22)
+        || characterItemDurability.Value != 29
+        || characterItemDurability.Maximum != Database.GetItemDurability(22))
+        throw new InvalidOperationException("Editing a character item did not update the row.");
+    character.SelectedIndex = 1;
+    character.SelectedIndex = 0;
+    itemRow = (Grid)characterItems.Children[0];
+    characterItemChoice = itemRow.Children.OfType<ComboBox>().Single();
+    characterItemDurability = itemRow.Children.OfType<NumericUpDown>().Single();
+    if (characterItemChoice.SelectedItem?.ToString() != Database.GetItemName(22)
+        || characterItemDurability.Value != 29)
+        throw new InvalidOperationException("Edited character item was not retained in memory.");
     window.FindControl<Button>("RestoreCharacterItemDurabilityButton")!
         .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-    ((Button)characterItems.Children[0]).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-    if (characterItemDurability.Text != Database.GetItemDurability(22).ToString())
+    characterItemDurability = ((Grid)characterItems.Children[0]).Children.OfType<NumericUpDown>().Single();
+    if (characterItemDurability.Value != Database.GetItemDurability(22))
         throw new InvalidOperationException("Character item durability was not restored to its normal limit.");
-    ((Button)characterItems.Children[guiItemCount]).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    characterItemChoice = ((Grid)characterItems.Children[guiItemCount]).Children.OfType<ComboBox>().Single();
     characterItemChoice.SelectedIndex = characterItemChoice.Items
         .Cast<object>().Select((choice, index) => (choice, index))
         .First(entry => entry.choice.ToString() == Database.GetItemName(22)).index;
-    window.FindControl<Button>("SaveCharacterItemButton")!
-        .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-    if (!((Button)characterItems.Children[guiItemCount]).Content!.ToString()!.Contains(Database.GetItemName(22), StringComparison.Ordinal))
+    if (((Grid)characterItems.Children[guiItemCount]).Children.OfType<ComboBox>().Single()
+            .SelectedItem?.ToString() != Database.GetItemName(22))
         throw new InvalidOperationException("Adding a character item did not update the visible count.");
     characterTabs.SelectedIndex = 3;
     var classExp = window.FindControl<TextBox>("SelectedClassExp")!;
