@@ -198,6 +198,8 @@ if (args.Length > 0 && !window.FindControl<MenuItem>("SaveMenuItem")!.IsEnabled)
     throw new InvalidOperationException("A loaded save cannot be written before editing.");
 if (args.Length > 0 && window.FindControl<TextBlock>("PlayerCardTitle")?.Text != "Player")
     throw new InvalidOperationException("Player card title was mistranslated by the game database.");
+if (window.Title != "FETH Save Editor")
+    throw new InvalidOperationException("The editor window still uses the old application name.");
 if (!Avalonia.Input.DragDrop.GetAllowDrop(window))
     throw new InvalidOperationException("Dropping a slot save on the editor is disabled.");
 if (args.Length == 0)
