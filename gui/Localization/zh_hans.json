@@ -96,6 +96,8 @@
   "Type": "类型",
   "Stamina": "体力",
   "Endurance": "耐久",
+  "Stored Endurance": "库存耐久",
+  "Equipped Endurance": "当前装备耐久",
   "Replenish": "补充",
   "Replenish All": "全部补充",
   "Replenished {0} battalions; skipped {1} unknown types.": "已补充 {0} 个骑士团，跳过 {1} 个未知类型。",

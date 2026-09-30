@@ -30,6 +30,8 @@ Battalion inspection reports effective current endurance in `Stamina`, the barra
 
 Use `replenishBattalion` (`slot`: barracks index), `replenishCharacterBattalion` (`slot`: character index), or `replenishBattalions` (no arguments) to restore normal endurance. Equipped records and their uniquely matched barracks entries are updated together; wounded unequipped entries are restored independently. Bulk replenishment also covers equipped battalions missing from the barracks and skips unknown types. Ambiguous equipped links are rejected without applying any of the batch. `setBattalionEndurance` (`slot`, `endurance`: 0–65535) edits an exact value in both linked records; low-level `set` still changes only the named field. Example: `{ "op": "replenishBattalions" }`.
 
+To edit the records independently, use `setBattalionEnduranceValues` (`slot`, `storedEndurance`, optional `equippedEndurance`). The stored value can be changed without touching the character's current equipped value. An equipped value requires a unique active-character link. Neither value is restricted to the normal replenishment target; both accept 0–65535. For an unequipped battalion, the stored value is its current endurance, not proof that it is full.
+
 ## Edit
 
 Save this as `patch.json`:

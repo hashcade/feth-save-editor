@@ -239,10 +239,20 @@ void VerifyBattalionReplenishment(string source, string? screenshots = null)
     tabs.SelectedIndex = 3;
     target.FindControl<ListBox>("BattalionList")!.SelectedIndex = slot;
     Dispatcher.UIThread.RunJobs();
-    if (target.FindControl<TextBox>("BattalionStamina")!.Text != save.GetBattalionEndurance(slot).ToString()
+    var storedInput = target.FindControl<TextBox>("BattalionStamina")!;
+    var equippedInput = target.FindControl<TextBox>("BattalionCurrentEndurance")!;
+    if (storedInput.Text != data.Player.Battalions[slot].Stamina.ToString()
+        || equippedInput.Text != save.GetBattalionEndurance(slot).ToString()
+        || !target.FindControl<StackPanel>("EquippedBattalionEnduranceEditor")!.IsVisible
         || target.FindControl<TextBlock>("BattalionMaxEndurance")!.Text != "/ 60")
         throw new InvalidOperationException("The battalion editor does not show equipped current endurance and its maximum.");
     Capture("battalions-before.png");
+    storedInput.Text = "100";
+    equippedInput.Text = "37";
+    target.FindControl<Button>("SaveBattalionButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    if (save.Data.Player.Battalions[slot].Stamina != 100 || save.GetBattalionEndurance(slot) != 37)
+        throw new InvalidOperationException("The original stored endurance and equipped endurance cannot be edited independently.");
+    Capture("battalions-independent.png");
     target.FindControl<Button>("ReplenishBattalionButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
     if (save.GetBattalionEndurance(slot) != 60 || save.Data.Player.Battalions[slot].Stamina != 60)
         throw new InvalidOperationException("The single replenishment button did not synchronize both records.");
@@ -261,6 +271,26 @@ void VerifyBattalionReplenishment(string source, string? screenshots = null)
         throw new InvalidOperationException("Roster still shows stale endurance after battalion replenishment.");
     target.LoadSave(source);
     save = CurrentSave();
+
+    int unequippedSlot = Array.FindIndex(save.Data.Player.Battalions, battalion =>
+        battalion.CharacterId < 0 && ObtainableBattalions.FullEndurance(battalion.Type).HasValue);
+    if (unequippedSlot < 0) throw new InvalidOperationException("The endurance fixture has no unequipped battalion.");
+    tabs.SelectedIndex = 3;
+    target.FindControl<ListBox>("BattalionList")!.SelectedIndex = unequippedSlot;
+    storedInput.Text = "7";
+    target.FindControl<Button>("SaveBattalionButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    if (target.FindControl<StackPanel>("EquippedBattalionEnduranceEditor")!.IsVisible
+        || save.GetBattalionEndurance(unequippedSlot) != 7
+        || save.GetBattalionEndurance(slot) != 44)
+        throw new InvalidOperationException("Editing a wounded unequipped battalion changed an equipped battalion.");
+    Capture("battalions-unequipped-wounded.png");
+    target.FindControl<Button>("ReplenishBattalionButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    if (save.GetBattalionEndurance(unequippedSlot) != ObtainableBattalions.FullEndurance(save.Data.Player.Battalions[unequippedSlot].Type)
+        || save.GetBattalionEndurance(slot) != 44)
+        throw new InvalidOperationException("Single replenishment did not independently restore the wounded unequipped battalion.");
+    target.LoadSave(source);
+    save = CurrentSave();
+    tabs.SelectedIndex = 2;
     target.FindControl<ListBox>("CurrentCharacterList")!.SelectedIndex = characterSlot;
     Dispatcher.UIThread.RunJobs();
     scroll.Offset = new Vector(0, scroll.Extent.Height);
@@ -276,9 +306,15 @@ void VerifyBattalionReplenishment(string source, string? screenshots = null)
     ((MenuItem)language.Items[8]!).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
     if (RosterButton().Content?.ToString() != "补充" || EnduranceLabel().Text != "耐久: 60 / 60")
         throw new InvalidOperationException("Roster replenishment was not translated to Chinese.");
+    if (!target.GetLogicalDescendants().OfType<TextBlock>().Any(label => label.Text == "库存耐久")
+        || !target.GetLogicalDescendants().OfType<TextBlock>().Any(label => label.Text == "当前装备耐久"))
+        throw new InvalidOperationException("Independent battalion endurance labels were not translated to Chinese.");
     ((MenuItem)language.Items[1]!).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
     if (RosterButton().Content?.ToString() != "Replenish" || EnduranceLabel().Text != "Endurance: 60 / 60")
         throw new InvalidOperationException("Roster replenishment kept stale Chinese after switching to English.");
+    if (!target.GetLogicalDescendants().OfType<TextBlock>().Any(label => label.Text == "Stored Endurance")
+        || !target.GetLogicalDescendants().OfType<TextBlock>().Any(label => label.Text == "Equipped Endurance"))
+        throw new InvalidOperationException("Independent battalion endurance labels kept stale Chinese.");
 
     int duplicateSlot = slot == 0 ? 1 : 0;
     save.Set($"Player.Battalions[{duplicateSlot}].CharacterId", 1);

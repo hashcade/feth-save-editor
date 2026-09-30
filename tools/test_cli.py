@@ -88,6 +88,19 @@ def verify_battalion_endurance(cli: Path, directory: Path, raw: bytes) -> None:
     assert struct.unpack_from("<H", manual, roster + 0x1C)[0] == 20
     assert struct.unpack_from("<H", manual, barracks + 4)[0] == 20
     unchanged_except(manual, [barracks + 4, roster + 0x1C])
+    independent = apply("endurance-independent", [{"op": "setBattalionEnduranceValues", "slot": 0,
+                                                  "storedEndurance": 100, "equippedEndurance": 37}])
+    assert struct.unpack_from("<H", independent, barracks + 4)[0] == 100
+    assert struct.unpack_from("<H", independent, roster + 0x1C)[0] == 37
+    unchanged_except(independent, [barracks + 4, roster + 0x1C])
+    stored_only = apply("endurance-stored-only", [{"op": "setBattalionEnduranceValues", "slot": 0,
+                                                  "storedEndurance": 80}])
+    assert struct.unpack_from("<H", stored_only, barracks + 4)[0] == 80
+    unchanged_except(stored_only, [barracks + 4])
+    wounded = apply("endurance-wounded-edit", [{"op": "setBattalionEnduranceValues", "slot": 1,
+                                               "storedEndurance": 6}])
+    assert struct.unpack_from("<H", wounded, barracks + 8 + 4)[0] == 6
+    unchanged_except(wounded, [barracks + 8 + 4])
 
     bulk = apply("endurance-bulk", [{"op": "replenishBattalions"}])
     expected = [60, 60, 30, 13, 60, 30, 60]
@@ -110,6 +123,10 @@ def verify_battalion_endurance(cli: Path, directory: Path, raw: bytes) -> None:
         ("roster-inactive", {"op": "replenishCharacterBattalion", "slot": 3}),
         ("roster-unknown", {"op": "replenishCharacterBattalion", "slot": 4}),
         ("roster-out-of-range", {"op": "replenishCharacterBattalion", "slot": 500}),
+        ("not-equipped", {"op": "setBattalionEnduranceValues", "slot": 1,
+                          "storedEndurance": 100, "equippedEndurance": 60}),
+        ("stored-overflow", {"op": "setBattalionEnduranceValues", "slot": 0,
+                             "storedEndurance": 65536}),
     ]:
         patch = directory / f"endurance-{name}.json"
         patch.write_text(json.dumps({"operations": [operation]}), encoding="utf-8")

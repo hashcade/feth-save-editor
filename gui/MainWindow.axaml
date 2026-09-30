@@ -408,11 +408,15 @@
               <ComboBox Classes="Small" Name="BattalionType" />
               <TextBlock Text="Experience" />
               <TextBox Classes="Small" Name="BattalionExp" />
-              <TextBlock Text="Endurance" />
-              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                <TextBox Classes="Small" Name="BattalionStamina" />
-                <TextBlock Name="BattalionMaxEndurance" Grid.Column="1" VerticalAlignment="Center" />
-              </Grid>
+              <TextBlock Text="Stored Endurance" />
+              <TextBox Classes="Small" Name="BattalionStamina" />
+              <StackPanel Name="EquippedBattalionEnduranceEditor" Spacing="8" IsVisible="False">
+                <TextBlock Text="Equipped Endurance" />
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                  <TextBox Classes="Small" Name="BattalionCurrentEndurance" />
+                  <TextBlock Name="BattalionMaxEndurance" Grid.Column="1" VerticalAlignment="Center" />
+                </Grid>
+              </StackPanel>
               <Button Classes="Small" Name="ReplenishBattalionButton"
                       Content="Replenish" Click="ReplenishBattalion_Click" />
               <TextBlock Text="Skill" />

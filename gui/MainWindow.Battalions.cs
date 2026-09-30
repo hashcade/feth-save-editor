@@ -62,16 +62,19 @@ public partial class MainWindow
         BattalionType.SelectedItem = _battalionTypes?.FirstOrDefault(choice => choice.Id == value.Type);
         BattalionSkill.SelectedItem = _battalionSkills?.FirstOrDefault(choice => choice.Id == value.Skill);
         BattalionExp.Text = value.Exp.ToString(CultureInfo.InvariantCulture);
+        BattalionStamina.Text = value.Stamina.ToString(CultureInfo.InvariantCulture);
         ushort? maximum = ObtainableBattalions.FullEndurance(value.Type);
         BattalionMaxEndurance.Text = maximum.HasValue ? $"/ {maximum.Value}" : "/ —";
         ReplenishBattalionButton.IsEnabled = maximum.HasValue;
+        EquippedBattalionEnduranceEditor.IsVisible = false;
         try
         {
-            BattalionStamina.Text = _save.GetBattalionEndurance(index).ToString(CultureInfo.InvariantCulture);
+            ushort? current = _save.GetEquippedBattalionEndurance(index);
+            EquippedBattalionEnduranceEditor.IsVisible = current.HasValue;
+            BattalionCurrentEndurance.Text = current?.ToString(CultureInfo.InvariantCulture);
         }
         catch (Exception error)
         {
-            BattalionStamina.Text = value.Stamina.ToString(CultureInfo.InvariantCulture);
             ReplenishBattalionButton.IsEnabled = false;
             Status.Text = error.Message;
         }
@@ -94,8 +97,10 @@ public partial class MainWindow
             int type = (BattalionType.SelectedItem as Choice)?.Id ?? Database.BATTALION_COUNT;
             int skill = (BattalionSkill.SelectedItem as Choice)?.Id ?? Database.BATTALION_SKILL_COUNT;
             ushort exp = ParseUShort(BattalionExp, "Battalion experience");
-            ushort stamina = ParseUShort(BattalionStamina, "Battalion endurance");
-            _save.SetBattalionEndurance(index, stamina);
+            ushort storedEndurance = ParseUShort(BattalionStamina, "Stored battalion endurance");
+            ushort? equippedEndurance = EquippedBattalionEnduranceEditor.IsVisible
+                ? ParseUShort(BattalionCurrentEndurance, "Equipped battalion endurance") : null;
+            _save.SetBattalionEnduranceValues(index, storedEndurance, equippedEndurance);
             string prefix = $"Player.Battalions[{index}].";
             _save.Set(prefix + "CharacterId", character);
             _save.Set(prefix + "Type", type);

@@ -8,6 +8,33 @@ namespace FethEditor.Core
 {
     public sealed partial class SaveBuffer
     {
+        public ushort? GetEquippedBattalionEndurance(int slot)
+        {
+            SaveData_V23 data = Data;
+            int? equippedSlot = EquippedBattalionSlot(data, slot);
+            return equippedSlot.HasValue
+                ? data.Characters[equippedSlot.Value].data.EquippedBattalion.Stamina : null;
+        }
+
+        public void SetBattalionEnduranceValues(int slot, ushort storedEndurance, ushort? equippedEndurance = null)
+        {
+            SaveData_V23 data = Data;
+            if (slot < 0 || slot >= data.Player.Battalions.Length)
+                throw new ArgumentOutOfRangeException(nameof(slot));
+            var writes = new List<(string Path, ushort Endurance)>
+            {
+                ($"Player.Battalions[{slot}].Stamina", storedEndurance)
+            };
+            if (equippedEndurance.HasValue)
+            {
+                int equippedSlot = EquippedBattalionSlot(data, slot)
+                    ?? throw new InvalidOperationException("This battalion is not equipped by an active character.");
+                writes.Add(($"Characters[{equippedSlot}].data.EquippedBattalion.Stamina", equippedEndurance.Value));
+            }
+            var locations = writes.Select(write => (Location: Resolve(write.Path), write.Endurance)).ToArray();
+            foreach (var write in locations) WriteNumber(write.Location, write.Endurance);
+        }
+
         public ushort GetBattalionEndurance(int slot)
         {
             SaveData_V23 data = Data;

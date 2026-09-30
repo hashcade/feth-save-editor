@@ -173,6 +173,12 @@ namespace FethEditor.Cli
                     case "setBattalionEndurance":
                         save.SetBattalionEndurance(Value<int>(item, "slot"), checked((ushort)Value<int>(item, "endurance")));
                         break;
+                    case "setBattalionEnduranceValues":
+                        save.SetBattalionEnduranceValues(Value<int>(item, "slot"),
+                            checked((ushort)Value<int>(item, "storedEndurance")),
+                            item.ContainsKey("equippedEndurance")
+                                ? checked((ushort)Value<int>(item, "equippedEndurance")) : null);
+                        break;
                     case "replenishBattalion":
                         save.ReplenishBattalion(Value<int>(item, "slot"));
                         break;
