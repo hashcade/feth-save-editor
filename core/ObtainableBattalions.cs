@@ -144,5 +144,12 @@ namespace FethEditor.Core
 
         public static IReadOnlyList<(byte Type, ushort Stamina, byte Skill)> All { get; } =
             Array.AsReadOnly(Templates);
+
+        public static ushort? FullEndurance(int type)
+        {
+            foreach (var template in Templates)
+                if (template.Type == type) return template.Stamina;
+            return null;
+        }
     }
 }

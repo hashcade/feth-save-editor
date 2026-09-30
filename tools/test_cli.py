@@ -27,6 +27,109 @@ def run(cli: Path, *args: str, success: bool = True) -> dict:
     return json.loads(result.stdout if success else result.stderr)
 
 
+def verify_battalion_endurance(cli: Path, directory: Path, raw: bytes) -> None:
+    data = bytearray(raw)
+    barracks = 12 + 0x231D9 + 0xA30
+    roster = 12 + 0x644
+    for slot in range(200):
+        struct.pack_into("<hHHBB", data, barracks + slot * 8, -1, 0, 99, 200, 80)
+    entries = [
+        (1, 400, 60, 115, 26),  # Equipped Essar: its live endurance is 44.
+        (-1, 123, 10, 115, 26),  # A second Essar, wounded and unequipped.
+        (-1, 88, 0, 1, 0),  # Depleted, unequipped battalion.
+        (-1, 55, 13, 150, 5),  # Unknown type: never guess its maximum.
+        (2, 35, 60, 115, 26),  # Same type, equipped by a different character.
+        (-1, 400, 30, 0, 4),  # Already full.
+        (4, 22, 11, 115, 26),  # Stale owner: the matching character is inactive.
+    ]
+    for slot, entry in enumerate(entries):
+        struct.pack_into("<hHHBB", data, barracks + slot * 8, *entry)
+    for slot, (unit, level, endurance, kind) in enumerate([
+        (1, 5, 44, 115), (2, 1, 12, 115), (3, 1, 7, 5),
+        (4, 0, 9, 115), (5, 1, 7, 150),
+    ]):
+        start = roster + slot * 0x24C
+        struct.pack_into("<hHHBB", data, start + 0x18, unit, 77, endurance, kind, 26)
+        struct.pack_into("<h", data, start + 0x24, unit)
+        data[start + 0x4A] = level
+    struct.pack_into("<I", data, 0, checksum(data))
+    source = directory / "endurance-source"
+    source.write_bytes(data)
+    snapshot = run(cli, "inspect", "--input", str(source), "--section", "battalions")["battalions"]
+    assert snapshot[0]["Stamina"] == 44 and snapshot[0]["storedStamina"] == 60
+    assert snapshot[0]["maximumEndurance"] == 60
+    assert snapshot[1]["Stamina"] == 10 and snapshot[3]["maximumEndurance"] is None
+
+    def apply(name: str, operations: list[dict], input_path: Path = source) -> bytes:
+        patch = directory / f"{name}.json"
+        patch.write_text(json.dumps({"operations": operations}), encoding="utf-8")
+        target = directory / name
+        run(cli, "apply", "--input", str(input_path), "--patch", str(patch), "--output", str(target))
+        return target.read_bytes()
+
+    def unchanged_except(result: bytes, offsets: list[int]) -> None:
+        allowed = set(range(4)) | {byte for offset in offsets for byte in (offset, offset + 1)}
+        assert all(a == b or index in allowed for index, (a, b) in enumerate(zip(data, result)))
+        assert len(result) == len(data)
+        assert struct.unpack_from("<I", result)[0] == checksum(result)
+
+    single = apply("endurance-single", [{"op": "replenishBattalion", "slot": 0}])
+    assert struct.unpack_from("<H", single, roster + 0x1C)[0] == 60
+    unchanged_except(single, [barracks + 4, roster + 0x1C])
+    roster_single = apply("endurance-roster", [{"op": "replenishCharacterBattalion", "slot": 0}])
+    assert roster_single == single
+    orphan = apply("endurance-orphan", [{"op": "replenishCharacterBattalion", "slot": 2}])
+    assert struct.unpack_from("<H", orphan, roster + 2 * 0x24C + 0x1C)[0] == 60
+    unchanged_except(orphan, [roster + 2 * 0x24C + 0x1C])
+    unequipped = apply("endurance-unequipped", [{"op": "replenishBattalion", "slot": 1}])
+    assert struct.unpack_from("<H", unequipped, barracks + 8 + 4)[0] == 60
+    unchanged_except(unequipped, [barracks + 8 + 4])
+    manual = apply("endurance-manual", [{"op": "setBattalionEndurance", "slot": 0, "endurance": 20}])
+    assert struct.unpack_from("<H", manual, roster + 0x1C)[0] == 20
+    assert struct.unpack_from("<H", manual, barracks + 4)[0] == 20
+    unchanged_except(manual, [barracks + 4, roster + 0x1C])
+
+    bulk = apply("endurance-bulk", [{"op": "replenishBattalions"}])
+    expected = [60, 60, 30, 13, 60, 30, 60]
+    assert [struct.unpack_from("<H", bulk, barracks + slot * 8 + 4)[0]
+            for slot in range(len(entries))] == expected
+    assert [struct.unpack_from("<H", bulk, roster + slot * 0x24C + 0x1C)[0]
+            for slot in range(5)] == [60, 60, 60, 9, 7]
+    unchanged_except(bulk, [barracks + slot * 8 + 4 for slot in (0, 1, 2, 4, 6)]
+                     + [roster + slot * 0x24C + 0x1C for slot in (0, 1, 2)])
+    assert run(cli, "apply", "--input", str(directory / "endurance-bulk"),
+               "--patch", str(directory / "endurance-bulk.json"), "--dry-run")["changedBytes"] == 0
+    assert source.read_bytes() == data
+
+    for name, operation in [
+        ("unknown", {"op": "replenishBattalion", "slot": 3}),
+        ("empty", {"op": "replenishBattalion", "slot": 100}),
+        ("out-of-range", {"op": "replenishBattalion", "slot": 200}),
+        ("negative", {"op": "setBattalionEndurance", "slot": 0, "endurance": -1}),
+        ("overflow", {"op": "setBattalionEndurance", "slot": 0, "endurance": 65536}),
+        ("roster-inactive", {"op": "replenishCharacterBattalion", "slot": 3}),
+        ("roster-unknown", {"op": "replenishCharacterBattalion", "slot": 4}),
+        ("roster-out-of-range", {"op": "replenishCharacterBattalion", "slot": 500}),
+    ]:
+        patch = directory / f"endurance-{name}.json"
+        patch.write_text(json.dumps({"operations": [operation]}), encoding="utf-8")
+        output = directory / f"endurance-{name}-output"
+        run(cli, "apply", "--input", str(source), "--patch", str(patch), "--output", str(output), success=False)
+        assert not output.exists() and source.read_bytes() == data
+
+    ambiguous = bytearray(data)
+    struct.pack_into("<h", ambiguous, barracks + 8, 1)
+    struct.pack_into("<I", ambiguous, 0, checksum(ambiguous))
+    ambiguous_source = directory / "endurance-ambiguous"
+    ambiguous_source.write_bytes(ambiguous)
+    for patch_name in ("endurance-single.json", "endurance-bulk.json", "endurance-roster.json"):
+        output = directory / f"ambiguous-{patch_name}"
+        error = run(cli, "apply", "--input", str(ambiguous_source), "--patch", str(directory / patch_name),
+                    "--output", str(output), success=False)
+        assert "uniquely matched" in error["error"] and not output.exists()
+    assert ambiguous_source.read_bytes() == ambiguous
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--cli", type=Path, required=True)
@@ -134,6 +237,8 @@ def main() -> None:
         assert "free battalion slots" in error["error"]
         assert not full_battalion_target.exists()
         assert full_battalion_source.read_bytes() == full_battalion_raw
+
+        verify_battalion_endurance(cli, directory, raw)
 
         rank_patch = directory / "rank.json"
         rank_patch.write_text(json.dumps({"operations": [
@@ -424,7 +529,7 @@ def main() -> None:
         error = run(cli, "inspect", "--input", str(suspend), success=False)
         assert "Suspend" in error["error"]
 
-        print("CLI slot/system inspection and editing, NG+ history, character items, backups, and rejection checks passed.")
+        print("CLI slot/system inspection and editing, NG+ history, character items, battalion endurance, backups, and rejection checks passed.")
 
 
 if __name__ == "__main__":

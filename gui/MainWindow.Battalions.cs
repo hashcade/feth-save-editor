@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using FethEditor.Core;
 using SaveEditor;
 using SaveEditor.Structs;
 
@@ -61,7 +62,19 @@ public partial class MainWindow
         BattalionType.SelectedItem = _battalionTypes?.FirstOrDefault(choice => choice.Id == value.Type);
         BattalionSkill.SelectedItem = _battalionSkills?.FirstOrDefault(choice => choice.Id == value.Skill);
         BattalionExp.Text = value.Exp.ToString(CultureInfo.InvariantCulture);
-        BattalionStamina.Text = value.Stamina.ToString(CultureInfo.InvariantCulture);
+        ushort? maximum = ObtainableBattalions.FullEndurance(value.Type);
+        BattalionMaxEndurance.Text = maximum.HasValue ? $"/ {maximum.Value}" : "/ —";
+        ReplenishBattalionButton.IsEnabled = maximum.HasValue;
+        try
+        {
+            BattalionStamina.Text = _save.GetBattalionEndurance(index).ToString(CultureInfo.InvariantCulture);
+        }
+        catch (Exception error)
+        {
+            BattalionStamina.Text = value.Stamina.ToString(CultureInfo.InvariantCulture);
+            ReplenishBattalionButton.IsEnabled = false;
+            Status.Text = error.Message;
+        }
     }
 
     private static ushort ParseUShort(TextBox input, string name)
@@ -81,14 +94,15 @@ public partial class MainWindow
             int type = (BattalionType.SelectedItem as Choice)?.Id ?? Database.BATTALION_COUNT;
             int skill = (BattalionSkill.SelectedItem as Choice)?.Id ?? Database.BATTALION_SKILL_COUNT;
             ushort exp = ParseUShort(BattalionExp, "Battalion experience");
-            ushort stamina = ParseUShort(BattalionStamina, "Battalion stamina");
+            ushort stamina = ParseUShort(BattalionStamina, "Battalion endurance");
+            _save.SetBattalionEndurance(index, stamina);
             string prefix = $"Player.Battalions[{index}].";
             _save.Set(prefix + "CharacterId", character);
             _save.Set(prefix + "Type", type);
             _save.Set(prefix + "Skill", skill);
             _save.Set(prefix + "Exp", exp);
-            _save.Set(prefix + "Stamina", stamina);
             RefreshBattalions(index);
+            ShowCurrentCharacter();
             MarkChanged();
         }
         catch (Exception error)
@@ -105,6 +119,41 @@ public partial class MainWindow
             _save.SortBattalions();
             RefreshBattalions();
             MarkChanged();
+        }
+        catch (Exception error)
+        {
+            Status.Text = error.Message;
+        }
+    }
+
+    private void ReplenishBattalion_Click(object? sender, RoutedEventArgs e)
+    {
+        int index = SelectedSourceIndex(BattalionList);
+        if (_save is null || index < 0) return;
+        try
+        {
+            if (_save.ReplenishBattalion(index)) MarkChanged();
+            ShowBattalion();
+            ShowCurrentCharacter();
+        }
+        catch (Exception error)
+        {
+            Status.Text = error.Message;
+        }
+    }
+
+    private void ReplenishAllBattalions_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_save is null) return;
+        try
+        {
+            var result = _save.ReplenishBattalions();
+            if (result.Replenished > 0) MarkChanged();
+            ShowBattalion();
+            ShowCurrentCharacter();
+            if (result.Skipped > 0)
+                Status.Text = UiStrings.Format("Replenished {0} battalions; skipped {1} unknown types.",
+                    _databaseLanguage, result.Replenished, result.Skipped);
         }
         catch (Exception error)
         {

@@ -89,6 +89,12 @@ if (args.Length == 2 && args[0] == "--about-screenshot")
     return;
 }
 
+if (args.Length == 3 && args[0] == "--battalion-screenshots")
+{
+    VerifyBattalionReplenishment(args[2], args[1]);
+    return;
+}
+
 if (args.Length == 3 && args[0] == "--support-screenshots")
 {
     Database.Init(enmLanguage.en_u);
@@ -176,6 +182,141 @@ static uint SaveBufferChecksum(byte[] bytes)
     for (int index = 12; index < bytes.Length; index++)
         unchecked { total += bytes[index]; }
     return total;
+}
+
+string enduranceFixture = Path.Combine(Path.GetTempPath(), $"feth-endurance-{Guid.NewGuid():N}");
+try
+{
+    byte[] sample = new byte[Save.SIZE_SAVE_V23];
+    BitConverter.GetBytes(Save.CURRENT_VERSION).CopyTo(sample, 4);
+    BitConverter.GetBytes(sample.Length).CopyTo(sample, 8);
+    int barracks = 12 + 0x231D9 + 0xA30;
+    for (int slot = 0; slot < SaveData_V23.CHARACTER_COUNT; slot++)
+    {
+        int offset = 12 + 0x644 + slot * Character_V23.SIZE;
+        BitConverter.GetBytes((short)-1).CopyTo(sample, offset + 0x24);
+        sample[offset + 0x1E] = Database.BATTALION_COUNT;
+    }
+    for (int slot = 0; slot < 200; slot++)
+    {
+        BitConverter.GetBytes((short)-1).CopyTo(sample, barracks + slot * 8);
+        sample[barracks + slot * 8 + 6] = Database.BATTALION_COUNT;
+    }
+    BitConverter.GetBytes((short)1).CopyTo(sample, 12 + 0x644 + 0x24);
+    sample[12 + 0x644 + 0x4A] = 5;
+    sample[12 + 0x644 + 0x1E] = 115;
+    BitConverter.GetBytes((ushort)44).CopyTo(sample, 12 + 0x644 + 0x1C);
+    BitConverter.GetBytes((short)1).CopyTo(sample, barracks);
+    BitConverter.GetBytes((ushort)60).CopyTo(sample, barracks + 4);
+    sample[barracks + 6] = 115;
+    BitConverter.GetBytes((ushort)7).CopyTo(sample, barracks + 8 + 4);
+    sample[barracks + 8 + 6] = 1;
+    BitConverter.GetBytes(SaveBufferChecksum(sample)).CopyTo(sample, 0);
+    File.WriteAllBytes(enduranceFixture, sample);
+    VerifyBattalionReplenishment(enduranceFixture);
+}
+finally
+{
+    File.Delete(enduranceFixture);
+}
+
+void VerifyBattalionReplenishment(string source, string? screenshots = null)
+{
+    Database.Init(enmLanguage.en_u);
+    byte[] original = File.ReadAllBytes(source);
+    var target = new MainWindow();
+    target.Show();
+    target.LoadSave(source);
+    SaveBuffer CurrentSave() => (SaveBuffer)typeof(MainWindow)
+        .GetField("_save", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+        .GetValue(target)!;
+    var save = CurrentSave();
+    var data = save.Data;
+    int slot = Array.FindIndex(data.Player.Battalions, battalion => battalion.Type == 115 && battalion.CharacterId == 1);
+    if (slot < 0) throw new InvalidOperationException("The endurance fixture has no equipped Essar battalion.");
+    int characterSlot = Array.FindIndex(data.Characters, character => character.data.Id == 1 && character.data.Level > 0);
+    var tabs = target.FindControl<TabControl>("EditorTabs")!;
+    tabs.SelectedIndex = 3;
+    target.FindControl<ListBox>("BattalionList")!.SelectedIndex = slot;
+    Dispatcher.UIThread.RunJobs();
+    if (target.FindControl<TextBox>("BattalionStamina")!.Text != save.GetBattalionEndurance(slot).ToString()
+        || target.FindControl<TextBlock>("BattalionMaxEndurance")!.Text != "/ 60")
+        throw new InvalidOperationException("The battalion editor does not show equipped current endurance and its maximum.");
+    Capture("battalions-before.png");
+    target.FindControl<Button>("ReplenishBattalionButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    if (save.GetBattalionEndurance(slot) != 60 || save.Data.Player.Battalions[slot].Stamina != 60)
+        throw new InvalidOperationException("The single replenishment button did not synchronize both records.");
+    Capture("battalions-replenished.png");
+
+    tabs.SelectedIndex = 2;
+    target.FindControl<ListBox>("CurrentCharacterList")!.SelectedIndex = characterSlot;
+    Dispatcher.UIThread.RunJobs();
+    var scroll = target.FindControl<ScrollViewer>("CharacterMainScroll")!;
+    scroll.Offset = new Vector(0, scroll.Extent.Height);
+    Dispatcher.UIThread.RunJobs();
+    Grid EnduranceRow() => target.FindControl<StackPanel>("CharacterStatRows")!.Children.OfType<Grid>().Last();
+    TextBlock EnduranceLabel() => EnduranceRow().Children.OfType<TextBlock>().Single();
+    Button RosterButton() => EnduranceRow().Children.OfType<Button>().Single();
+    if (EnduranceLabel().Text != "Endurance: 60 / 60")
+        throw new InvalidOperationException("Roster still shows stale endurance after battalion replenishment.");
+    target.LoadSave(source);
+    save = CurrentSave();
+    target.FindControl<ListBox>("CurrentCharacterList")!.SelectedIndex = characterSlot;
+    Dispatcher.UIThread.RunJobs();
+    scroll.Offset = new Vector(0, scroll.Extent.Height);
+    Dispatcher.UIThread.RunJobs();
+    if (EnduranceLabel().Text != "Endurance: 44 / 60")
+        throw new InvalidOperationException("Roster does not show equipped current endurance.");
+    Capture("roster-endurance.png");
+    RosterButton().RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    if (EnduranceLabel().Text != "Endurance: 60 / 60" || save.GetBattalionEndurance(slot) != 60)
+        throw new InvalidOperationException("Roster replenishment did not update both records.");
+    Capture("roster-replenished.png");
+    var language = target.FindControl<MenuItem>("LanguageMenu")!;
+    ((MenuItem)language.Items[8]!).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+    if (RosterButton().Content?.ToString() != "补充" || EnduranceLabel().Text != "耐久: 60 / 60")
+        throw new InvalidOperationException("Roster replenishment was not translated to Chinese.");
+    ((MenuItem)language.Items[1]!).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+    if (RosterButton().Content?.ToString() != "Replenish" || EnduranceLabel().Text != "Endurance: 60 / 60")
+        throw new InvalidOperationException("Roster replenishment kept stale Chinese after switching to English.");
+
+    int duplicateSlot = slot == 0 ? 1 : 0;
+    save.Set($"Player.Battalions[{duplicateSlot}].CharacterId", 1);
+    save.Set($"Player.Battalions[{duplicateSlot}].Type", 115);
+    byte[] ambiguousBefore = save.FinishedBytes();
+    try
+    {
+        save.ReplenishBattalions();
+        throw new InvalidOperationException("Ambiguous battalions were accepted by bulk replenishment.");
+    }
+    catch (InvalidOperationException error) when (error.Message.Contains("uniquely matched", StringComparison.Ordinal)) { }
+    if (!save.FinishedBytes().SequenceEqual(ambiguousBefore))
+        throw new InvalidOperationException("Ambiguous bulk replenishment partially changed the in-memory save.");
+    target.LoadSave(source);
+    save = CurrentSave();
+
+    tabs.SelectedIndex = 3;
+    target.FindControl<TextBox>("BattalionSearch")!.Text = "Essar";
+    target.FindControl<Button>("ReplenishAllBattalionsButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    foreach (var (battalion, index) in save.Data.Player.Battalions.Select((value, index) => (value, index)))
+    {
+        ushort? maximum = ObtainableBattalions.FullEndurance(battalion.Type);
+        if (maximum.HasValue && save.GetBattalionEndurance(index) != maximum.Value)
+            throw new InvalidOperationException("Filtered bulk replenishment missed a wounded battalion.");
+    }
+    if (!File.ReadAllBytes(source).SequenceEqual(original))
+        throw new InvalidOperationException("GUI replenishment modified the original save file.");
+    target.Close();
+
+    void Capture(string filename)
+    {
+        Dispatcher.UIThread.RunJobs();
+        if (screenshots is null) return;
+        string output = Path.Combine(screenshots, filename);
+        (target.CaptureRenderedFrame() ?? throw new InvalidOperationException("Endurance UI did not render."))
+            .Save(output, PngBitmapEncoderOptions.Default);
+        Console.WriteLine(output);
+    }
 }
 
 var window = new MainWindow();
@@ -491,10 +632,13 @@ for (int index = 0; index < tabs.ItemCount; index++)
         var battalionList = window.FindControl<ListBox>("BattalionList")!;
         var sortButton = window.FindControl<Button>("SortBattalionButton")!;
         var fillButton = window.FindControl<Button>("FillMissingBattalionsButton")!;
+        var replenishButton = window.FindControl<Button>("ReplenishAllBattalionsButton")!;
         if (sortButton.Bounds.Width < battalionList.Bounds.Width - 1
             || fillButton.Bounds.Width < battalionList.Bounds.Width - 1
+            || replenishButton.Bounds.Width < battalionList.Bounds.Width - 1
             || sortButton.Bounds.Y < battalionList.Bounds.Bottom
-            || fillButton.Bounds.Y < sortButton.Bounds.Bottom)
+            || fillButton.Bounds.Y < sortButton.Bounds.Bottom
+            || replenishButton.Bounds.Y < fillButton.Bounds.Bottom)
             throw new InvalidOperationException("Battalion actions must be full-width rows below the list.");
     }
     var frame = window.CaptureRenderedFrame()

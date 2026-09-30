@@ -170,6 +170,18 @@ namespace FethEditor.Cli
                     case "fillMissingBattalions":
                         save.FillMissingBattalions();
                         break;
+                    case "setBattalionEndurance":
+                        save.SetBattalionEndurance(Value<int>(item, "slot"), checked((ushort)Value<int>(item, "endurance")));
+                        break;
+                    case "replenishBattalion":
+                        save.ReplenishBattalion(Value<int>(item, "slot"));
+                        break;
+                    case "replenishCharacterBattalion":
+                        save.ReplenishCharacterBattalion(Value<int>(item, "slot"));
+                        break;
+                    case "replenishBattalions":
+                        save.ReplenishBattalions();
+                        break;
                     case "inventoryDurability":
                         save.SetInventoryDurability(Value<string>(item, "mode"));
                         break;
@@ -459,7 +471,11 @@ namespace FethEditor.Cli
             if (section == "all" || section == "battalions")
                 result["battalions"] = data.Player.Battalions.Select((battalion, slot) => new
                 {
-                    slot, battalion.CharacterId, battalion.Exp, battalion.Stamina, battalion.Type, battalion.Skill,
+                    slot, battalion.CharacterId, battalion.Exp,
+                    Stamina = save.GetBattalionEndurance(slot),
+                    storedStamina = battalion.Stamina,
+                    maximumEndurance = ObtainableBattalions.FullEndurance(battalion.Type),
+                    battalion.Type, battalion.Skill,
                     name = SafeName(() => Database.GetBattalionName(battalion.Type))
                 }).ToArray();
             if (section == "all" || section == "activities")

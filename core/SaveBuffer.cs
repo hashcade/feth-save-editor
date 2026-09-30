@@ -12,7 +12,7 @@ using SaveEditor.Structs;
 
 namespace FethEditor.Core
 {
-    public sealed class SaveBuffer
+    public sealed partial class SaveBuffer
     {
         private const int HeaderSize = 12;
         private static readonly Regex SegmentPattern = new Regex(@"^([A-Za-z_][A-Za-z_0-9]*)(?:\[(\d+)\])?$", RegexOptions.Compiled);

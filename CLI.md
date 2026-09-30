@@ -26,6 +26,10 @@ NG+ history can be edited with `setNgPlusProfessorRank` (`rank`: 0–9), `setNgP
 
 For the GUI's rank controls, `setNgPlusSupportRank` and `setSupportRank` take a support `index` and one of that pair's available `rank` values. `maxSupportRank` and `maxNgPlusSupportRank` take an `index` and raise that pair's points to its highest conversation-rank threshold. `maxSupports` and `maxNgPlusSupports` need no index and apply this to every valid current-run or inherited pair, respectively. These maximum operations leave already-higher hidden point values unchanged and skip invalid records in the bulk operation. Example: `{ "op": "maxNgPlusSupports" }`. They change point values, not independently stored conversation or ending events; back up and test a copy in-game. `setProfessorRank` takes a rank index from 0 (E) to 9 (A+) and writes the matching current-run instruction-experience threshold. Unlike `setNgPlusProfessorRank`, it does not edit inherited progress.
 
+Battalion inspection reports effective current endurance in `Stamina`, the barracks value in `storedStamina`, and the type's normal maximum in `maximumEndurance` (null for unknown types). For an equipped battalion, current endurance comes from the character record.
+
+Use `replenishBattalion` (`slot`: barracks index), `replenishCharacterBattalion` (`slot`: character index), or `replenishBattalions` (no arguments) to restore normal endurance. Equipped records and their uniquely matched barracks entries are updated together; wounded unequipped entries are restored independently. Bulk replenishment also covers equipped battalions missing from the barracks and skips unknown types. Ambiguous equipped links are rejected without applying any of the batch. `setBattalionEndurance` (`slot`, `endurance`: 0–65535) edits an exact value in both linked records; low-level `set` still changes only the named field. Example: `{ "op": "replenishBattalions" }`.
+
 ## Edit
 
 Save this as `patch.json`:

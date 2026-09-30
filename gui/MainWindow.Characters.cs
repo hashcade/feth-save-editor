@@ -129,6 +129,50 @@ public partial class MainWindow
             Text = UiStrings.Translate("Equipped Battalion:", _databaseLanguage) + " " + battalion,
             TextWrapping = Avalonia.Media.TextWrapping.Wrap
         });
+        if (character.EquippedBattalion.Type < Database.BATTALION_COUNT)
+        {
+            ushort? maximum = ObtainableBattalions.FullEndurance(character.EquippedBattalion.Type);
+            var row = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitions("*,Auto"),
+                ColumnSpacing = 12
+            };
+            row.Children.Add(new TextBlock
+            {
+                Name = "CharacterBattalionEnduranceValue",
+                Text = UiStrings.Translate("Endurance", _databaseLanguage) + ": "
+                    + character.EquippedBattalion.Stamina.ToString(CultureInfo.InvariantCulture)
+                    + " / " + (maximum?.ToString(CultureInfo.InvariantCulture) ?? "—"),
+                VerticalAlignment = VerticalAlignment.Center
+            });
+            var replenish = new Button
+            {
+                Name = "ReplenishCharacterBattalionButton",
+                Content = UiStrings.Translate("Replenish", _databaseLanguage),
+                IsEnabled = maximum.HasValue && character.Id >= 0 && character.Level > 0
+            };
+            replenish.Classes.Add("Small");
+            int slot = _currentCharacter;
+            replenish.Click += (_, _) => ReplenishCharacterBattalion(slot);
+            Grid.SetColumn(replenish, 1);
+            row.Children.Add(replenish);
+            CharacterStatRows.Children.Add(row);
+        }
+    }
+
+    private void ReplenishCharacterBattalion(int slot)
+    {
+        if (_save is null || slot != _currentCharacter) return;
+        try
+        {
+            if (_save.ReplenishCharacterBattalion(slot)) MarkChanged();
+            ShowCurrentCharacter();
+            ShowBattalion();
+        }
+        catch (Exception error)
+        {
+            Status.Text = error.Message;
+        }
     }
 
     private void SetCharacterNumber(int slot, string path, TextBox input)

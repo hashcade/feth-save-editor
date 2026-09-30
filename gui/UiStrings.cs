@@ -110,9 +110,9 @@ internal static class UiStrings
             if (control.TemplatedParent is not null) continue;
             switch (control)
             {
-                case TextBlock text when control.Name is not ("Status" or "BattalionUsage"
+                case TextBlock text when control.Name is not ("Status" or "BattalionUsage" or "BattalionMaxEndurance"
                     or "StorageCount" or "CurrentCharacterTitle" or "CurrentClassInfo"
-                    or "EquippedBattalionValue" or "StorageSlotLabel"
+                    or "EquippedBattalionValue" or "CharacterBattalionEnduranceValue" or "StorageSlotLabel"
                     or "CurrentSupportMaxRank" or "InheritedSupportMaxRank")
                     && (control.GetVisualParent() is not ContentPresenter presenter
                         || ReferenceEquals(presenter.Content, control)):
@@ -125,7 +125,8 @@ internal static class UiStrings
                 case TabItem tab when tab.Header is string header:
                     Replace(control, header, value => tab.Header = value, language);
                     break;
-                case Button button when button.Content is string content:
+                case Button button when control.Name != "ReplenishCharacterBattalionButton"
+                    && button.Content is string content:
                     Replace(control, content, value => button.Content = value, language);
                     break;
                 case ComboBoxItem item when item.Content is string content:

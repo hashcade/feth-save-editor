@@ -382,7 +382,7 @@
       <TabItem Name="BattalionTab" Header="Battalions">
         <Grid Margin="8" ColumnDefinitions="320,*" ColumnSpacing="10">
           <suki:GlassCard Name="BattalionListCard" Classes="section" Grid.Column="0">
-            <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" RowSpacing="8">
+            <Grid RowDefinitions="Auto,Auto,*,Auto,Auto,Auto" RowSpacing="8">
               <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
                 <TextBlock Text="Battalion List" FontWeight="SemiBold" />
                 <TextBlock Name="BattalionUsage" Grid.Column="1" HorizontalAlignment="Right" />
@@ -395,6 +395,8 @@
                       Content="Sort Battalion" Click="SortBattalion_Click" />
               <Button Classes="Small" Name="FillMissingBattalionsButton" Grid.Row="4"
                       Content="Fill Missing Battalions" Click="FillMissingBattalions_Click" />
+              <Button Classes="Small" Name="ReplenishAllBattalionsButton" Grid.Row="5"
+                      Content="Replenish All" Click="ReplenishAllBattalions_Click" />
             </Grid>
           </suki:GlassCard>
           <suki:GlassCard Name="BattalionEditorCard" Classes="section" Grid.Column="1">
@@ -406,8 +408,13 @@
               <ComboBox Classes="Small" Name="BattalionType" />
               <TextBlock Text="Experience" />
               <TextBox Classes="Small" Name="BattalionExp" />
-              <TextBlock Text="Stamina" />
-              <TextBox Classes="Small" Name="BattalionStamina" />
+              <TextBlock Text="Endurance" />
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <TextBox Classes="Small" Name="BattalionStamina" />
+                <TextBlock Name="BattalionMaxEndurance" Grid.Column="1" VerticalAlignment="Center" />
+              </Grid>
+              <Button Classes="Small" Name="ReplenishBattalionButton"
+                      Content="Replenish" Click="ReplenishBattalion_Click" />
               <TextBlock Text="Skill" />
               <ComboBox Classes="Small" Name="BattalionSkill" />
               <Button Classes="Small" Name="SaveBattalionButton" Content="Apply Changes" Click="SaveBattalion_Click" />
