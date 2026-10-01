@@ -27,6 +27,52 @@ def run(cli: Path, *args: str, success: bool = True) -> dict:
     return json.loads(result.stdout if success else result.stderr)
 
 
+def verify_jeritza_classes(cli: Path, directory: Path, raw: bytes) -> None:
+    roster = 12 + 0x644
+    data = bytearray(raw)
+    struct.pack_into("<h", data, roster + 0x24, 1045)
+    data[roster + 0x4A] = 30
+    data[roster + 0x4B] = 91
+    struct.pack_into("<H", data, roster + 0x112 + 2, 7)
+    struct.pack_into("<I", data, 0, checksum(data))
+    source = directory / "jeritza-source"
+    source.write_bytes(data)
+    for name, operations in [
+        ("single", [{"op": "unlockNgPlusClasses", "recordIndex": 43}]),
+        ("all", [{"op": "unlockNgPlusRoster"}]),
+        ("preserved", [
+            {"op": "setNgPlusClassMastery", "recordIndex": 43, "classId": 1, "mastered": True},
+            {"op": "setNgPlusClassMastery", "recordIndex": 43, "classId": 60, "mastered": True},
+            {"op": "unlockNgPlusClasses", "recordIndex": 43},
+            {"op": "unlockNgPlusRoster"},
+        ]),
+        ("experience", [{"op": "maxClassExp", "slot": 0}]),
+    ]:
+        patch = directory / f"jeritza-{name}.json"
+        patch.write_text(json.dumps({"operations": operations}), encoding="utf-8")
+        target = directory / f"jeritza-{name}"
+        run(cli, "apply", "--input", str(source), "--patch", str(patch), "--output", str(target))
+        result = target.read_bytes()
+        assert len(result) == len(data) and checksum(result) == struct.unpack_from("<I", result)[0]
+        if name == "experience":
+            assert struct.unpack_from("<H", result, roster + 0x112)[0] == 20
+            assert struct.unpack_from("<H", result, roster + 0x112 + 2)[0] == 7
+            assert struct.unpack_from("<H", result, roster + 0x112 + 91 * 2)[0] == 200
+            assert struct.unpack_from("<H", result, roster + 0x48)[0] == 200
+            allowed = set(range(4)) | set(range(roster + 0x112, roster + 0x112 + 100 * 2))
+            allowed.update((roster + 0x48, roster + 0x49))
+            assert all(before == after or index in allowed
+                       for index, (before, after) in enumerate(zip(data, result)))
+        else:
+            history = run(cli, "inspect", "--input", str(target), "--section", "inheritance")["inheritance"]
+            classes = history["characters"][43]["masteredClassIds"]
+            assert 0 in classes and 91 in classes
+            assert (1 in classes) == (name == "preserved")
+            assert (60 in classes) == (name == "preserved")
+        assert run(cli, "apply", "--input", str(target), "--patch", str(patch), "--dry-run")["changedBytes"] == 0
+    assert source.read_bytes() == data
+
+
 def verify_battalion_endurance(cli: Path, directory: Path, raw: bytes) -> None:
     data = bytearray(raw)
     barracks = 12 + 0x231D9 + 0xA30
@@ -291,6 +337,7 @@ def main() -> None:
         assert full_battalion_source.read_bytes() == full_battalion_raw
 
         verify_battalion_endurance(cli, directory, raw)
+        verify_jeritza_classes(cli, directory, raw)
 
         rank_patch = directory / "rank.json"
         rank_patch.write_text(json.dumps({"operations": [

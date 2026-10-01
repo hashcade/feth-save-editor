@@ -60,8 +60,8 @@ namespace FethEditor.Core
         {
             if (record is 0 or 1)
                 return 1;
-            // Faculty join in advanced classes, but retain Noble/Commoner as their base class.
-            if (record is 26 or 27 or 28 or 30 or 31 or 32)
+            // Faculty and Jeritza join in promoted classes, but retain Noble/Commoner as their base class.
+            if (record is 26 or 27 or 28 or 30 or 31 or 32 or 43)
                 return 0;
             if (record is 29 or 33)
                 return 1;

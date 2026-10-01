@@ -463,16 +463,43 @@ if (!dancers.SequenceEqual(expectedDancers)
     || Enumerable.Range(0, 100).Count(id => ClassEligibility.IsAvailable(0, id)) != 37
     || Enumerable.Range(0, 100).Count(id => ClassEligibility.IsAvailable(1, id)) != 36)
     throw new InvalidOperationException("Playable class or White Heron Cup eligibility is incorrect.");
-foreach (var (record, startingClass) in new[]
-{
-    (26, 0), (27, 0), (28, 0), (29, 1),
-    (30, 0), (31, 0), (32, 0), (33, 1), (34, 1)
-})
+(int Record, int StartingClass)[] startingClasses =
+[
+    (0, 1), (1, 1), (2, 0), (3, 0), (4, 0),
+    (5, 0), (6, 0), (7, 0), (8, 0), (9, 0),
+    (10, 1), (11, 1), (12, 1), (13, 0), (14, 1),
+    (15, 0), (16, 1), (17, 0), (18, 0), (19, 0),
+    (20, 1), (21, 1), (22, 0), (23, 0), (24, 0), (25, 1),
+    (26, 0), (27, 0), (28, 0), (29, 1), (30, 0),
+    (31, 0), (32, 0), (33, 1), (34, 1),
+    (38, 1), (39, 0), (40, 0), (41, 1), (43, 0), (44, 1)
+];
+foreach (var (record, startingClass) in startingClasses)
     foreach (int classId in new[] { 0, 1 })
         if (ClassEligibility.IsAvailable(record, classId) != (classId == startingClass))
             throw new InvalidOperationException($"Record {record} has the wrong Noble/Commoner class.");
 int[] playableRecords = Enumerable.Range(0, NgPlusJournal.CharacterCount)
     .Where(ClassEligibility.IsPlayableRecord).ToArray();
+if (!startingClasses.Select(entry => entry.Record).SequenceEqual(playableRecords))
+    throw new InvalidOperationException("The Noble/Commoner test matrix must cover every playable character.");
+foreach (var (record, startingClass) in startingClasses)
+{
+    var journal = new NgPlusJournal(new byte[0x2000], 0);
+    journal.UnlockAvailableClasses(record);
+    if (!journal.IsClassMastered(record, startingClass)
+        || journal.IsClassMastered(record, 1 - startingClass))
+        throw new InvalidOperationException($"Record {record} unlocked the wrong Noble/Commoner class.");
+}
+var allClassesJournal = new NgPlusJournal(new byte[0x2000], 0);
+allClassesJournal.SetClassMastered(43, 60, true);
+allClassesJournal.UnlockAllPlayableSkillsAndClasses();
+foreach (var (record, startingClass) in startingClasses)
+    if (!allClassesJournal.IsClassMastered(record, startingClass)
+        || allClassesJournal.IsClassMastered(record, 1 - startingClass))
+        throw new InvalidOperationException($"Bulk roster unlock gave record {record} the wrong Noble/Commoner class.");
+if (!allClassesJournal.IsClassMastered(43, 91)
+    || !allClassesJournal.IsClassMastered(43, 60))
+    throw new InvalidOperationException("Jeritza's Death Knight and existing mastery flags must survive bulk unlock.");
 foreach (int record in playableRecords)
     foreach (int classId in Enumerable.Range(0, NgPlusJournal.ClassCount))
         _ = ClassEligibility.IsAvailable(record, classId);
