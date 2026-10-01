@@ -9,7 +9,7 @@ Edit Fire Emblem: Three Houses saves, including inherited New Game+ progress.
 - **Main:** Edit player details, money, renown, professor experience and rank, activity points, goddess statues, game values, and monthly statistics. The inherited professor rank is available here too.
 - **Items:** Edit inventory items and durability, restore durability to each item's normal maximum, sort the inventory, add essential items, and change miscellaneous item and gift quantities.
 - **Roster:** Edit character stats, equipped abilities and combat arts, held items, skill experience, learned magic, flags, class experience and mastery, unlocked abilities and combat arts, and import or export individual characters.
-- **Battalions:** Change battalion type, assigned character, experience, stored and equipped endurance independently, and skill; replenish one or all battalions to their normal maximum, sort the list, or fill missing battalions from the curated collection. Equipped battalions can also be replenished from the Roster panel.
+- **Battalions:** Change battalion type, assigned character, experience, stored and equipped endurance independently, and skill; max the level of one or all battalions, replenish normal endurance, delete a selected battalion, sort the list, or fill missing battalions from the curated collection. Deleting an equipped battalion also unequips it. Equipped battalions can also be replenished from the Roster panel.
 - **Quests:** Search quests and change their state.
 - **Support:** Edit the current run's support ranks and underlying points, or raise every pair to its available maximum.
 - **Database:** Look up characters, classes, and items without changing the save.

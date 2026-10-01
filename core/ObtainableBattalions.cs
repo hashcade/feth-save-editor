@@ -6,7 +6,7 @@ namespace FethEditor.Core
     /// <summary>One of each obtainable battalion from the curated all-battalions save.</summary>
     public static class ObtainableBattalions
     {
-        public const ushort Experience = 400;
+        public const ushort Experience = SaveBuffer.MaximumBattalionExperience;
 
         // Type, full stamina, and skill copied from slot00-all-battalions.
         // The user's save itself is not distributed with the application.

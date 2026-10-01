@@ -188,6 +188,15 @@ namespace FethEditor.Cli
                     case "replenishBattalions":
                         save.ReplenishBattalions();
                         break;
+                    case "maxBattalionLevel":
+                        save.MaximizeBattalionLevel(Value<int>(item, "slot"));
+                        break;
+                    case "maxBattalionLevels":
+                        save.MaximizeBattalionLevels();
+                        break;
+                    case "deleteBattalion":
+                        save.DeleteBattalion(Value<int>(item, "slot"));
+                        break;
                     case "inventoryDurability":
                         save.SetInventoryDurability(Value<string>(item, "mode"));
                         break;

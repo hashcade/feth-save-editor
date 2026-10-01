@@ -8,6 +8,70 @@ namespace FethEditor.Core
 {
     public sealed partial class SaveBuffer
     {
+        // v1.2.0 (89048449BA238C8CF565518B83BF02D3): level = Exp / 100 + 1
+        // at main+0x5D177C; battle experience is capped at 400 at main+0x0D5200.
+        public const ushort MaximumBattalionExperience = 400;
+
+        public bool MaximizeBattalionLevel(int slot)
+        {
+            SaveData_V23 data = Data;
+            int? equippedSlot = EquippedBattalionSlot(data, slot);
+            if (data.Player.Battalions[slot].Type >= Database.BATTALION_COUNT)
+                throw new InvalidOperationException("No battalion is selected.");
+            var paths = new List<string> { $"Player.Battalions[{slot}].Exp" };
+            if (equippedSlot.HasValue)
+                paths.Add($"Characters[{equippedSlot.Value}].data.EquippedBattalion.Exp");
+            return MaximizeBattalionExperience(paths) > 0;
+        }
+
+        public int MaximizeBattalionLevels()
+        {
+            SaveData_V23 data = Data;
+            var paths = new List<string>();
+            for (int slot = 0; slot < data.Player.Battalions.Length; slot++)
+            {
+                if (data.Player.Battalions[slot].Type >= Database.BATTALION_COUNT) continue;
+                // Validate every equipment link before applying any part of the batch.
+                EquippedBattalionSlot(data, slot);
+                paths.Add($"Player.Battalions[{slot}].Exp");
+            }
+            for (int slot = 0; slot < data.Characters.Length; slot++)
+            {
+                CharacterData_V23 character = data.Characters[slot].data;
+                if (character.Id >= 0 && character.Level > 0
+                    && character.EquippedBattalion.Type < Database.BATTALION_COUNT)
+                    paths.Add($"Characters[{slot}].data.EquippedBattalion.Exp");
+            }
+            return MaximizeBattalionExperience(paths);
+        }
+
+        private int MaximizeBattalionExperience(IEnumerable<string> paths)
+        {
+            var locations = paths.Where(path => (long)Get(path) < MaximumBattalionExperience)
+                .Select(Resolve).ToArray();
+            foreach (var location in locations) WriteNumber(location, MaximumBattalionExperience);
+            return locations.Length;
+        }
+
+        public void DeleteBattalion(int slot)
+        {
+            SaveData_V23 data = Data;
+            int? equippedSlot = EquippedBattalionSlot(data, slot);
+            if (data.Player.Battalions[slot].Type >= Database.BATTALION_COUNT)
+                throw new InvalidOperationException("No battalion is selected.");
+            var prefixes = new List<string> { $"Player.Battalions[{slot}]." };
+            if (equippedSlot.HasValue)
+                prefixes.Add($"Characters[{equippedSlot.Value}].data.EquippedBattalion.");
+            var fields = new (string Name, long Value)[]
+            {
+                ("CharacterId", -1), ("Exp", 0), ("Stamina", 0),
+                ("Type", Database.BATTALION_COUNT), ("Skill", Database.BATTALION_SKILL_COUNT)
+            };
+            var writes = prefixes.SelectMany(prefix => fields.Select(field =>
+                (Location: Resolve(prefix + field.Name), field.Value))).ToArray();
+            foreach (var write in writes) WriteNumber(write.Location, write.Value);
+        }
+
         public ushort? GetEquippedBattalionEndurance(int slot)
         {
             SaveData_V23 data = Data;

@@ -1,8 +1,10 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
 using FethEditor.Core;
 using SaveEditor;
 using SaveEditor.Structs;
@@ -58,6 +60,9 @@ public partial class MainWindow
         int index = SelectedSourceIndex(BattalionList);
         if (_save is null || index < 0) return;
         Battalion value = _save.Data.Player.Battalions[index];
+        bool occupied = value.Type < Database.BATTALION_COUNT;
+        MaxBattalionButton.IsEnabled = occupied;
+        DeleteBattalionButton.IsEnabled = occupied;
         BattalionCharacter.SelectedItem = _battalionCharacters?.FirstOrDefault(choice => choice.Id == value.CharacterId);
         BattalionType.SelectedItem = _battalionTypes?.FirstOrDefault(choice => choice.Id == value.Type);
         BattalionSkill.SelectedItem = _battalionSkills?.FirstOrDefault(choice => choice.Id == value.Skill);
@@ -76,6 +81,8 @@ public partial class MainWindow
         catch (Exception error)
         {
             ReplenishBattalionButton.IsEnabled = false;
+            MaxBattalionButton.IsEnabled = false;
+            DeleteBattalionButton.IsEnabled = false;
             Status.Text = error.Message;
         }
     }
@@ -123,6 +130,64 @@ public partial class MainWindow
         {
             _save.SortBattalions();
             RefreshBattalions();
+            MarkChanged();
+        }
+        catch (Exception error)
+        {
+            Status.Text = error.Message;
+        }
+    }
+
+    private void MaxBattalion_Click(object? sender, RoutedEventArgs e)
+    {
+        int index = SelectedSourceIndex(BattalionList);
+        if (_save is null || index < 0) return;
+        try
+        {
+            if (_save.MaximizeBattalionLevel(index)) MarkChanged();
+            ShowBattalion();
+            ShowCurrentCharacter();
+        }
+        catch (Exception error)
+        {
+            Status.Text = error.Message;
+        }
+    }
+
+    private void MaxAllBattalions_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_save is null) return;
+        try
+        {
+            if (_save.MaximizeBattalionLevels() > 0) MarkChanged();
+            ShowBattalion();
+            ShowCurrentCharacter();
+        }
+        catch (Exception error)
+        {
+            Status.Text = error.Message;
+        }
+    }
+
+    private async void DeleteBattalion_Click(object? sender, RoutedEventArgs e)
+    {
+        int index = SelectedSourceIndex(BattalionList);
+        if (_save is null || index < 0) return;
+        try
+        {
+            SaveBuffer save = _save;
+            Battalion selected = save.Data.Player.Battalions[index];
+            bool equipped = save.GetEquippedBattalionEndurance(index).HasValue;
+            var dialog = new DeleteBattalionDialog(Database.GetBattalionName(selected.Type), equipped, _databaseLanguage)
+            {
+                Icon = Icon
+            };
+            if (!await dialog.ShowDialog<bool>(this)) return;
+            // A confirmation must never delete a different save or a replaced entry.
+            if (!ReferenceEquals(_save, save) || !save.Data.Player.Battalions[index].Equals(selected)) return;
+            save.DeleteBattalion(index);
+            RefreshBattalions(index);
+            ShowCurrentCharacter();
             MarkChanged();
         }
         catch (Exception error)
@@ -185,5 +250,48 @@ public partial class MainWindow
         {
             Status.Text = error.Message;
         }
+    }
+}
+
+internal sealed class DeleteBattalionDialog : Window
+{
+    public DeleteBattalionDialog(string battalion, bool equipped, enmLanguage language)
+    {
+        Name = "DeleteBattalionDialog";
+        Title = UiStrings.Translate("Delete Battalion", language);
+        Width = 420;
+        SizeToContent = SizeToContent.Height;
+        CanResize = false;
+        WindowStartupLocation = WindowStartupLocation.CenterOwner;
+        var body = new StackPanel { Margin = new Thickness(20), Spacing = 16 };
+        body.Children.Add(new TextBlock
+        {
+            Text = UiStrings.Format("Delete {0}?", language, battalion),
+            TextWrapping = Avalonia.Media.TextWrapping.Wrap
+        });
+        if (equipped)
+            body.Children.Add(new TextBlock
+            {
+                Text = UiStrings.Translate("This will also unequip it from its character.", language),
+                TextWrapping = Avalonia.Media.TextWrapping.Wrap
+            });
+        var actions = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*"), ColumnSpacing = 8 };
+        var cancel = new Button
+        {
+            Name = "CancelDeleteBattalionButton", Content = UiStrings.Translate("Cancel", language),
+            HorizontalAlignment = HorizontalAlignment.Stretch, IsCancel = true, IsDefault = true
+        };
+        var delete = new Button
+        {
+            Name = "ConfirmDeleteBattalionButton", Content = UiStrings.Translate("Delete", language),
+            HorizontalAlignment = HorizontalAlignment.Stretch
+        };
+        cancel.Click += (_, _) => Close(false);
+        delete.Click += (_, _) => Close(true);
+        actions.Children.Add(cancel);
+        Grid.SetColumn(delete, 1);
+        actions.Children.Add(delete);
+        body.Children.Add(actions);
+        Content = body;
     }
 }

@@ -340,6 +340,70 @@ void VerifyBattalionReplenishment(string source, string? screenshots = null)
         if (maximum.HasValue && save.GetBattalionEndurance(index) != maximum.Value)
             throw new InvalidOperationException("Filtered bulk replenishment missed a wounded battalion.");
     }
+    target.LoadSave(source);
+    save = CurrentSave();
+    target.FindControl<TextBox>("BattalionSearch")!.Text = "";
+    target.FindControl<ListBox>("BattalionList")!.SelectedIndex = slot;
+    save.Set($"Player.Battalions[{slot}].Exp", 0);
+    target.FindControl<Button>("MaxBattalionButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    if (save.Data.Player.Battalions[slot].Exp != 400
+        || save.Data.Characters[characterSlot].data.EquippedBattalion.Exp != 400
+        || save.GetBattalionEndurance(slot) != 44)
+        throw new InvalidOperationException("Max level did not synchronize experience or changed wounded endurance.");
+    Capture("battalions-max-level.png");
+
+    ((MenuItem)language.Items[8]!).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+    if (target.FindControl<Button>("MaxBattalionButton")!.Content?.ToString() != "满级"
+        || target.FindControl<Button>("MaxAllBattalionsButton")!.Content?.ToString() != "全部满级"
+        || target.FindControl<Button>("DeleteBattalionButton")!.Content?.ToString() != "删除")
+        throw new InvalidOperationException("Battalion actions were not translated to Chinese.");
+    ((MenuItem)language.Items[1]!).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+    if (target.FindControl<Button>("MaxAllBattalionsButton")!.Content?.ToString() != "Max All Levels"
+        || target.FindControl<Button>("MaxBattalionButton")!.Content?.ToString() != "Max Level"
+        || target.FindControl<Button>("DeleteBattalionButton")!.Content?.ToString() != "Delete")
+        throw new InvalidOperationException("Battalion actions kept stale Chinese.");
+
+    byte[] beforeDelete = save.FinishedBytes();
+    target.FindControl<Button>("DeleteBattalionButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    Dispatcher.UIThread.RunJobs();
+    var confirmation = target.OwnedWindows.Single(dialog => dialog.Name == "DeleteBattalionDialog");
+    if (!confirmation.GetLogicalDescendants().OfType<TextBlock>().Any(label =>
+        label.Text == "This will also unequip it from its character."))
+        throw new InvalidOperationException("Equipped deletion did not warn about unequipping.");
+    if (screenshots is not null)
+    {
+        string output = Path.Combine(screenshots, "battalions-delete-confirmation.png");
+        (confirmation.CaptureRenderedFrame() ?? throw new InvalidOperationException("Deletion confirmation did not render."))
+            .Save(output, PngBitmapEncoderOptions.Default);
+        Console.WriteLine(output);
+    }
+    confirmation.GetLogicalDescendants().OfType<Button>().Single(button => button.Name == "CancelDeleteBattalionButton")
+        .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    Dispatcher.UIThread.RunJobs();
+    if (!save.FinishedBytes().SequenceEqual(beforeDelete))
+        throw new InvalidOperationException("Canceling deletion modified the save.");
+    target.FindControl<Button>("DeleteBattalionButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    Dispatcher.UIThread.RunJobs();
+    confirmation = target.OwnedWindows.Single(dialog => dialog.Name == "DeleteBattalionDialog");
+    confirmation.GetLogicalDescendants().OfType<Button>().Single(button => button.Name == "ConfirmDeleteBattalionButton")
+        .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    Dispatcher.UIThread.RunJobs();
+    if (save.Data.Player.Battalions[slot].Type != Database.BATTALION_COUNT
+        || save.Data.Characters[characterSlot].data.EquippedBattalion.Type != Database.BATTALION_COUNT
+        || target.FindControl<Button>("DeleteBattalionButton")!.IsEnabled
+        || target.FindControl<Button>("MaxBattalionButton")!.IsEnabled)
+        throw new InvalidOperationException("Confirmed deletion did not clear both records and disable empty-slot actions.");
+    string expectedUsage = $"{save.Data.Player.Battalions.Count(value => value.Type != Database.BATTALION_COUNT)}/200";
+    if (!target.FindControl<TextBlock>("BattalionUsage")!.Text!.StartsWith(expectedUsage, StringComparison.Ordinal))
+        throw new InvalidOperationException("Deletion did not refresh the occupied battalion count.");
+
+    target.LoadSave(source);
+    save = CurrentSave();
+    save.Set($"Player.Battalions[{unequippedSlot}].Exp", 0);
+    target.FindControl<TextBox>("BattalionSearch")!.Text = "Essar";
+    target.FindControl<Button>("MaxAllBattalionsButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    if (save.Data.Player.Battalions[unequippedSlot].Exp != 400 || save.GetBattalionEndurance(slot) != 44)
+        throw new InvalidOperationException("Filtered max level missed a battalion or replenished endurance.");
     if (!File.ReadAllBytes(source).SequenceEqual(original))
         throw new InvalidOperationException("GUI replenishment modified the original save file.");
     target.Close();

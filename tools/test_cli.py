@@ -39,7 +39,7 @@ def verify_battalion_endurance(cli: Path, directory: Path, raw: bytes) -> None:
         (-1, 88, 0, 1, 0),  # Depleted, unequipped battalion.
         (-1, 55, 13, 150, 5),  # Unknown type: never guess its maximum.
         (2, 35, 60, 115, 26),  # Same type, equipped by a different character.
-        (-1, 400, 30, 0, 4),  # Already full.
+        (-1, 600, 30, 0, 4),  # Already full; preserve above-target experience.
         (4, 22, 11, 115, 26),  # Stale owner: the matching character is inactive.
     ]
     for slot, entry in enumerate(entries):
@@ -114,6 +114,35 @@ def verify_battalion_endurance(cli: Path, directory: Path, raw: bytes) -> None:
                "--patch", str(directory / "endurance-bulk.json"), "--dry-run")["changedBytes"] == 0
     assert source.read_bytes() == data
 
+    maximum = apply("level-single", [{"op": "maxBattalionLevel", "slot": 0}])
+    assert struct.unpack_from("<H", maximum, roster + 0x1A)[0] == 400
+    unchanged_except(maximum, [barracks + 2, roster + 0x1A])
+    bench_maximum = apply("level-unequipped", [{"op": "maxBattalionLevel", "slot": 1}])
+    assert struct.unpack_from("<H", bench_maximum, barracks + 8 + 2)[0] == 400
+    unchanged_except(bench_maximum, [barracks + 8 + 2])
+    all_maximum = apply("level-bulk", [{"op": "maxBattalionLevels"}])
+    assert [struct.unpack_from("<H", all_maximum, barracks + slot * 8 + 2)[0]
+            for slot in range(len(entries))] == [400, 400, 400, 400, 400, 600, 400]
+    assert [struct.unpack_from("<H", all_maximum, roster + slot * 0x24C + 0x1A)[0]
+            for slot in range(5)] == [400, 400, 400, 77, 400]
+    unchanged_except(all_maximum, [barracks + slot * 8 + 2 for slot in range(len(entries))]
+                     + [roster + slot * 0x24C + 0x1A for slot in (0, 1, 2, 4)])
+    assert run(cli, "apply", "--input", str(directory / "level-bulk"),
+               "--patch", str(directory / "level-bulk.json"), "--dry-run")["changedBytes"] == 0
+
+    empty = (-1, 0, 0, 200, 80)
+    deleted = apply("delete-equipped", [{"op": "deleteBattalion", "slot": 0}])
+    assert struct.unpack_from("<hHHBB", deleted, barracks) == empty
+    assert struct.unpack_from("<hHHBB", deleted, roster + 0x18) == empty
+    unchanged_except(deleted, [barracks + field for field in range(0, 8, 2)]
+                     + [roster + 0x18 + field for field in range(0, 8, 2)])
+    bench_deleted = apply("delete-unequipped", [{"op": "deleteBattalion", "slot": 1}])
+    assert struct.unpack_from("<hHHBB", bench_deleted, barracks + 8) == empty
+    unchanged_except(bench_deleted, [barracks + 8 + field for field in range(0, 8, 2)])
+    stale_deleted = apply("delete-inactive", [{"op": "deleteBattalion", "slot": 6}])
+    assert struct.unpack_from("<hHHBB", stale_deleted, barracks + 6 * 8) == empty
+    unchanged_except(stale_deleted, [barracks + 6 * 8 + field for field in range(0, 8, 2)])
+
     for name, operation in [
         ("unknown", {"op": "replenishBattalion", "slot": 3}),
         ("empty", {"op": "replenishBattalion", "slot": 100}),
@@ -127,6 +156,11 @@ def verify_battalion_endurance(cli: Path, directory: Path, raw: bytes) -> None:
                           "storedEndurance": 100, "equippedEndurance": 60}),
         ("stored-overflow", {"op": "setBattalionEnduranceValues", "slot": 0,
                              "storedEndurance": 65536}),
+        ("level-empty", {"op": "maxBattalionLevel", "slot": 100}),
+        ("level-out-of-range", {"op": "maxBattalionLevel", "slot": 200}),
+        ("delete-empty", {"op": "deleteBattalion", "slot": 100}),
+        ("delete-negative", {"op": "deleteBattalion", "slot": -1}),
+        ("delete-out-of-range", {"op": "deleteBattalion", "slot": 200}),
     ]:
         patch = directory / f"endurance-{name}.json"
         patch.write_text(json.dumps({"operations": [operation]}), encoding="utf-8")
@@ -139,7 +173,8 @@ def verify_battalion_endurance(cli: Path, directory: Path, raw: bytes) -> None:
     struct.pack_into("<I", ambiguous, 0, checksum(ambiguous))
     ambiguous_source = directory / "endurance-ambiguous"
     ambiguous_source.write_bytes(ambiguous)
-    for patch_name in ("endurance-single.json", "endurance-bulk.json", "endurance-roster.json"):
+    for patch_name in ("endurance-single.json", "endurance-bulk.json", "endurance-roster.json",
+                       "level-single.json", "level-bulk.json", "delete-equipped.json"):
         output = directory / f"ambiguous-{patch_name}"
         error = run(cli, "apply", "--input", str(ambiguous_source), "--patch", str(directory / patch_name),
                     "--output", str(output), success=False)

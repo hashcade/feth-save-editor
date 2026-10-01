@@ -34,6 +34,10 @@ To edit the records independently, use `setBattalionEnduranceValues` (`slot`, `s
 
 ## Edit
 
+`maxBattalionLevel` (`slot`: barracks index) raises the selected battalion's stored and uniquely linked equipped experience to 400 (level 5). This threshold was verified against the v1.2.0 executable's level calculation and battle experience cap. `maxBattalionLevels` (no arguments) covers every occupied barracks entry and every active equipped battalion, regardless of search filters. Experience already above 400 is preserved. Neither operation changes endurance, type, skill, or assignment.
+
+`deleteBattalion` (`slot`: barracks index) clears only the selected entry and its uniquely linked equipped record. Other copies are preserved and slot indices are not reordered. Empty slots and ambiguous equipment links are rejected. The GUI asks for confirmation; CLI patches explicitly request deletion. Example: `{ "op": "deleteBattalion", "slot": 3 }`.
+
 Save this as `patch.json`:
 
 ```json

@@ -382,7 +382,7 @@
       <TabItem Name="BattalionTab" Header="Battalions">
         <Grid Margin="8" ColumnDefinitions="320,*" ColumnSpacing="10">
           <suki:GlassCard Name="BattalionListCard" Classes="section" Grid.Column="0">
-            <Grid RowDefinitions="Auto,Auto,*,Auto,Auto,Auto" RowSpacing="8">
+            <Grid RowDefinitions="Auto,Auto,*,Auto,Auto,Auto,Auto" RowSpacing="8">
               <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
                 <TextBlock Text="Battalion List" FontWeight="SemiBold" />
                 <TextBlock Name="BattalionUsage" Grid.Column="1" HorizontalAlignment="Right" />
@@ -397,9 +397,12 @@
                       Content="Fill Missing Battalions" Click="FillMissingBattalions_Click" />
               <Button Classes="Small" Name="ReplenishAllBattalionsButton" Grid.Row="5"
                       Content="Replenish All" Click="ReplenishAllBattalions_Click" />
+              <Button Classes="Small" Name="MaxAllBattalionsButton" Grid.Row="6"
+                      Content="Max All Levels" Click="MaxAllBattalions_Click" />
             </Grid>
           </suki:GlassCard>
           <suki:GlassCard Name="BattalionEditorCard" Classes="section" Grid.Column="1">
+            <ScrollViewer>
             <StackPanel Width="340" HorizontalAlignment="Left" Spacing="8">
               <TextBlock Text="Battalion Editor" FontWeight="SemiBold" />
               <TextBlock Text="Character" />
@@ -407,7 +410,11 @@
               <TextBlock Text="Type" />
               <ComboBox Classes="Small" Name="BattalionType" />
               <TextBlock Text="Experience" />
-              <TextBox Classes="Small" Name="BattalionExp" />
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <TextBox Classes="Small" Name="BattalionExp" />
+                <Button Classes="Small" Name="MaxBattalionButton" Grid.Column="1"
+                        Content="Max Level" Click="MaxBattalion_Click" />
+              </Grid>
               <TextBlock Text="Stored Endurance" />
               <TextBox Classes="Small" Name="BattalionStamina" />
               <StackPanel Name="EquippedBattalionEnduranceEditor" Spacing="8" IsVisible="False">
@@ -422,7 +429,9 @@
               <TextBlock Text="Skill" />
               <ComboBox Classes="Small" Name="BattalionSkill" />
               <Button Classes="Small" Name="SaveBattalionButton" Content="Apply Changes" Click="SaveBattalion_Click" />
+              <Button Classes="Small" Name="DeleteBattalionButton" Content="Delete" Click="DeleteBattalion_Click" />
             </StackPanel>
+            </ScrollViewer>
           </suki:GlassCard>
         </Grid>
       </TabItem>
