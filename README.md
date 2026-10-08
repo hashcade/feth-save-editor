@@ -1,5 +1,9 @@
 # FETH Save Editor
 
+> [!NOTE]
+> Based on [fe3h-editor](https://github.com/imouto1994/fe3h-editor) by
+> [imouto1994](https://github.com/imouto1994), with v1.2.0 save support and game data from Falo.
+
 Edit Fire Emblem: Three Houses saves, including inherited New Game+ progress.
 
 ![Roster editor](docs/roster.png)
