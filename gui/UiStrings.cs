@@ -59,7 +59,7 @@ internal static class UiStrings
     {
         using var stream = typeof(UiStrings).Assembly.GetManifestResourceStream($"FethEditor.Gui.Localization.{language}.json");
         if (stream is null) return new Dictionary<string, string>(StringComparer.Ordinal);
-        return JsonSerializer.Deserialize<Dictionary<string, string>>(stream)
+        return JsonSerializer.Deserialize(stream, UiLocaleJsonContext.Default.DictionaryStringString)
             ?? throw new InvalidOperationException($"Invalid UI language resource: {language}");
     }
 

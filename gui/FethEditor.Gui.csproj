@@ -3,6 +3,8 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
+    <PublishTrimmed Condition="'$(Configuration)' == 'Release'">true</PublishTrimmed>
+    <TrimMode>full</TrimMode>
     <Version>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)/../VERSION').Trim())</Version>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets/sothis.ico</ApplicationIcon>
@@ -21,4 +23,13 @@
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup Condition="'$(PublishTrimmed)' == 'true'">
+    <ProjectReference Include="../cli/Cli.csproj" />
+    <TrimmerRootAssembly Include="FethEditor.Gui" />
+    <TrimmerRootAssembly Include="FethEditor.Core" />
+    <TrimmerRootAssembly Include="FethEditor.Cli" />
+  </ItemGroup>
+  <PropertyGroup Condition="'$(PublishTrimmed)' == 'true'">
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
 </Project>
