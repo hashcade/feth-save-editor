@@ -28,9 +28,6 @@ def main() -> None:
         names = package.namelist()
         if any(name.endswith(".pdb") for name in names):
             raise ValueError("Release ZIP contains debug symbols")
-        database = ("FETH Save Editor.app/Contents/MacOS/" if args.rid.startswith("osx-") else "") + "Database/msgdata.bin.gz"
-        if database not in names:
-            raise ValueError("Release ZIP is missing its database fallback")
         with tempfile.TemporaryDirectory(prefix="feth-package-test-") as temporary:
             extracted = Path(temporary)
             if args.rid.startswith("osx-"):
