@@ -66,7 +66,7 @@ def main() -> None:
                 if not executable.is_file():
                     raise ValueError(f"Release entry point is missing: {executable}")
             subprocess.run(
-                [sys.executable, str(ROOT / "tools/test_cli.py"), "--cli", str(cli)],
+                [sys.executable, str(ROOT / "scripts/test_cli.py"), "--cli", str(cli)],
                 check=True,
             )
     print(f"Release package passed: {args.rid}")
