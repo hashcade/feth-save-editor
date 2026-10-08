@@ -2,6 +2,7 @@
 """Extract a platform ZIP and test its GUI entry point and CLI save editing."""
 
 import argparse
+import json
 import os
 import plistlib
 import subprocess
@@ -57,6 +58,10 @@ def main() -> None:
                         if not mode & 0o111:
                             raise ValueError(f"ZIP lost executable permission: {executable.name}")
                         os.chmod(executable, mode)
+            for config in extracted.rglob("*.runtimeconfig.json"):
+                properties = json.loads(config.read_text(encoding="utf-8"))["runtimeOptions"]["configProperties"]
+                if properties.get("System.Runtime.InteropServices.BuiltInComInterop.IsSupported", True):
+                    raise ValueError(f"Shared trimmed runtime requires COM interop to be disabled: {config.name}")
             for executable in (gui, cli):
                 if not executable.is_file():
                     raise ValueError(f"Release entry point is missing: {executable}")
