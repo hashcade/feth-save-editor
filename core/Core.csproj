@@ -13,6 +13,7 @@
     <Compile Include="Structs/*.cs" />
     <Compile Include="SaveBuffer.cs" />
     <Compile Include="SaveBuffer.Battalions.cs" />
+    <Compile Include="SaveBuffer.Protagonist.cs" />
     <Compile Include="ClassEligibility.cs" />
     <Compile Include="SupportRankPresets.cs" />
     <Compile Include="SupportPairRanks.cs" />

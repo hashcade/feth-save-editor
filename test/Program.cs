@@ -71,6 +71,11 @@ AppBuilder.Configure<App>()
     .SetupWithoutStarting();
 
 string expectedVersion = File.ReadAllText("VERSION").Trim();
+if (args is ["--gender-tests", var genderSave, var genderScreenshot])
+{
+    GenderTests.Run(genderSave, genderScreenshot);
+    return;
+}
 if (new AboutWindow(enmLanguage.en_u).Title != "About"
     || new AboutWindow(enmLanguage.zh_hans).Title != "关于"
     || AboutWindow.GetVersion() != expectedVersion)

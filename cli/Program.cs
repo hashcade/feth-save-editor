@@ -158,6 +158,14 @@ namespace FethEditor.Cli
                     case "setName":
                         save.SetName(Value<string>(item, "value"));
                         break;
+                    case "setProtagonistGender":
+                        save.SetProtagonistGender(Value<string>(item, "gender").ToLowerInvariant() switch
+                        {
+                            "male" => 0,
+                            "female" => 1,
+                            _ => throw new ArgumentException("Gender must be male or female.")
+                        });
+                        break;
                     case "setBit":
                         save.SetBit(Value<string>(item, "path"), Value<int>(item, "index"), Value<bool>(item, "value"));
                         break;
@@ -449,6 +457,7 @@ namespace FethEditor.Cli
                 result["summary"] = new
                 {
                     playerName = Util.DecodeString(data.PlayerName),
+                    protagonistGender = save.ReadProtagonistGender() switch { 0 => "male", 1 => "female", _ => null },
                     data.Player.Playtime, data.Player.Money, data.Player.Chapter,
                     data.Player.Difficulty, data.Player.Gamestyle, data.Player.Route, data.Player.MapID,
                     renown = data.Activities.Reputation, professorExp = data.Activities.InstructExp,

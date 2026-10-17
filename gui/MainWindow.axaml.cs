@@ -189,7 +189,7 @@ public partial class MainWindow : Window
     {
         foreach (Control input in new Control[]
         {
-            PlayerNameInput, PlaytimeInput, MoneyInput, RenownInput, InstructExpInput,
+            PlayerNameInput, PlayerGenderInput, PlaytimeInput, MoneyInput, RenownInput, InstructExpInput,
             CurrentProfessorRank, NgPlusProfessorRank
         })
             input.IsEnabled = enabled;
@@ -383,6 +383,38 @@ public partial class MainWindow : Window
             PlayerNameInput.Text = _save.Get("playerName").ToString();
             Status.Text = error.Message;
         }
+    }
+
+    private void PlayerGender_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_loading || _save is null || PlayerGenderInput.SelectedIndex < 0) return;
+        try
+        {
+            int gender = PlayerGenderInput.SelectedIndex;
+            if (_save.ReadProtagonistGender() == gender) return;
+            _save.SetProtagonistGender(gender);
+            RefreshCurrentCharacters(Math.Max(0, _currentCharacter));
+            RefreshCurrentSummary();
+            MarkChanged();
+        }
+        catch (Exception error)
+        {
+            RefreshProtagonistGender();
+            Status.Text = error.Message;
+        }
+    }
+
+    private void RefreshProtagonistGender()
+    {
+        bool previousLoading = _loading;
+        _loading = true;
+        try
+        {
+            int? gender = _save?.ReadProtagonistGender();
+            PlayerGenderInput.SelectedIndex = gender ?? -1;
+            PlayerGenderInput.IsEnabled = gender.HasValue;
+        }
+        finally { _loading = previousLoading; }
     }
 
     private void CharacterSearch_TextChanged(object? sender, TextChangedEventArgs e)
@@ -630,6 +662,7 @@ public partial class MainWindow : Window
 
     private void RefreshCurrentSummary()
     {
+        RefreshProtagonistGender();
         if (_save is not null)
         {
             var data = _save.Data;

@@ -406,6 +406,7 @@ public partial class MainWindow
         {
             _save.Set($"Characters[{_currentCharacter}].data.Id", choice.Id);
             RefreshCurrentCharacters(_currentCharacter);
+            RefreshCurrentSummary();
             MarkChanged();
         }
         catch (Exception error)

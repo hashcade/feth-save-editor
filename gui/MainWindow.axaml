@@ -73,29 +73,35 @@
             <suki:GlassCard Classes="section">
               <HeaderedContentControl>
                 <HeaderedContentControl.Header><TextBlock Name="PlayerCardTitle" Text="Player" FontWeight="SemiBold" /></HeaderedContentControl.Header>
-                <Grid Margin="0,16,0,0" ColumnDefinitions="160,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                <Grid Margin="0,16,0,0" ColumnDefinitions="160,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                       RowSpacing="8" ColumnSpacing="8">
                   <TextBlock Text="Player Name:" VerticalAlignment="Center" />
                   <TextBox Classes="Small" Name="PlayerNameInput" Grid.Column="1"
                            LostFocus="PlayerName_LostFocus" />
-                  <TextBlock Grid.Row="1" Text="Playtime:" VerticalAlignment="Center" />
-                  <TextBox Classes="Small" Name="PlaytimeInput" Grid.Row="1" Grid.Column="1" Tag="Player.Playtime"
+                  <TextBlock Grid.Row="1" Text="Gender:" VerticalAlignment="Center" />
+                  <ComboBox Classes="Small" Name="PlayerGenderInput" Grid.Row="1" Grid.Column="1" Margin="-5,0"
+                            SelectionChanged="PlayerGender_SelectionChanged">
+                    <ComboBoxItem Content="Male" />
+                    <ComboBoxItem Content="Female" />
+                  </ComboBox>
+                  <TextBlock Grid.Row="2" Text="Playtime:" VerticalAlignment="Center" />
+                  <TextBox Classes="Small" Name="PlaytimeInput" Grid.Row="2" Grid.Column="1" Tag="Player.Playtime"
                            LostFocus="PlayerField_LostFocus" />
-                  <TextBlock Grid.Row="2" Text="Money:" VerticalAlignment="Center" />
-                  <TextBox Classes="Small" Name="MoneyInput" Grid.Row="2" Grid.Column="1" Tag="Player.Money"
+                  <TextBlock Grid.Row="3" Text="Money:" VerticalAlignment="Center" />
+                  <TextBox Classes="Small" Name="MoneyInput" Grid.Row="3" Grid.Column="1" Tag="Player.Money"
                            LostFocus="PlayerField_LostFocus" />
-                  <TextBlock Grid.Row="3" Text="Reputation:" VerticalAlignment="Center" />
-                  <TextBox Classes="Small" Name="RenownInput" Grid.Row="3" Grid.Column="1"
+                  <TextBlock Grid.Row="4" Text="Reputation:" VerticalAlignment="Center" />
+                  <TextBox Classes="Small" Name="RenownInput" Grid.Row="4" Grid.Column="1"
                            Tag="Activities.Reputation" LostFocus="PlayerField_LostFocus" />
-                  <TextBlock Grid.Row="4" Text="Instruct Level:" VerticalAlignment="Center" />
-                  <ComboBox Classes="Small" Name="CurrentProfessorRank" Grid.Row="4" Grid.Column="1" Margin="-5,0"
+                  <TextBlock Grid.Row="5" Text="Instruct Level:" VerticalAlignment="Center" />
+                  <ComboBox Classes="Small" Name="CurrentProfessorRank" Grid.Row="5" Grid.Column="1" Margin="-5,0"
                             SelectionChanged="CurrentProfessorRank_SelectionChanged" />
-                  <TextBlock Grid.Row="5" Text="Instruct Exp:" VerticalAlignment="Center" />
-                  <TextBox Classes="Small" Name="InstructExpInput" Grid.Row="5" Grid.Column="1"
+                  <TextBlock Grid.Row="6" Text="Instruct Exp:" VerticalAlignment="Center" />
+                  <TextBox Classes="Small" Name="InstructExpInput" Grid.Row="6" Grid.Column="1"
                            Tag="Activities.InstructExp" TextChanged="InstructExpInput_TextChanged"
                            LostFocus="PlayerField_LostFocus" />
-                  <TextBlock Grid.Row="6" Text="Inherited rank:" VerticalAlignment="Center" />
-                  <ComboBox Classes="Small" Name="NgPlusProfessorRank" Grid.Row="6" Grid.Column="1" Margin="-5,0"
+                  <TextBlock Grid.Row="7" Text="Inherited rank:" VerticalAlignment="Center" />
+                  <ComboBox Classes="Small" Name="NgPlusProfessorRank" Grid.Row="7" Grid.Column="1" Margin="-5,0"
                             SelectionChanged="NgPlusProfessorRank_SelectionChanged" />
                 </Grid>
               </HeaderedContentControl>
