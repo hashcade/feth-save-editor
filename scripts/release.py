@@ -83,12 +83,6 @@ def check_build(head: str) -> None:
         raise ValueError("wait for a successful build of this commit before tagging")
 
 
-def run_host_tests() -> None:
-    command("dotnet", "build", "FethEditor.slnx", "-c", "Release", "--nologo")
-    command("dotnet", "run", "--project", "test/Gui.Smoke.csproj", "-c", "Release", "--no-build")
-    command(sys.executable, "scripts/test_cli.py", "--cli", "cli/bin/Release/net10.0/FethEditor.Cli.dll")
-
-
 def push_tag(tag: str) -> None:
     command("git", "tag", "-a", tag, "-m", tag)
     command("git", "push", REMOTE, tag)
@@ -131,8 +125,7 @@ def main() -> None:
         return
 
     if not args.current:
-        print("Running host tests...", flush=True)
-        run_host_tests()
+        print("Full validation and publication will run in the release workflow.", flush=True)
         committed = False
         try:
             VERSION_PATH.write_text(f"{format_version(next_version)}\n", encoding="utf-8")
